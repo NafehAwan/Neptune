@@ -58,7 +58,7 @@ public class Party {
     }
 
     public boolean isLeader(UUID playerUUID) {
-        return leader == playerUUID;
+        return leader.equals(playerUUID);
     }
 
     public void invite(UUID playerUUID) {
@@ -92,19 +92,21 @@ public class Party {
         Profile profile = API.getProfile(playerUUID);
         profile.getGameData().setParty(this);
         profile.setState(ProfileState.IN_PARTY);
-        if (playerUUID != leader) {
+        if (!playerUUID.equals(leader)) {
             broadcast(ad ? MessagesLocale.PARTY_JOINED_FROM_ADVERTISEMENT : MessagesLocale.PARTY_JOINED, Placeholder.unparsed("player", invitedPlayer.getName()));
         }
         API.getProfile(playerUUID).getGameData().removeRequest(leader);
     }
 
     public void kick(UUID playerUUID) {
-        broadcast(MessagesLocale.PARTY_KICK, Placeholder.unparsed("player", getLeaderName()));
+        Player kicked = Bukkit.getPlayer(playerUUID);
+        String kickedName = kicked != null ? kicked.getName() : Bukkit.getOfflinePlayer(playerUUID).getName();
+        broadcast(MessagesLocale.PARTY_KICK, Placeholder.unparsed("player", kickedName == null ? "" : kickedName));
         remove(playerUUID);
     }
 
     public void remove(UUID playerUUID) {
-        if (leader == playerUUID) {
+        if (leader.equals(playerUUID)) {
             disband();
             return;
         }
@@ -163,7 +165,11 @@ public class Party {
     }
 
     public void transfer(Player player, Player target) {
+        // PartyService keys parties by leader UUID, so the map entry must be re-keyed
+        // whenever leadership changes; otherwise the party leaks and lookups break.
+        PartyService.get().removeParty(this);
         this.setLeader(target.getUniqueId());
+        PartyService.get().addParty(this);
         this.broadcast(MessagesLocale.PARTY_TRANSFER, TagResolver.resolver(
             Placeholder.unparsed("leader", player.getName()),
             Placeholder.unparsed("target", target.getName())

@@ -22,8 +22,13 @@ public abstract class PaginatedMenu extends Menu {
     }
 
     public final void modPage(Player player, int mod) {
-        page += mod;
-        getButtons(player).clear();
+        int newPage = page + mod;
+        // Clamp to a valid page so "previous" on page 1 or "next" on the last page
+        // no longer opens a blank inventory.
+        if (newPage < 1 || newPage > getPages(player)) {
+            return;
+        }
+        page = newPage;
         open(player);
     }
 

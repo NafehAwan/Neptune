@@ -110,6 +110,10 @@ public class PlaceholderUtil {
                 Placeholder.unparsed("winner", match.getWinnerName()),
                 Placeholder.unparsed("loser", match.getLoserName()),
                 Placeholder.unparsed("round", String.valueOf(match.getCurrentRound())),
+                Placeholder.unparsed("total-rounds", String.valueOf(match.getRounds())),
+                Placeholder.parsed("ranked", match.isDuel()
+                        ? MessagesLocale.MATCH_RANKED_NO.getString()
+                        : MessagesLocale.MATCH_RANKED_YES.getString()),
                 Placeholder.unparsed("time", match.getTime().formatTime())
             );
             if (match instanceof SoloFightMatch sfm) {

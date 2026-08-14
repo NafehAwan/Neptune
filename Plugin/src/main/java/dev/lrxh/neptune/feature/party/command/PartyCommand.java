@@ -120,14 +120,15 @@ public class PartyCommand {
             return;
         }
 
-        if (profile.getGameData().getRequests().contains(player.getUniqueId()) ||
-                targetProfile.getGameData().getRequests().contains(player.getUniqueId())) {
+        // The invite is stored on the target's profile keyed by the inviter's UUID,
+        // so the "already invited" check must look at the TARGET's request map.
+        if (targetProfile.getGameData().getRequests().contains(player.getUniqueId())) {
             MessagesLocale.PARTY_ALREADY_SENT.send(player.getUniqueId(),
                     Placeholder.unparsed("player", target.getName()));
             return;
         }
 
-        if (party.getUsers().size() > party.getMaxUsers()) {
+        if (party.getUsers().size() >= party.getMaxUsers()) {
             MessagesLocale.PARTY_MAX_SIZE.send(player.getUniqueId());
             return;
         }

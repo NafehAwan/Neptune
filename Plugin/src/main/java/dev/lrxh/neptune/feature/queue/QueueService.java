@@ -17,6 +17,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
@@ -24,7 +25,7 @@ public class QueueService implements IQueueService {
 
     private static QueueService instance;
 
-    private final Map<Kit, Queue<QueueEntry>> kitQueues = new HashMap<>();
+    private final Map<Kit, Queue<QueueEntry>> kitQueues = new ConcurrentHashMap<>();
 
     public static QueueService get() {
         if (instance == null) instance = new QueueService();

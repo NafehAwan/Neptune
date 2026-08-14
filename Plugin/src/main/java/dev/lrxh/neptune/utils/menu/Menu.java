@@ -184,7 +184,10 @@ public abstract class Menu {
             item = button.getItemStack(player);
             itemCache.put(slot, item);
         } else {
-            item = itemCache.get(slot);
+            // No button occupies this slot anymore: clear it instead of leaving the
+            // previously cached item behind (which caused "ghost" items on refresh).
+            item = null;
+            itemCache.remove(slot);
         }
 
         set(inventory, slot, item);
