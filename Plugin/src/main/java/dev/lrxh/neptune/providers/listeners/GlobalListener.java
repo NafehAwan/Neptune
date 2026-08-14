@@ -7,6 +7,9 @@ import dev.lrxh.neptune.configs.impl.SettingsLocale;
 import dev.lrxh.neptune.feature.party.Party;
 import dev.lrxh.neptune.profile.data.ProfileState;
 import dev.lrxh.neptune.profile.impl.Profile;
+import dev.lrxh.neptune.feature.hotbar.HotbarService;
+import dev.lrxh.neptune.utils.LobbyPvP;
+import dev.lrxh.neptune.utils.PlayerUtil;
 import dev.lrxh.neptune.utils.tasks.NeptuneRunnable;
 import dev.lrxh.neptune.utils.tasks.TaskScheduler;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -204,6 +207,7 @@ public class GlobalListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerDamageByPlayer(EntityDamageByEntityEvent event) {
+        if (LobbyPvP.allows(event)) return; // allow lobby-vs-lobby PvP when enabled
         if (event.getDamager() instanceof Player attacker && event.getEntity() instanceof Player victim) {
             Profile attackerProfile = API.getProfile(attacker);
             Profile victimProfile = API.getProfile(victim);
@@ -217,6 +221,7 @@ public class GlobalListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onEntityDamage(EntityDamageEvent event) {
+        if (event instanceof EntityDamageByEntityEvent ed && LobbyPvP.allows(ed)) return; // allow lobby PvP
         if (event.getEntity() instanceof Player player) {
             Profile profile = API.getProfile(player);
             if (profile == null) return;
@@ -225,6 +230,32 @@ public class GlobalListener implements Listener {
                 event.setCancelled(true);
             }
         }
+    }
+
+    /**
+     * Turns a lethal lobby-PvP hit into a safe knockout instead of a real death:
+     * the loser is reset, teleported to spawn and re-given their lobby items.
+     * Runs at LOWEST so it is the sole authority on lobby-PvP kills; the normal
+     * damage cancellers early-return for lobby-PvP hits via {@link LobbyPvP#allows}.
+     */
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onLobbyPvpLethal(EntityDamageByEntityEvent event) {
+        if (!LobbyPvP.allows(event)) return;
+        Player victim = (Player) event.getEntity();
+        if (victim.getHealth() - event.getFinalDamage() > 0) return; // non-lethal: let the hit land
+
+        event.setCancelled(true);
+        Player killer = LobbyPvP.resolveAttacker(event);
+
+        PlayerUtil.reset(victim);
+        PlayerUtil.teleportToSpawn(victim.getUniqueId());
+        HotbarService.get().giveItems(victim);
+
+        if (killer != null) {
+            MessagesLocale.LOBBY_PVP_KILLER.send(killer.getUniqueId(), Placeholder.unparsed("player", victim.getName()));
+        }
+        MessagesLocale.LOBBY_PVP_KILLED.send(victim.getUniqueId(),
+                Placeholder.unparsed("player", killer == null ? "" : killer.getName()));
     }
 
     @EventHandler(priority = EventPriority.HIGH)

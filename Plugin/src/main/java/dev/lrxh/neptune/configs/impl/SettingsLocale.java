@@ -14,6 +14,9 @@ import java.util.List;
 @Getter
 public enum SettingsLocale implements IDataAccessor {
     FRIENDLY_FIRE("FRIENDLY_FIRE", DataType.BOOLEAN, "false"),
+    LOBBY_PVP("LOBBY_PVP", "Allow players to fight each other while in the lobby (global/lobby PvP). "
+            + "A killing blow is handled as a safe knockout: the loser is healed, teleported to spawn and given "
+            + "their lobby items back, with no death screen or item loss.", DataType.BOOLEAN, "false"),
     MATCH_START_COUNTDOWN("MATCH_START_COUNTDOWN", "The countdown in seconds before a match starts.", DataType.INT, "3"),
     FFA_MATCH_START_COUNTDOWN("FFA_MATCH_START_COUNTDOWN", "The countdown in seconds before an FFA match starts.", DataType.INT, "5"),
     DYNAMIC_ARENA_GENERATION("DYNAMIC_ARENA_GENERATION",

@@ -19,6 +19,7 @@ import dev.lrxh.neptune.profile.data.ProfileState;
 import dev.lrxh.neptune.profile.impl.Profile;
 import dev.lrxh.neptune.utils.CC;
 import dev.lrxh.neptune.utils.EntityUtils;
+import dev.lrxh.neptune.utils.LobbyPvP;
 import dev.lrxh.neptune.utils.LocationUtil;
 import dev.lrxh.neptune.utils.WorldUtils;
 import dev.lrxh.neptune.utils.tasks.NeptuneRunnable;
@@ -420,6 +421,7 @@ public class MatchListener implements Listener {
 
     @EventHandler
     public void onPlayerDamage(EntityDamageByEntityEvent event) {
+        if (LobbyPvP.allows(event)) return; // allow lobby-vs-lobby PvP when enabled
         if (!(event.getDamager() instanceof Player attacker)) return;
         Profile profile = API.getProfile(attacker);
         if (profile == null || profile.hasState(ProfileState.IN_SPECTATOR)) {
@@ -605,6 +607,7 @@ public class MatchListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onPlayerHitEvent(EntityDamageByEntityEvent event) {
+        if (LobbyPvP.allows(event)) return; // lobby PvP is handled by GlobalListener, skip match hit-tracking
         if (!(event.getEntity() instanceof Player target)) return;
 
         Player damager;
@@ -762,6 +765,7 @@ public class MatchListener implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onEntityDamage(EntityDamageEvent event) {
+        if (event instanceof EntityDamageByEntityEvent ed && LobbyPvP.allows(ed)) return; // allow lobby PvP
         if (event.getEntity() instanceof Player player) {
             ProfileService profileService = ProfileService.get();
             Profile profileDirect = profileService.getByUUID(player.getUniqueId());

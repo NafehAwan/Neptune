@@ -103,6 +103,8 @@ public enum MessagesLocale implements IDataAccessor {
             " "),
     MATCH_RANKED_YES("MATCH.RANKED.YES", "Shown by the <ranked> placeholder for ranked (queue) matches.", DataType.STRING, "&aYes"),
     MATCH_RANKED_NO("MATCH.RANKED.NO", "Shown by the <ranked> placeholder for unranked (duel) matches.", DataType.STRING, "&cNo"),
+    LOBBY_PVP_KILLER("LOBBY.PVP.KILLER", "Sent to the winner of a lobby-PvP knockout (requires LOBBY_PVP).", DataType.STRING, "&aYou knocked out &f<player>&a!"),
+    LOBBY_PVP_KILLED("LOBBY.PVP.KILLED", "Sent to the loser of a lobby-PvP knockout (requires LOBBY_PVP).", DataType.STRING, "&cYou were knocked out by &f<player>&c!"),
     MATCH_RESPAWN_TIMER("MATCH.RESPAWN_TIMER", DataType.STRING_LIST, "&fRespawning in &b<timer>&f..."),
     MATCH_RESPAWNED("MATCH.RESPAWNED", DataType.STRING_LIST, "&aRespawned!"),
     MATCH_RESPAWN_TITLE_HEADER("MATCH.RESPAWN_TITLE.HEADER", DataType.STRING, "&fRespawning in &b<timer>&f..."),
