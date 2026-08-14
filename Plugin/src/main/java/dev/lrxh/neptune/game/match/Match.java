@@ -24,6 +24,7 @@ import dev.lrxh.neptune.profile.data.ProfileState;
 import dev.lrxh.neptune.profile.impl.Profile;
 import dev.lrxh.neptune.utils.CC;
 import dev.lrxh.neptune.utils.PlayerUtil;
+import dev.lrxh.neptune.utils.ServerUtils;
 import dev.lrxh.neptune.utils.Time;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -440,6 +441,17 @@ public abstract class Match implements IMatch {
         Player player = participant.getPlayer();
         if (player == null)
             return;
+        // Guard against a misconfigured or unloaded arena: teleporting to a null
+        // location (or one whose world isn't loaded) silently drops players into the
+        // void. Log a clear, actionable error instead so admins can fix the setup.
+        if (location == null || location.getWorld() == null) {
+            ServerUtils.error("Arena '" + (arena != null ? arena.getName() : "null")
+                    + "' has an invalid " + participant.getColor() + " spawn"
+                    + " (null location or unloaded world). Player " + player.getName()
+                    + " was NOT teleported. Re-set the arena spawns with the arena editor"
+                    + " and make sure the arena's world is loaded on startup.");
+            return;
+        }
         player.teleport(location);
     }
 
