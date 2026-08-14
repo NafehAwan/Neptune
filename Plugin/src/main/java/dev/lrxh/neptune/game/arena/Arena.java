@@ -220,7 +220,7 @@ public class Arena implements IArena, ConfigData {
     }
 
     private static boolean useFawe() {
-        return "FAWE".equalsIgnoreCase(SettingsLocale.ARENA_CLEANUP_METHOD.getString()) && ArenaDuplicator.isAvailable();
+        return "FAWE".equalsIgnoreCase(SettingsLocale.ARENA_CLEANUP_METHOD.getString()) && FaweSupport.isAvailable();
     }
 
     public void capture() {

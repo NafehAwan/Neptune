@@ -36,7 +36,7 @@ import dev.lrxh.neptune.feature.settings.Setting;
 import dev.lrxh.neptune.feature.settings.command.SettingProvider;
 import dev.lrxh.neptune.feature.settings.command.SettingsCommand;
 import dev.lrxh.neptune.game.arena.Arena;
-import dev.lrxh.neptune.game.arena.ArenaDuplicator;
+import dev.lrxh.neptune.game.arena.FaweSupport;
 import dev.lrxh.neptune.game.arena.ArenaService;
 import dev.lrxh.neptune.game.arena.command.ArenaProvider;
 import dev.lrxh.neptune.game.arena.listener.ArenaEditorChatListener;
@@ -135,7 +135,7 @@ public final class Neptune extends JavaPlugin {
         BlockChanger.initialize(this);
         ArenaService.get().load();
         if (arenaGenerationDisabled) {
-            duplicatesEnabled = ArenaDuplicator.isAvailable();
+            duplicatesEnabled = FaweSupport.isAvailable();
             if (duplicatesEnabled) {
                 ArenaService.get().setupDuplicatesWorld();
                 ArenaService.get().loadDuplicates();

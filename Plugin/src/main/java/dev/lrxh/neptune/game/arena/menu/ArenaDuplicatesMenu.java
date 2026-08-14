@@ -1,8 +1,8 @@
 package dev.lrxh.neptune.game.arena.menu;
 
 import dev.lrxh.neptune.game.arena.Arena;
-import dev.lrxh.neptune.game.arena.ArenaDuplicator;
 import dev.lrxh.neptune.game.arena.ArenaService;
+import dev.lrxh.neptune.game.arena.FaweSupport;
 import dev.lrxh.neptune.utils.CC;
 import dev.lrxh.neptune.utils.ItemBuilder;
 import dev.lrxh.neptune.utils.menu.Button;
@@ -96,7 +96,7 @@ public class ArenaDuplicatesMenu extends Menu {
         }));
 
         buttons.add(new DisplayButton(getSize() - 6, Material.EMERALD, "&aRecopy Duplicates", p -> {
-            if (!ArenaDuplicator.isAvailable()) {
+            if (!FaweSupport.isAvailable()) {
                 p.sendMessage(CC.error("FastAsyncWorldEdit is not installed."));
                 return;
             }
