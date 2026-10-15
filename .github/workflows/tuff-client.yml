@@ -9,6 +9,10 @@ on:
     paths: [ "tuff-client/**", ".github/workflows/tuff-client.yml" ]
   workflow_dispatch:
 
+concurrency:
+  group: tuff-client-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   mod:
     name: Fabric mod
@@ -35,6 +39,7 @@ jobs:
     name: Fabric mod in-game test
     needs: mod
     runs-on: ubuntu-24.04
+    timeout-minutes: 25
     defaults:
       run:
         working-directory: tuff-client/mod
@@ -48,7 +53,10 @@ jobs:
       - name: Install a virtual display and software OpenGL
         run: sudo apt-get update && sudo apt-get install -y xvfb mesa-utils libgl1-mesa-dri
       - name: Run client game test
-        run: xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runClientGameTest --stacktrace
+        run: timeout 15m xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runClientGameTest --stacktrace
+      - name: Show game log
+        if: failure()
+        run: find . -name latest.log -path '*logs*' -exec tail -n 150 {} \;
       - uses: actions/upload-artifact@v4
         if: always()
         with:
