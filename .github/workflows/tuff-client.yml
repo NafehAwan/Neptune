@@ -29,6 +29,19 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Build
         run: ./gradlew build --stacktrace
+      - name: Dump camera FOV code (temporary diagnostics)
+        run: |
+          JAR=""
+          for j in $(find ~/.gradle/caches/fabric-loom .gradle/loom-cache -name '*.jar' 2>/dev/null); do
+            if unzip -l "$j" 2>/dev/null | grep -q 'net/minecraft/client/Minecraft.class'; then JAR="$j"; break; fi
+          done
+          for c in net.minecraft.client.Camera net.minecraft.client.renderer.GameRenderer net.minecraft.client.renderer.state.level.CameraRenderState; do
+            echo "=== $c"; javap -p -cp "$JAR" "$c" | grep -iE "fov|projection|class|float|record" | head -60 || true
+          done
+          echo "=== Camera bytecode around fov"
+          javap -p -c -cp "$JAR" net.minecraft.client.Camera | grep -iE -B3 -A3 "fov" | head -150 || true
+          echo "=== GameRenderer bytecode around fov"
+          javap -p -c -cp "$JAR" net.minecraft.client.renderer.GameRenderer | grep -iE -B3 -A3 "fov" | head -150 || true
       - uses: actions/upload-artifact@v4
         with:
           name: tuff-mod
