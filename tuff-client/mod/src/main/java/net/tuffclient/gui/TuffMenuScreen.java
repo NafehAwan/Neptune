@@ -167,8 +167,9 @@ public final class TuffMenuScreen extends Screen {
 		g.text(font, font.plainSubstrByWidth(m.name, w - 40), x + 7, y + 7, Theme.TEXT);
 		String chip = m.category.label.toUpperCase();
 		g.text(font, chip, x + 7, y + CARD_H - 13, Theme.FAINT);
-		List<net.minecraft.util.FormattedCharSequence> desc = font.split(Component.literal(m.description), w - 14);
-		if (!desc.isEmpty()) g.text(font, desc.getFirst(), x + 7, y + 19, Theme.MUTED);
+		String desc = m.description;
+		if (font.width(desc) > w - 14) desc = font.plainSubstrByWidth(desc, w - 14 - font.width("...")).stripTrailing() + "...";
+		g.text(font, desc, x + 7, y + 19, Theme.MUTED);
 		float anim = Theme.approach(toggleAnim.getOrDefault(m, m.isEnabled() ? 1f : 0f), m.isEnabled() ? 1 : 0, dt, 16);
 		toggleAnim.put(m, anim);
 		int tx = x + w - 25, ty = y + 7;

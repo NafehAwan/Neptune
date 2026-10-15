@@ -4,7 +4,7 @@ import net.minecraft.client.Minecraft;
 
 public final class MemoryModule extends TextHudModule {
 	public MemoryModule() {
-		super("memory", "Memory", "Java heap in use, to spot memory pressure.", "RAM", 0.006, 0.31, false);
+		super("memory", "Memory", "Java heap in use, to spot memory pressure.", "RAM", 0.006, 0.4, false);
 	}
 
 	@Override

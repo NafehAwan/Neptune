@@ -11,7 +11,7 @@ public final class SpeedModule extends TextHudModule {
 	private boolean primed;
 
 	public SpeedModule() {
-		super("speed", "Speed", "How fast you're moving, in blocks per second.", "Speed", 0.006, 0.24, false);
+		super("speed", "Speed", "How fast you're moving, in blocks per second.", "Speed", 0.006, 0.33, false);
 	}
 
 	@Override

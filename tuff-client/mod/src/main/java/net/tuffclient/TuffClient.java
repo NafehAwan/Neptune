@@ -26,6 +26,10 @@ public final class TuffClient implements ClientModInitializer {
 		return modules;
 	}
 
+	public static KeyMapping zoomKey() {
+		return zoomKey;
+	}
+
 	@Override
 	public void onInitializeClient() {
 		modules = new ModuleManager();

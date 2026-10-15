@@ -12,7 +12,7 @@ public final class CoordinatesModule extends HudModule {
 	private final BoolSetting direction = add(new BoolSetting("direction", "Show direction", true));
 
 	public CoordinatesModule() {
-		super("coordinates", "Coordinates", "Your position and the direction you're facing.", 0.006, 0.1, true);
+		super("coordinates", "Coordinates", "Your position and the direction you're facing.", 0.006, 0.15, true);
 	}
 
 	@Override

@@ -54,8 +54,9 @@ public final class HudEditorScreen extends Screen {
 
 		String help = "Drag to move · Scroll to resize · Right-click to reset size · Esc when done";
 		int hw = font.width(help) + 12;
-		Theme.panel(g, width / 2 - hw / 2, 6, width / 2 + hw / 2, 22, 0xE0141614, Theme.BORDER_STRONG);
-		Theme.centered(g, font, help, width / 2, 10, Theme.MUTED);
+		int hy = height - 52;
+		Theme.panel(g, width / 2 - hw / 2, hy, width / 2 + hw / 2, hy + 16, 0xE0141614, Theme.BORDER_STRONG);
+		Theme.centered(g, font, help, width / 2, hy + 4, Theme.MUTED);
 
 		int bw = 90, bx = width / 2 - bw / 2, by = height - 28;
 		Theme.pixelButton(g, bx, by, bx + bw, by + 18, Theme.inside(mouseX, mouseY, bx, by, bx + bw, by + 18) ? 1 : 0);

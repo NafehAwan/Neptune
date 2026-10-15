@@ -12,7 +12,7 @@ public final class CpsModule extends TextHudModule {
 	private static boolean wasRight;
 
 	public CpsModule() {
-		super("cps", "CPS", "Left and right clicks per second.", "CPS", 0.006, 0.055, true);
+		super("cps", "CPS", "Left and right clicks per second.", "CPS", 0.006, 0.08, true);
 	}
 
 	/** Called from the HUD render every frame, even when this module is hidden, so Keystrokes can reuse it. */

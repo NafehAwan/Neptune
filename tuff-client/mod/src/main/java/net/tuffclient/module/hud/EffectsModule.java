@@ -17,7 +17,7 @@ public final class EffectsModule extends HudModule {
 	private static final String[] ROMAN = {"", " II", " III", " IV", " V", " VI", " VII", " VIII", " IX", " X"};
 
 	public EffectsModule() {
-		super("effects", "Potion Effects", "Active effects with time remaining.", 0.006, 0.4, false);
+		super("effects", "Potion Effects", "Active effects with time remaining.", 0.006, 0.48, false);
 	}
 
 	@Override

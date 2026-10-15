@@ -20,13 +20,20 @@ public final class ArmorModule extends HudModule {
 	@Override
 	public void render(GuiGraphicsExtractor g, Font font, boolean preview) {
 		LocalPlayer player = Minecraft.getInstance().player;
-		int y = 2, w = 22;
-		boolean any = false;
-		if (background.get()) g.fill(0, 0, width, height, 0x9A101210);
+		java.util.List<ItemStack> stacks = new java.util.ArrayList<>();
 		for (EquipmentSlot slot : SLOTS) {
 			ItemStack stack = player == null ? ItemStack.EMPTY : player.getItemBySlot(slot);
-			if (stack.isEmpty()) continue;
-			any = true;
+			if (!stack.isEmpty()) stacks.add(stack);
+		}
+		if (stacks.isEmpty() && !preview) {
+			width = 0;
+			height = 0;
+			return;
+		}
+		int y = 2, w = 22;
+		boolean any = !stacks.isEmpty();
+		if (background.get()) g.fill(0, 0, width, height, 0x9A101210);
+		for (ItemStack stack : stacks) {
 			g.item(stack, 2, y);
 			String text;
 			int color = textColor();

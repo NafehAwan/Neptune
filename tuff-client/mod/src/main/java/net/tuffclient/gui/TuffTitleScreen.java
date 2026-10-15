@@ -48,8 +48,16 @@ public final class TuffTitleScreen extends Screen {
 		return Math.min(200, width - 40);
 	}
 
+	private static final int BUTTON_H = 20;
+
+	private int gap() {
+		return height < 300 ? 4 : 6;
+	}
+
+	/** Keeps the whole button stack clear of the footer on short screens. */
 	private int buttonsTop() {
-		return height / 2 + 4;
+		int stack = entries.size() * BUTTON_H + (entries.size() - 1) * gap();
+		return Math.max(height / 4 + 30, Math.min(height / 2 + 4, height - 20 - stack));
 	}
 
 	@Override
@@ -66,11 +74,14 @@ public final class TuffTitleScreen extends Screen {
 		float bob = (float) Math.sin(now / 1e9 * 0.9) * 2;
 
 		// Wordmark: the game font scaled up stays pixel-perfect.
-		int scale = Math.max(3, Math.min(6, height / 60));
+		// Fit the wordmark into the space above the buttons.
+		int room = buttonsTop() - 12;
+		int scale = Math.max(2, Math.min(6, (room - 22) / 9));
 		String word = "TUFF";
 		int wordWidth = font.width(word) * scale;
+		int wordHeight = 8 * scale + 15;
 		int wx = width / 2 - wordWidth / 2;
-		int wy = Math.round(height * 0.17f + bob);
+		int wy = Math.round(Math.max(4, (room - wordHeight) / 2f) + bob);
 		g.pose().pushMatrix();
 		g.pose().translate(wx, wy);
 		g.pose().scale(scale);
@@ -80,7 +91,7 @@ public final class TuffTitleScreen extends Screen {
 		String sub = "C L I E N T";
 		g.text(font, sub, width / 2 - font.width(sub) / 2, wy + 8 * scale + 6, Theme.alpha(Theme.COPPER_HI, fadeIn), false);
 
-		int bw = buttonWidth(), bh = 20, gap = 6;
+		int bw = buttonWidth(), bh = BUTTON_H, gap = gap();
 		int x = width / 2 - bw / 2;
 		int y = buttonsTop();
 		for (int i = 0; i < entries.size(); i++) {
@@ -102,16 +113,16 @@ public final class TuffTitleScreen extends Screen {
 		}
 
 		g.text(font, version, 6, height - 12, Theme.alpha(Theme.MUTED, fadeIn));
-		String legal = "Copyright Mojang AB. Do not distribute!";
+		String legal = width - font.width(version) - 20 > font.width("Copyright Mojang AB. Do not distribute!") ? "Copyright Mojang AB. Do not distribute!" : "© Mojang AB";
 		g.text(font, legal, width - font.width(legal) - 6, height - 12, Theme.alpha(Theme.FAINT, fadeIn));
 		String hint = "Right Shift opens the Tuff menu in game";
-		g.text(font, hint, width - font.width(hint) - 6, 6, Theme.alpha(Theme.FAINT, fadeIn));
+		if (width > font.width(hint) * 2 + 40) g.text(font, hint, width - font.width(hint) - 6, 6, Theme.alpha(Theme.FAINT, fadeIn));
 	}
 
 	@Override
 	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
 		if (event.button() == 0) {
-			int bw = buttonWidth(), bh = 20, gap = 6;
+			int bw = buttonWidth(), bh = BUTTON_H, gap = gap();
 			int x = width / 2 - bw / 2;
 			for (int i = 0; i < entries.size(); i++) {
 				int top = buttonsTop() + i * (bh + gap);

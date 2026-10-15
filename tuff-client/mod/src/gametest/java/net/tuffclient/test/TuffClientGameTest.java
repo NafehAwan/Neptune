@@ -4,6 +4,7 @@ import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.world.effect.MobEffects;
 import net.tuffclient.TuffClient;
 import net.tuffclient.gui.HudEditorScreen;
 import net.tuffclient.gui.TuffMenuScreen;
@@ -41,17 +42,25 @@ public class TuffClientGameTest implements FabricClientGameTest {
 			context.takeScreenshot("tuff-menu-ingame");
 			context.setScreen(() -> null);
 
-			// Zoom and fullbright must not crash when toggled in a world.
-			context.runOnClient(client -> {
-				TuffClient.modules().fullbright.setEnabled(true);
-				TuffClient.modules().zoom.setHeld(true);
-			});
-			context.waitTicks(20);
-			context.takeScreenshot("tuff-zoom-fullbright");
-			context.runOnClient(client -> {
-				TuffClient.modules().zoom.setHeld(false);
-				TuffClient.modules().fullbright.setEnabled(false);
-			});
+			// Zoom: holding the key must narrow the camera's field of view.
+			float normalFov = context.computeOnClient(client -> client.gameRenderer.mainCamera().getFov());
+			context.getInput().holdKey(TuffClient.zoomKey());
+			context.waitTicks(30);
+			float zoomedFov = context.computeOnClient(client -> client.gameRenderer.mainCamera().getFov());
+			context.takeScreenshot("tuff-zoom");
+			context.getInput().releaseKey(TuffClient.zoomKey());
+			if (!(zoomedFov < normalFov * 0.5f)) {
+				throw new AssertionError("Zoom did not narrow the FOV: " + normalFov + " -> " + zoomedFov);
+			}
+
+			// Fullbright applies a hidden night vision effect and removes it again.
+			context.runOnClient(client -> TuffClient.modules().fullbright.setEnabled(true));
+			context.waitTicks(5);
+			boolean lit = context.computeOnClient(client -> client.player.hasEffect(MobEffects.NIGHT_VISION));
+			context.runOnClient(client -> TuffClient.modules().fullbright.setEnabled(false));
+			context.waitTicks(2);
+			boolean cleared = context.computeOnClient(client -> !client.player.hasEffect(MobEffects.NIGHT_VISION));
+			if (!lit || !cleared) throw new AssertionError("Fullbright effect state was wrong: on=" + lit + " cleared=" + cleared);
 		}
 
 		// Leaving the world lands on the Tuff title screen again; the test
