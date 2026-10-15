@@ -98,9 +98,16 @@ cd tuff-client/mod
 
 ## CI
 
-`.github/workflows/tuff-client.yml` builds the mod, bundles it into the
-launcher, runs the Rust tests and type checks, and uploads the `.deb` and mod
-jar as artifacts.
+`.github/workflows/tuff-client.yml`:
+
+- builds the mod and uploads the jar;
+- boots real Minecraft with the mod (Fabric client game test on Mesa's software
+  Vulkan driver). The test checks that the Tuff title screen replaces the
+  vanilla one, opens the mod menu and HUD editor in a world, checks that zoom
+  magnifies the rendered image and that fullbright toggles cleanly, and saves
+  screenshots of each step (`./gradlew runClientGameTest` locally);
+- bundles the mod into the launcher, runs the Rust tests and Svelte type
+  checks, and uploads the `.deb`.
 
 Tuff Client is not an official Minecraft product and is not approved by or
 associated with Mojang or Microsoft.
