@@ -1,0 +1,106 @@
+name: Tuff Client
+
+on:
+  push:
+    branches: [ "master", "claude/**" ]
+    paths: [ "tuff-client/**", ".github/workflows/tuff-client.yml" ]
+  pull_request:
+    branches: [ "master" ]
+    paths: [ "tuff-client/**", ".github/workflows/tuff-client.yml" ]
+  workflow_dispatch:
+
+jobs:
+  mod:
+    name: Fabric mod
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: tuff-client/mod
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build
+        run: ./gradlew build --stacktrace
+      - name: Dump Minecraft API used by the mod
+        if: always()
+        run: |
+          JAR=$(find ~/.gradle/caches/fabric-loom -name '*.jar' -path '*minecraft*' -printf '%s %p\n' 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2)
+          echo "jar: $JAR"
+          [ -n "$JAR" ] || exit 0
+          for c in \
+            net.minecraft.client.gui.GuiGraphicsExtractor net.minecraft.client.gui.screens.Screen \
+            net.minecraft.client.input.MouseButtonEvent net.minecraft.client.input.KeyEvent \
+            net.minecraft.client.input.CharacterEvent net.minecraft.client.input.InputWithModifiers \
+            net.minecraft.client.gui.Font net.minecraft.client.KeyMapping net.minecraft.client.gui.Gui \
+            net.minecraft.client.multiplayer.PlayerInfo net.minecraft.client.multiplayer.ServerData \
+            net.minecraft.client.resources.sounds.SimpleSoundInstance net.minecraft.client.Camera \
+            net.minecraft.world.effect.MobEffectInstance net.minecraft.client.OptionInstance; do
+            echo "=== $c"; javap -cp "$JAR" "$c" || true
+          done
+          for c in net.minecraft.client.Minecraft net.minecraft.client.Options net.minecraft.client.player.LocalPlayer \
+            net.minecraft.world.entity.LivingEntity net.minecraft.world.entity.Entity \
+            net.minecraft.client.renderer.GameRenderer net.minecraft.client.multiplayer.ClientPacketListener \
+            com.mojang.blaze3d.platform.InputConstants net.minecraft.sounds.SoundEvents net.minecraft.world.item.ItemStack; do
+            echo "=== $c (filtered)"
+            javap -cp "$JAR" "$c" | grep -iE "fps|gui|options|player|level|key(up|down|left|right|jump|attack|use|sprint|shift)|hidegui|getx|gety|getz|yrot|xrot|effect|armor|itemBySlot|connection|currentServer|playerInfo|latency|fov|gamma|light|setScreen|screen|setSprint|isSprint|KEY_(ESCAPE|BACKSPACE|RETURN|ENTER|A |C )|UI_BUTTON|damage|maxDamage|isEmpty|getCount|getHoverName|font|window|guiScale|deltaPartial|getUUID|camera|zoom|tick" | head -150 || true
+          done
+          echo "=== screens / light classes"
+          unzip -l "$JAR" | grep -oE "net/minecraft/client/(gui/screens/(options|worldselection|multiplayer)/[A-Za-z]+Screen|renderer/[A-Za-z]*Light[A-Za-z]*|gui/[A-Za-z]+)\.class" | sort -u | head -120
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tuff-mod
+          path: tuff-client/mod/build/libs/tuff-client-*.jar
+          if-no-files-found: warn
+
+  launcher:
+    name: Launcher (.deb)
+    needs: mod
+    if: always()
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: tuff-client/launcher
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch the Tuff mod build
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: tuff-mod
+          path: tuff-client/launcher/mod-build
+      - name: Bundle the mod
+        run: |
+          JAR=$(ls mod-build/tuff-client-*.jar 2>/dev/null | grep -vE 'sources|dev' | head -1 || true)
+          if [ -n "$JAR" ]; then cp "$JAR" src-tauri/resources/tuff-mod.jar; echo "bundled $JAR"; else echo "::warning::Tuff mod jar not available; building the launcher without it"; fi
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libssl-dev patchelf
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tuff-client/launcher/package-lock.json
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: tuff-client/launcher/src-tauri
+      - run: npm ci
+      - run: npm run check
+      - name: Rust tests
+        working-directory: tuff-client/launcher/src-tauri
+        run: cargo test --locked
+      - name: Build .deb
+        env:
+          TUFF_MS_CLIENT_ID: ${{ secrets.TUFF_MS_CLIENT_ID }}
+          TUFF_DISCORD_APP_ID: ${{ secrets.TUFF_DISCORD_APP_ID }}
+        run: npx tauri build --bundles deb
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tuff-client-deb
+          path: tuff-client/launcher/src-tauri/target/release/bundle/deb/*.deb
+          if-no-files-found: error
