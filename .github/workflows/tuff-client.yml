@@ -28,7 +28,10 @@ jobs:
       - name: Dump Minecraft API used by the mod
         if: always()
         run: |
-          JAR=$(find ~/.gradle/caches/fabric-loom -name '*.jar' -path '*minecraft*' -printf '%s %p\n' 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2)
+          JAR=""
+          for j in $(find ~/.gradle/caches/fabric-loom -name '*.jar' 2>/dev/null); do
+            if unzip -l "$j" 2>/dev/null | grep -q 'net/minecraft/client/Minecraft.class'; then JAR="$j"; break; fi
+          done
           echo "jar: $JAR"
           [ -n "$JAR" ] || exit 0
           for c in \
@@ -38,7 +41,9 @@ jobs:
             net.minecraft.client.gui.Font net.minecraft.client.KeyMapping net.minecraft.client.gui.Gui \
             net.minecraft.client.multiplayer.PlayerInfo net.minecraft.client.multiplayer.ServerData \
             net.minecraft.client.resources.sounds.SimpleSoundInstance net.minecraft.client.Camera \
-            net.minecraft.world.effect.MobEffectInstance net.minecraft.client.OptionInstance; do
+            net.minecraft.world.effect.MobEffectInstance net.minecraft.client.OptionInstance \\
+            net.minecraft.client.gui.screens.TitleScreen net.minecraft.client.ToggleKeyMapping net.minecraft.client.DeltaTracker \\
+            net.minecraft.client.gui.components.Button net.minecraft.client.gui.Hud; do
             echo "=== $c"; javap -cp "$JAR" "$c" || true
           done
           for c in net.minecraft.client.Minecraft net.minecraft.client.Options net.minecraft.client.player.LocalPlayer \
