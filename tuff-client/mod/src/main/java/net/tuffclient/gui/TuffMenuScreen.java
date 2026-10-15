@@ -153,7 +153,8 @@ public final class TuffMenuScreen extends Screen {
 	 */
 	private float zoom() {
 		int gs = Ui.guiScale();
-		float unit = Math.max(1, Math.min(gs, height * gs / VIRTUAL_HEIGHT));
+		// Small windows keep at least 1.5 physical pixels per unit so text stays readable.
+		float unit = Math.min(gs, Math.max(1.5f, height * gs / VIRTUAL_HEIGHT));
 		return unit / gs;
 	}
 
