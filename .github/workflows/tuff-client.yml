@@ -51,7 +51,7 @@ jobs:
           distribution: 'temurin'
       - uses: gradle/actions/setup-gradle@v4
       - name: Install software rendering drivers
-        run: sudo apt-get update && sudo apt-get install -y mesa-vulkan-drivers libgl1-mesa-dri libglx-mesa0 libegl-mesa0 xvfb
+        run: sudo apt-get update && sudo apt-get install -y mesa-vulkan-drivers libgl1-mesa-dri libglx-mesa0 libegl-mesa0 xvfb imagemagick
       - name: Run client game test
         # Same setup as Fabric API's own client tests: Mesa's software Vulkan driver.
         run: |
@@ -60,7 +60,7 @@ jobs:
         if: always()
         run: |
           for f in $(find . -path '*screenshots*' -name '*.png' | sort); do
-            convert "$f" -resize 960x -quality 70 /tmp/preview.jpg
+            convert "$f" -resize 960x -quality 70 /tmp/preview.jpg || continue
             echo "SHOT $(basename "$f") $(base64 -w0 /tmp/preview.jpg)"
           done
       - name: Show game log
