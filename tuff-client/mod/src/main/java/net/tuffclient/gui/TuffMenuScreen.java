@@ -244,9 +244,9 @@ public final class TuffMenuScreen extends Screen {
 		float slide = (1 - pageFade) * 6;
 		switch (page) {
 			case MODS -> mods(g, mouseX, mouseY, x, y + slide, w, h, pa);
-			case THEME -> theme(g, mouseX, mouseY, x, y + 12 + slide, w, h - 12, pa);
-			case PACKS -> packs(g, mouseX, mouseY, x, y + 12 + slide, w, h - 12, pa);
-			case SETTINGS -> settings(g, mouseX, mouseY, x, y + 12 + slide, w, h - 12, pa);
+			case THEME -> theme(g, mouseX, mouseY, x, y + 20 + slide, w, h - 20, pa);
+			case PACKS -> packs(g, mouseX, mouseY, x, y + 20 + slide, w, h - 20, pa);
+			case SETTINGS -> settings(g, mouseX, mouseY, x, y + 20 + slide, w, h - 20, pa);
 		}
 		if (page != Page.MODS) pageTitle(g, x, y, pa);
 		topBar(g, mouseX, mouseY, x, y, w, a);
@@ -335,8 +335,8 @@ public final class TuffMenuScreen extends Screen {
 			case SETTINGS -> "Title screen, keybinds and HUD";
 			default -> "";
 		};
-		Ui.text(g, page.label, x + 18, y + TOP + 9, Theme.alpha(Theme.TEXT, a), Ui.Font.TITLE);
-		Ui.text(g, subtitle, x + 24 + Ui.width(page.label, Ui.Font.TITLE), y + TOP + 14, Theme.alpha(Theme.MUTED, a), Ui.Font.BODY);
+		Ui.text(g, page.label, x + 18, y + TOP + 13, Theme.alpha(Theme.TEXT, a), Ui.Font.TITLE);
+		Ui.text(g, subtitle, x + 26 + Ui.width(page.label, Ui.Font.TITLE), y + TOP + 18.5f, Theme.alpha(Theme.MUTED, a), Ui.Font.BODY);
 	}
 
 	// ------------------------------------------------------------------ mods page

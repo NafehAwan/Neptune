@@ -10,7 +10,7 @@ tuff-client/
   art/        source for the painted Trial Chamber layers, emblem and icons
 ```
 
-Both use the Inter typeface (SIL Open Font License) and the same painted
+Both use the Poppins typeface (SIL Open Font License) and the same painted
 chamber art, so the launcher and the game look alike.
 
 ## Launcher
@@ -86,10 +86,11 @@ profiles automatically.
   bulbs, a glowing spawner and drifting embers, drawn at full screen
   resolution. Rounded buttons, an account chip, and a toolbar that opens the
   menu on any page.
-- **Mod menu** (Right Shift): a sidebar with Mods, Theme, Packs, Settings and
-  Edit HUD.
-  - *Mods*: tabs with counts, a grid of cards with icons and animated toggles,
-    type-to-search, and a settings drawer (switches, choices and sliders).
+- **Mod menu** (Right Shift): a wide window with a top bar (Mods, Theme, Packs,
+  Settings, Edit HUD) that keeps a steady size at any GUI scale.
+  - *Mods*: category tabs with counts and a grid of cards, each with a large
+    icon and a green ENABLED / red DISABLED bar. Type to search; right-click or
+    the gear opens a settings drawer (switches, choices and sliders).
   - *Theme*: accent color (Copper, Amethyst, Mint, Sky, Rose, Gold), background
     blur and animations.
   - *Packs*: enable, disable and reorder resource packs.
@@ -99,7 +100,7 @@ profiles automatically.
 - **HUD modules**: FPS, CPS, Keystrokes, Armor Status, Coordinates and
   direction, Ping, Potion Effects, Clock, Server address, Speed, Memory.
 - **Utility and visual**: Zoom (hold C, smooth and with optional cinematic
-  camera), Fullbright, Toggle Sprint, Custom Crosshair, Hide Scoreboard.
+  camera), Fullbright, Toggle Sprint, Crosshair, Hide Scoreboard.
 
 Settings are saved to `config/tuff/config.json`.
 

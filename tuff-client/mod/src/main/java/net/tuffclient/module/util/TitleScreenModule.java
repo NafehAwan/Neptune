@@ -9,6 +9,6 @@ public final class TitleScreenModule extends Module {
 	public final BoolSetting animate = add(new BoolSetting("animate", "Animated background", true));
 
 	public TitleScreenModule() {
-		super("title_screen", "Tuff title screen", "The animated Trial Chamber title screen. Turn off for the vanilla menu.", Category.VISUAL, true);
+		super("title_screen", "Title Screen", "The animated Trial Chamber title screen. Turn off for the vanilla menu.", Category.VISUAL, true);
 	}
 }

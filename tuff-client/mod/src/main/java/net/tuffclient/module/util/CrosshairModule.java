@@ -18,7 +18,7 @@ public final class CrosshairModule extends Module {
 	public final BoolSetting outline = add(new BoolSetting("outline", "Outline", true));
 
 	public CrosshairModule() {
-		super("crosshair", "Custom Crosshair", "Pick your own crosshair shape and color.", Category.VISUAL, false);
+		super("crosshair", "Crosshair", "Pick your own crosshair shape and color.", Category.VISUAL, false);
 	}
 
 	public void render(GuiGraphicsExtractor g) {
