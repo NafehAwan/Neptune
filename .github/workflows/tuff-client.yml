@@ -62,8 +62,14 @@ jobs:
         if: always()
         run: |
           for f in $(find . -path '*screenshots*' -name '*.png' | sort); do
+            echo "Screenshot $(basename "$f"): $(identify -format '%wx%h' "$f")"
             convert "$f" -resize 960x -quality 70 /tmp/preview.jpg || continue
             echo "SHOT $(basename "$f") $(base64 -w0 /tmp/preview.jpg)"
+          done
+          # Full-resolution crops show real text quality.
+          for f in $(find . -path '*screenshots*' -name '*tuff-menu-mods*.png' -o -path '*screenshots*' -name '*tuff-title*.png' | sort); do
+            convert "$f" -gravity center -crop 640x360+0+0 +repage -quality 92 /tmp/crop.jpg || continue
+            echo "SHOT crop-$(basename "$f") $(base64 -w0 /tmp/crop.jpg)"
           done
       - name: Show game log
         if: failure()

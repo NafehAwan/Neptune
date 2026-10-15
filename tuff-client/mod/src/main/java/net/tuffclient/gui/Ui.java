@@ -18,12 +18,22 @@ public final class Ui {
 	public enum Font {
 		BODY("body"), MEDIUM("medium"), SEMIBOLD("semibold"), BOLD("bold"), TITLE("title"), HERO("hero");
 
-		final FontDescription description;
+		/** One copy per oversample level, so glyphs are rasterised near the size they are shown at. */
+		private final FontDescription[] variants = new FontDescription[MAX_OVERSAMPLE];
 
 		Font(String id) {
-			description = new FontDescription.Resource(Identifier.fromNamespaceAndPath(TuffClient.MOD_ID, id));
+			for (int i = 0; i < MAX_OVERSAMPLE; i++) {
+				variants[i] = new FontDescription.Resource(Identifier.fromNamespaceAndPath(TuffClient.MOD_ID, id + "_" + (i + 1)));
+			}
+		}
+
+		FontDescription description() {
+			int oversample = (int) Math.ceil(scale() - 0.2f);
+			return variants[Math.max(1, Math.min(MAX_OVERSAMPLE, oversample)) - 1];
 		}
 	}
+
+	private static final int MAX_OVERSAMPLE = 6;
 
 	private static final int[] RADII = {4, 8, 16, 32};
 	private static final Identifier[] ROUND = new Identifier[RADII.length];
@@ -47,7 +57,7 @@ public final class Ui {
 	// ------------------------------------------------------------------ text
 
 	public static Component text(String s, Font font) {
-		return Component.literal(s).withStyle(style -> style.withFont(font.description));
+		return Component.literal(s).withStyle(style -> style.withFont(font.description()));
 	}
 
 	public static int width(String s, Font font) {
