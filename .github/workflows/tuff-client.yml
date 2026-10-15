@@ -43,15 +43,17 @@ jobs:
             net.minecraft.client.resources.sounds.SimpleSoundInstance net.minecraft.client.Camera \
             net.minecraft.world.effect.MobEffectInstance net.minecraft.client.OptionInstance \
             net.minecraft.client.gui.screens.TitleScreen net.minecraft.client.ToggleKeyMapping net.minecraft.client.DeltaTracker \
-            net.minecraft.client.gui.components.Button net.minecraft.client.gui.Hud; do
+            net.minecraft.client.gui.components.Button net.minecraft.client.gui.Hud net.minecraft.client.CameraType \
+            net.minecraft.client.gui.screens.worldselection.SelectWorldScreen net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen \
+            net.minecraft.client.gui.screens.options.OptionsScreen; do
             echo "=== $c"; javap -cp "$JAR" "$c" || true
           done
           for c in net.minecraft.client.Minecraft net.minecraft.client.Options net.minecraft.client.player.LocalPlayer \
             net.minecraft.world.entity.LivingEntity net.minecraft.world.entity.Entity \
             net.minecraft.client.renderer.GameRenderer net.minecraft.client.multiplayer.ClientPacketListener \
-            com.mojang.blaze3d.platform.InputConstants net.minecraft.sounds.SoundEvents net.minecraft.world.item.ItemStack; do
+            com.mojang.blaze3d.platform.InputConstants net.minecraft.sounds.SoundEvents net.minecraft.world.item.ItemStack net.minecraft.world.effect.MobEffects; do
             echo "=== $c (filtered)"
-            javap -cp "$JAR" "$c" | grep -iE "fps|gui|options|player|level|key(up|down|left|right|jump|attack|use|sprint|shift)|hidegui|getx|gety|getz|yrot|xrot|effect|armor|itemBySlot|connection|currentServer|playerInfo|latency|fov|gamma|light|setScreen|screen|setSprint|isSprint|KEY_(ESCAPE|BACKSPACE|RETURN|ENTER|A |C )|UI_BUTTON|damage|maxDamage|isEmpty|getCount|getHoverName|font|window|guiScale|deltaPartial|getUUID|camera|zoom|tick" | head -150 || true
+            javap -cp "$JAR" "$c" | grep -iE "fps|gui|options|player|level|key(up|down|left|right|jump|attack|use|sprint|shift)|hidegui|getx|gety|getz|yrot|xrot|effect|armor|itemBySlot|connection|currentServer|playerInfo|latency|fov|gamma|light|setScreen|screen|setSprint|isSprint|KEY_(ESCAPE|BACKSPACE|RETURN|ENTER|A |C )|UI_BUTTON|damage|maxDamage|isEmpty|getCount|getHoverName|font|window|guiScale|deltaPartial|getUUID|camera|zoom|tick|stop|NIGHT_VISION" | head -150 || true
           done
           echo "=== screens / light classes"
           unzip -l "$JAR" | grep -oE "net/minecraft/client/(gui/screens/(options|worldselection|multiplayer)/[A-Za-z]+Screen|renderer/[A-Za-z]*Light[A-Za-z]*|gui/[A-Za-z]+)\.class" | sort -u | head -120
