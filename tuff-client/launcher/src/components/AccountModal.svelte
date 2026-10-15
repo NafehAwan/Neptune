@@ -98,7 +98,7 @@
     padding: 18px; background: var(--bg); border: 1px dashed var(--accent-deep); border-radius: 8px;
     color: var(--accent-hover); cursor: pointer;
   }
-  .code .pixel { font-size: 28px; letter-spacing: 0.12em; }
+  .code .pixel { font-size: 28px; font-weight: 750; letter-spacing: 0.14em; font-variant-numeric: tabular-nums; }
   .waiting { font-size: 13px; }
   .big { height: 42px; }
   form { display: grid; gap: 12px; }

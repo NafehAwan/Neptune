@@ -149,7 +149,7 @@
 
   {#snippet footer()}
     <button class="btn ghost" onclick={onclose}>Cancel</button>
-    <button class="btn primary" onclick={save} disabled={saving || !draft.name.trim() || !draft.gameVersion}>{initial ? "SAVE" : "CREATE"}</button>
+    <button class="btn primary" onclick={save} disabled={saving || !draft.name.trim() || !draft.gameVersion}>{initial ? "Save" : "Create"}</button>
   {/snippet}
 </Modal>
 

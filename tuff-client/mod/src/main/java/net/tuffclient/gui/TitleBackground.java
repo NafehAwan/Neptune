@@ -79,11 +79,12 @@ public final class TitleBackground {
 
 		// spawner with a breathing glow
 		float bob = (float) Math.sin(time * 1.2) * 6;
-		float[] sp = toScreen(ART_W / 2f, HORIZON - 70 + bob, pw, ph, k, drift, lift, 0.85f);
+		float[] sp = toScreen(ART_W / 2f, HORIZON - 30 + bob, pw, ph, k, drift, lift, 0.85f);
 		float pulse = 0.8f + (float) (Math.sin(time * 2.1) * 0.12 + Math.sin(time * 7.3) * 0.06);
-		glow(g, sp[0], sp[1] - 40 * k, 700 * k, Theme.alpha(0xFFF08040, 0.35f * pulse));
-		Ui.image(g, SPAWNER, sp[0] - 260 * k, sp[1] - 260 * k - 30 * k, 520 * k, 520 * k, 520, 520, 0xFFFFFFFF);
-		glow(g, sp[0], sp[1] - 50 * k, 220 * k, Theme.alpha(0xFFFFD08A, 0.45f * pulse));
+		float size = 380 * k;
+		glow(g, sp[0], sp[1] - 30 * k, 520 * k, Theme.alpha(0xFFF08040, 0.35f * pulse));
+		Ui.image(g, SPAWNER, sp[0] - size / 2, sp[1] - size * 0.56f, size, size, 520, 520, 0xFFFFFFFF);
+		glow(g, sp[0], sp[1] - 36 * k, 160 * k, Theme.alpha(0xFFFFD08A, 0.45f * pulse));
 
 		// embers and dust
 		for (int i = 0; i < EMBERS; i++) {
@@ -132,8 +133,8 @@ public final class TitleBackground {
 			elife[i] += dt;
 			if (elife[i] >= emax[i]) {
 				if (random.nextFloat() < dt * 10) {
-					ex[i] = ART_W / 2f + (random.nextFloat() - 0.5f) * 140;
-					ey[i] = HORIZON - 130;
+					ex[i] = ART_W / 2f + (random.nextFloat() - 0.5f) * 100;
+					ey[i] = HORIZON - 90;
 					evx[i] = (random.nextFloat() - 0.5f) * 24;
 					evy[i] = -(40 + random.nextFloat() * 70);
 					elife[i] = 0;

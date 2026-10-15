@@ -1,5 +1,5 @@
 <script lang="ts">
-  import logo from "../assets/logo.svg";
+  import logo from "../assets/chamber/emblem.png";
   import { app, go, type Route } from "../lib/state.svelte";
   import Icon from "./Icon.svelte";
 
@@ -27,7 +27,7 @@
 
 <nav class="sidebar">
   <button class="logo" onclick={() => go("home")} aria-label="Tuff Client home">
-    <img src={logo} alt="" width="34" height="34" />
+    <img src={logo} alt="" width="36" height="36" />
   </button>
   <div class="group">
     {#each items as i, n}{@render item(i, n + 1)}{/each}
@@ -48,7 +48,7 @@
   }
   .logo { background: none; border: 0; padding: 0; margin-bottom: 22px; cursor: pointer; image-rendering: pixelated; transition: transform var(--med) var(--ease); }
   .logo:hover { transform: rotate(-6deg) scale(1.06); }
-  .logo img { display: block; image-rendering: pixelated; }
+  .logo img { display: block; filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.45)); }
   .group { display: grid; gap: 6px; }
   .bottom { margin-top: auto; }
   .nav {

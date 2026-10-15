@@ -71,7 +71,7 @@
     </div>
     <div class="row">
       <button class="btn ghost" onclick={pingAll} disabled={!servers.length}><Icon name="refresh" size={12} /> Refresh</button>
-      <button class="btn primary" onclick={() => (editing = { id: crypto.randomUUID(), name: "", address: "", profileId: null })}><Icon name="plus" size={12} /> ADD</button>
+      <button class="btn primary" onclick={() => (editing = { id: crypto.randomUUID(), name: "", address: "", profileId: null })}><Icon name="plus" size={12} /> Add server</button>
     </div>
   </div>
 
@@ -108,7 +108,7 @@
           <button class="btn small icon ghost" onclick={() => move(s, 1)} disabled={i === servers.length - 1} title="Move down" aria-label="Move down"><Icon name="chevron" size={10} /></button>
           <button class="btn small icon ghost" onclick={() => (editing = { ...s })} title="Edit"><Icon name="edit" size={12} /></button>
           <button class="btn small icon ghost danger" onclick={() => remove(s)} title="Remove"><Icon name="trash" size={12} /></button>
-          <button class="btn primary joinbtn" onclick={() => join(s)} disabled={!!app.running || !!app.launching}><Icon name="play" size={10} /> JOIN</button>
+          <button class="btn primary joinbtn" onclick={() => join(s)} disabled={!!app.running || !!app.launching}><Icon name="play" size={10} /> Join</button>
         </div>
       </article>
     {/each}
@@ -130,7 +130,7 @@
     </label>
     {#snippet footer()}
       <button class="btn ghost" onclick={() => (editing = null)}>Cancel</button>
-      <button class="btn primary" onclick={saveEdit}>SAVE</button>
+      <button class="btn primary" onclick={saveEdit}>Save</button>
     {/snippet}
   </Modal>
 {/if}

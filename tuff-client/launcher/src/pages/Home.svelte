@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { fly } from "svelte/transition";
-  import ChamberScene from "../components/ChamberScene.svelte";
+  import SmoothChamber from "../components/SmoothChamber.svelte";
+  import emblem from "../assets/chamber/emblem.png";
   import Icon from "../components/Icon.svelte";
   import ProfileIcon from "../components/ProfileIcon.svelte";
   import ProfileModal from "../components/ProfileModal.svelte";
@@ -57,11 +58,12 @@
 </script>
 
 <section class="home">
-  <ChamberScene lowMotion={app.settings?.lowMotion ?? false} />
+  <SmoothChamber lowMotion={app.settings?.lowMotion ?? false} />
 
   <div class="brand" in:fly={{ y: 10, duration: 500 }}>
+    <img class="emblem" src={emblem} alt="" width="88" height="88" />
     <h1 class="word">TUFF</h1>
-    <span class="sub pixel">client</span>
+    <span class="sub">client</span>
     {#if account}<p class="hello">{greeting()}, <strong>{account.name}</strong></p>{/if}
   </div>
 
@@ -131,13 +133,13 @@
 
         {#if running}
           <button class="btn primary play running" onclick={() => api.killGame()}>
-            <span class="label">PLAYING</span>
+            <span class="label">Playing</span>
             <span class="hint">Click to stop</span>
           </button>
         {:else}
           <button class="btn primary play" onclick={() => play(profile.id)} disabled={busy} title="Play (Ctrl+Enter)">
             {#if percent !== null}<span class="fill" style:width="{percent}%"></span>{/if}
-            <span class="label">{#if busy}{percent !== null ? `${percent}%` : "LOADING"}{:else}<Icon name="play" size={14} /> PLAY{/if}</span>
+            <span class="label">{#if busy}{percent !== null ? `${percent}%` : "Loading"}{:else}<Icon name="play" size={14} /> Play{/if}</span>
           </button>
         {/if}
       {:else}
@@ -147,7 +149,7 @@
             <p class="pinfo">Fabric {app.info?.tuffMcVersion}, the Tuff mod and a tuned performance pack, set up in one click.</p>
           </div>
           <button class="btn primary play" onclick={createTuff} disabled={tuffBusy}>
-            <span class="label">{#if tuffBusy}<span class="spinner"></span> SETTING UP{:else}<Icon name="spark" size={14} /> CREATE{/if}</span>
+            <span class="label">{#if tuffBusy}<span class="spinner"></span> Setting up{:else}<Icon name="spark" size={14} /> Create{/if}</span>
           </button>
           <button class="btn ghost" onclick={() => (creating = true)}>Custom profile</button>
         </div>
@@ -163,12 +165,13 @@
 <style>
   .home { position: absolute; inset: 0; overflow: hidden; }
 
-  .brand { position: absolute; left: 0; right: 0; top: 19%; display: grid; justify-items: center; pointer-events: none; animation: float 7s ease-in-out infinite; }
+  .brand { position: absolute; left: 0; right: 0; top: 12%; display: grid; justify-items: center; pointer-events: none; animation: float 7s ease-in-out infinite; }
+  .emblem { width: clamp(64px, 8vw, 96px); height: auto; filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.55)); margin-bottom: 14px; }
   .word {
-    font-size: clamp(64px, 9vw, 112px); line-height: 0.9; letter-spacing: 0.06em; color: #efe9df;
-    text-shadow: 4px 4px 0 var(--accent-deep), 8px 8px 0 rgba(0, 0, 0, 0.45);
+    font-size: clamp(54px, 7vw, 84px); line-height: 0.95; font-weight: 800; letter-spacing: 0.16em; padding-left: 0.16em; color: #f4efe6;
+    text-shadow: 0 6px 30px rgba(0, 0, 0, 0.55);
   }
-  .sub { margin-top: 10px; font-size: 15px; letter-spacing: 0.9em; padding-left: 0.9em; color: var(--accent-hover); text-transform: uppercase; }
+  .sub { margin-top: 8px; font-size: 13px; font-weight: 650; letter-spacing: 0.7em; padding-left: 0.7em; color: var(--accent-hover); text-transform: uppercase; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8); }
   .hello { margin-top: 18px; color: var(--muted); font-size: 13px; text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8); }
   .hello strong { color: var(--text); font-weight: 600; }
   @keyframes float { 50% { transform: translateY(-5px); } }
@@ -223,11 +226,11 @@
   .opt.on { background: rgba(217, 130, 75, 0.1); }
   .picker-foot { display: flex; justify-content: space-between; border-top: 1px solid var(--border); margin-top: 4px; padding-top: 6px; }
 
-  .play { position: relative; width: 230px; height: 56px; font-size: 18px; overflow: hidden; display: grid; place-items: center; }
+  .play { position: relative; width: 220px; height: 52px; font-size: 16px; font-weight: 700; border-radius: 11px; overflow: hidden; display: grid; place-items: center; }
   .play .label { position: relative; display: inline-flex; align-items: center; gap: 10px; }
   .play .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent-hover); transition: width 200ms linear; }
-  .play.running { background: #3c6e40; box-shadow: inset 2px 2px 0 #5c9a60, inset -2px -2px 0 #2a4f2d, 0 0 0 2px #0d0e0d; color: #e9f6e9; grid-template-rows: auto auto; gap: 0; }
-  .play.running:hover { background: var(--danger); box-shadow: inset 2px 2px 0 #ea8077, inset -2px -2px 0 #9e3c33, 0 0 0 2px #0d0e0d; }
+  .play.running { background: linear-gradient(180deg, #5c9a60, #3c6e40); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 6px 18px rgba(111, 191, 115, 0.2); color: #f0faf0; grid-template-rows: auto auto; gap: 0; }
+  .play.running:hover { background: linear-gradient(180deg, #ea8077, var(--danger)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 8px 22px rgba(217, 88, 75, 0.3); }
   .play.running .hint { font: 500 11px var(--font); opacity: 0.8; letter-spacing: 0; }
 
   .first { display: flex; align-items: center; gap: 16px; padding: 4px 4px 4px 12px; }

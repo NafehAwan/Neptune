@@ -158,7 +158,7 @@
       {#if !app.profiles.some((p) => p.isTuff)}
         <button class="btn" onclick={createTuff} disabled={busy}><Icon name="spark" size={12} /> Tuff profile</button>
       {/if}
-      <button class="btn primary" onclick={() => (creating = true)}><Icon name="plus" size={12} /> NEW</button>
+      <button class="btn primary" onclick={() => (creating = true)}><Icon name="plus" size={12} /> New profile</button>
     </div>
   </div>
 
@@ -201,7 +201,7 @@
             </div>
             <div class="actions">
               <button class="btn primary playbtn" disabled={!!app.running || !!app.launching} onclick={() => { selectProfile(selected.id); play(selected.id); }}>
-                <Icon name="play" size={12} /> PLAY
+                <Icon name="play" size={12} /> Play
               </button>
               <div class="row tight">
                 <button class="btn small icon" title="Edit" onclick={() => (editing = selected)}><Icon name="edit" size={12} /></button>

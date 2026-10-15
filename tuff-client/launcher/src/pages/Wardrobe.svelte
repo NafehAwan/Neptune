@@ -184,7 +184,7 @@
             <div class="pending">
               <span class="ellipsis grow">Previewing {pendingPath.split(/[\\/]/).pop()}</span>
               <button class="btn ghost small" onclick={() => { pendingPath = null; showCurrent(); }}>Cancel</button>
-              <button class="btn primary small" onclick={apply} disabled={busy}>APPLY</button>
+              <button class="btn primary small" onclick={apply} disabled={busy}>Apply</button>
             </div>
           {/if}
         </div>

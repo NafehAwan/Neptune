@@ -7,7 +7,6 @@ import net.minecraft.network.chat.Component;
 import net.tuffclient.ModuleManager;
 import net.tuffclient.TuffClient;
 import net.tuffclient.TuffConfig;
-import net.tuffclient.module.Category;
 import net.tuffclient.module.hud.CpsModule;
 import net.tuffclient.module.hud.HudModule;
 
@@ -82,7 +81,7 @@ public final class HudEditorScreen extends Screen {
 	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
 		int bw = 104, bx = width / 2 - bw / 2, by = height - 30;
 		if (Theme.inside(event.x(), event.y(), bx, by, bx + bw, by + 20)) {
-			minecraft.gui.setScreen(new TuffMenuScreen(this, Category.HUD));
+			minecraft.gui.setScreen(new TuffMenuScreen(this, TuffMenuScreen.Page.MODS));
 			return true;
 		}
 		HudModule m = at(event.x(), event.y());
