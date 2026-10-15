@@ -7,7 +7,11 @@ the 1.21 Trial Chambers: tuff stone and copper.
 tuff-client/
   launcher/   Tauri 2 app (Rust backend + Svelte 5 UI), ships as a .deb
   mod/        Tuff Fabric mod for Minecraft 26.3 (bundled into the launcher)
+  art/        source for the painted Trial Chamber layers, emblem and icons
 ```
+
+Both use the Inter typeface (SIL Open Font License) and the same painted
+chamber art, so the launcher and the game look alike.
 
 ## Launcher
 
@@ -78,10 +82,18 @@ named `tuff`, and paste the application ID in Settings → Discord (or build wit
 Fabric mod for Minecraft 26.3 (Java 25). The launcher installs it into Tuff
 profiles automatically.
 
-- **Title screen**: the same animated Trial Chamber as the launcher, drawn
-  pixel-perfect at any GUI scale.
-- **Mod menu** (Right Shift): searchable module cards by category, with
-  toggles and settings (switches, choices and sliders).
+- **Title screen**: the painted Trial Chamber with parallax, flickering copper
+  bulbs, a glowing spawner and drifting embers, drawn at full screen
+  resolution. Rounded buttons, an account chip, and a toolbar that opens the
+  menu on any page.
+- **Mod menu** (Right Shift): a sidebar with Mods, Theme, Packs, Settings and
+  Edit HUD.
+  - *Mods*: tabs with counts, a grid of cards with icons and animated toggles,
+    type-to-search, and a settings drawer (switches, choices and sliders).
+  - *Theme*: accent color (Copper, Amethyst, Mint, Sky, Rose, Gold), background
+    blur and animations.
+  - *Packs*: enable, disable and reorder resource packs.
+  - *Settings*: title screen and background toggles, keybinds, HUD reset.
 - **HUD editor**: drag modules anywhere, with snapping to screen edges, the
   center and other modules. Scroll to resize; right-click to reset.
 - **HUD modules**: FPS, CPS, Keystrokes, Armor Status, Coordinates and
@@ -90,6 +102,17 @@ profiles automatically.
   camera), Fullbright, Toggle Sprint, Custom Crosshair, Hide Scoreboard.
 
 Settings are saved to `config/tuff/config.json`.
+
+### Art
+
+`art/chamber.html` paints the chamber layers on a canvas; `art/render.mjs`
+renders them with Playwright into the mod and the launcher, and
+`art/sprites.py` builds the mod's icon and rounded-corner sprites.
+
+```sh
+PLAYWRIGHT_PATH=$(npm root -g)/playwright node tuff-client/art/render.mjs
+python3 tuff-client/art/sprites.py
+```
 
 ```sh
 cd tuff-client/mod
@@ -103,7 +126,7 @@ cd tuff-client/mod
 - builds the mod and uploads the jar;
 - boots real Minecraft with the mod (Fabric client game test on Mesa's software
   Vulkan driver). The test checks that the Tuff title screen replaces the
-  vanilla one, opens the mod menu and HUD editor in a world, checks that zoom
+  vanilla one, opens every mod menu page, the settings drawer and the HUD editor in a world, checks that zoom
   magnifies the rendered image and that fullbright toggles cleanly, and saves
   screenshots of each step (`./gradlew runClientGameTest` locally);
 - bundles the mod into the launcher, runs the Rust tests and Svelte type
