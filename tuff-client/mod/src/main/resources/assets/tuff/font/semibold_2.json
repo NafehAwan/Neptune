@@ -2,8 +2,8 @@
   "providers": [
     {
       "type": "ttf",
-      "file": "tuff:inter-semibold.ttf",
-      "size": 8.5,
+      "file": "tuff:poppins-semibold.ttf",
+      "size": 9.5,
       "oversample": 2,
       "shift": [
         0,

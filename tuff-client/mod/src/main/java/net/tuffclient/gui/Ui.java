@@ -16,7 +16,11 @@ import net.tuffclient.TuffClient;
  */
 public final class Ui {
 	public enum Font {
-		BODY("body"), MEDIUM("medium"), SEMIBOLD("semibold"), BOLD("bold"), TITLE("title"), HERO("hero");
+		BODY("body"), MEDIUM("medium"), SEMIBOLD("semibold"), BOLD("bold"), TITLE("title"), HERO("hero"),
+		/** Small print: counts, hints, footers. */
+		SMALL("small"),
+		/** Bold small capitals for status bars. */
+		CAPS("caps");
 
 		/** One copy per oversample level, so glyphs are rasterised near the size they are shown at. */
 		private final FontDescription[] variants = new FontDescription[MAX_OVERSAMPLE];

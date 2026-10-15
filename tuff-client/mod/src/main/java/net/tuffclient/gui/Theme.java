@@ -38,6 +38,11 @@ public final class Theme {
 	public static final int INK = 0xFF1A0F08;
 	public static final int ONLINE = 0xFF6FBF73;
 	public static final int DANGER = 0xFFD9584B;
+	/** Status bars on mod cards. */
+	public static final int ENABLED = 0xFF2E9A55;
+	public static final int ENABLED_HI = 0xFF39B565;
+	public static final int DISABLED = 0xFFA8373A;
+	public static final int DISABLED_HI = 0xFFC44448;
 
 	/** Accent colours; reassigned by {@link #apply}. */
 	public static int COPPER = Accent.COPPER.base;

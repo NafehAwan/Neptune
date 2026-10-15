@@ -42,6 +42,8 @@ public class TuffClientGameTest implements FabricClientGameTest {
 
 	@Override
 	public void runTest(ClientGameTestContext context) {
+		// A common 1080p window, so screenshots match what players see.
+		context.getInput().resizeWindow(1920, 1080);
 		// The title screen mixin must have replaced the vanilla menu.
 		context.waitForScreen(TuffTitleScreen.class);
 		context.waitTicks(40);
@@ -57,6 +59,20 @@ public class TuffClientGameTest implements FabricClientGameTest {
 		context.setScreen(() -> menu);
 		context.waitTicks(15);
 		context.takeScreenshot("tuff-menu-mods");
+
+		// Clicking a card's ENABLED/DISABLED bar toggles the module.
+		Module scoreboard = context.computeOnClient(client -> TuffClient.modules().hideScoreboard);
+		boolean before = context.computeOnClient(client -> scoreboard.isEnabled());
+		double[] bar = context.computeOnClient(client -> menu.statusBarPosition(scoreboard.id));
+		if (bar == null) throw new AssertionError("Hide Scoreboard card was not drawn");
+		context.getInput().setCursorPos(bar[0], bar[1]);
+		context.waitTicks(1);
+		context.getInput().pressMouse(0);
+		context.waitTicks(2);
+		if (context.computeOnClient(client -> scoreboard.isEnabled()) == before) throw new AssertionError("Clicking the status bar did not toggle the module");
+		context.waitTicks(12);
+		context.takeScreenshot("tuff-menu-toggled");
+		context.runOnClient(client -> scoreboard.setEnabled(before));
 		context.runOnClient(client -> menu.openSettings(TuffClient.modules().crosshair));
 		context.waitTicks(15);
 		context.takeScreenshot("tuff-menu-drawer");

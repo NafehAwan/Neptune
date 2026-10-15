@@ -106,7 +106,7 @@ public final class TuffTitleScreen extends Screen {
 		float a = stage(0);
 		float firstButton = boxes.getFirst().y();
 		float emblem = Math.max(34, Math.min(64, (firstButton - 52) * 0.55f));
-		float wordH = 30;
+		float wordH = 34;
 		float blockH = emblem + 8 + wordH;
 		float top = Math.max(26, (firstButton - blockH) / 2 + 4) + (1 - a) * 8 + (float) Math.sin(now / 1e9 * 0.8) * 1.2f;
 		Ui.shadow(g, width / 2f - emblem / 2 + 4, top + 4, emblem - 8, emblem - 8, 14, 0.35f * a);
@@ -116,7 +116,7 @@ public final class TuffTitleScreen extends Screen {
 		Ui.spaced(g, "TUFF", width / 2f - ww / 2 + 1, wy + 1, Theme.alpha(0x99000000, a), Ui.Font.HERO, 5);
 		Ui.spaced(g, "TUFF", width / 2f - ww / 2, wy, Theme.alpha(0xFFF4EFE6, a), Ui.Font.HERO, 5);
 		float cw = Ui.spacedWidth("CLIENT", Ui.Font.SEMIBOLD, 4.5f);
-		Ui.spaced(g, "CLIENT", width / 2f - cw / 2, wy + 22, Theme.alpha(Theme.COPPER_HI, a), Ui.Font.SEMIBOLD, 4.5f);
+		Ui.spaced(g, "CLIENT", width / 2f - cw / 2, wy + 26, Theme.alpha(Theme.COPPER_HI, a), Ui.Font.SEMIBOLD, 4.5f);
 
 		// account chip
 		String name = minecraft.getUser().getName();
@@ -179,10 +179,10 @@ public final class TuffTitleScreen extends Screen {
 		}
 
 		float fa = stage(0.4f);
-		Ui.text(g, version, 8, height - 14, Theme.alpha(Theme.MUTED, fa), Ui.Font.BODY);
+		Ui.text(g, version, 8, height - 13, Theme.alpha(Theme.MUTED, fa), Ui.Font.SMALL);
 		String legal = "Copyright Mojang AB. Do not distribute!";
-		if (Ui.width(version, Ui.Font.BODY) + Ui.width(legal, Ui.Font.BODY) + 30 > width) legal = "© Mojang AB";
-		Ui.right(g, legal, width - 8, height - 14, Theme.alpha(Theme.FAINT, fa), Ui.Font.BODY);
+		if (Ui.width(version, Ui.Font.SMALL) + Ui.width(legal, Ui.Font.SMALL) + 30 > width) legal = "© Mojang AB";
+		Ui.right(g, legal, width - 8, height - 13, Theme.alpha(Theme.FAINT, fa), Ui.Font.SMALL);
 	}
 
 	private void label(GuiGraphicsExtractor g, Box b, float y, Button btn, int color) {
@@ -190,7 +190,7 @@ public final class TuffTitleScreen extends Screen {
 		float total = 12 + 6 + textW;
 		float x = b.x() + (b.w() - total) / 2;
 		Ui.icon(g, btn.icon(), x, y + (b.h() - 12) / 2, 12, color);
-		Ui.text(g, btn.label(), x + 18, y + (b.h() - 8) / 2f, color, Ui.Font.SEMIBOLD);
+		Ui.text(g, btn.label(), x + 18, y + (b.h() - 9) / 2f, color, Ui.Font.SEMIBOLD);
 	}
 
 	@Override

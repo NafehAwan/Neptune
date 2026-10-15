@@ -2,8 +2,8 @@
   "providers": [
     {
       "type": "ttf",
-      "file": "tuff:inter-regular.ttf",
-      "size": 8,
+      "file": "tuff:poppins-regular.ttf",
+      "size": 9,
       "oversample": 5,
       "shift": [
         0,

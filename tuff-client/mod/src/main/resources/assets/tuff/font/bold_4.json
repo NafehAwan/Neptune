@@ -2,8 +2,8 @@
   "providers": [
     {
       "type": "ttf",
-      "file": "tuff:inter-bold.ttf",
-      "size": 9,
+      "file": "tuff:poppins-bold.ttf",
+      "size": 10.5,
       "oversample": 4,
       "shift": [
         0,
