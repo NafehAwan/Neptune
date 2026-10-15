@@ -19,16 +19,17 @@ import net.tuffclient.gui.TuffTitleScreen;
 import net.tuffclient.module.Module;
 
 public class TuffClientGameTest implements FabricClientGameTest {
-	/** Counts gold-block-coloured pixels (bright yellow) in a screenshot. */
+	/** Counts gold-coloured pixels in the middle of a screenshot (away from the hand and HUD). */
 	private static long goldPixels(Path screenshot) {
 		try {
 			BufferedImage image = ImageIO.read(screenshot.toFile());
 			long count = 0;
-			for (int y = 0; y < image.getHeight(); y++) {
-				for (int x = 0; x < image.getWidth(); x++) {
+			int w = image.getWidth(), h = image.getHeight();
+			for (int y = h * 3 / 10; y < h * 7 / 10; y++) {
+				for (int x = w * 3 / 10; x < w * 7 / 10; x++) {
 					int rgb = image.getRGB(x, y);
 					int r = (rgb >> 16) & 0xFF, g = (rgb >> 8) & 0xFF, b = rgb & 0xFF;
-					if (r > 200 && g > 160 && b < 110 && r - b > 120) count++;
+					if (r > 100 && r >= g && g > b && r - b > 50) count++;
 				}
 			}
 			return count;
