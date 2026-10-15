@@ -40,7 +40,7 @@ public final class KeystrokesModule extends HudModule {
 		}
 		if (showSpace.get()) {
 			key(g, font, 6, client.options.keyJump, "", 0, y, w, 10, dt);
-			g.fill(w / 2 - 10, y + 4, w / 2 + 10, y + 5, glow[6] > 0.5f ? Theme.COPPER_INK : Theme.MUTED);
+			g.fill(w / 2 - 10, y + 4, w / 2 + 10, y + 5, glow[6] > 0.5f ? Theme.INK : Theme.MUTED);
 			y += 10 + GAP;
 		}
 		width = w;
@@ -52,7 +52,7 @@ public final class KeystrokesModule extends HudModule {
 		int fill = Theme.mix(background.get() ? 0x9A101210 : 0x00000000, Theme.alpha(Theme.COPPER, 0.92f), glow[i]);
 		g.fill(x, y, x + w, y + h, fill);
 		if (!label.isEmpty()) {
-			int color = Theme.mix(textColor(), Theme.COPPER_INK, glow[i]);
+			int color = Theme.mix(textColor(), Theme.INK, glow[i]);
 			g.text(font, label, x + (w - font.width(label)) / 2, y + (h - 8) / 2, color);
 		}
 	}

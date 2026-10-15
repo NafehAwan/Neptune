@@ -16,6 +16,7 @@ import net.tuffclient.TuffClient;
 import net.tuffclient.gui.HudEditorScreen;
 import net.tuffclient.gui.TuffMenuScreen;
 import net.tuffclient.gui.TuffTitleScreen;
+import net.tuffclient.gui.Ui;
 import net.tuffclient.module.Module;
 
 public class TuffClientGameTest implements FabricClientGameTest {
@@ -45,9 +46,25 @@ public class TuffClientGameTest implements FabricClientGameTest {
 		context.waitTicks(40);
 		context.takeScreenshot("tuff-title");
 
-		context.setScreen(() -> new TuffMenuScreen(null));
-		context.waitTicks(10);
-		context.takeScreenshot("tuff-menu");
+		// The Inter font must actually be loaded (its widths differ from the game font).
+		boolean customFont = context.computeOnClient(client ->
+				Ui.width("Tuff Client menu", Ui.Font.BODY) != client.font.width("Tuff Client menu"));
+		if (!customFont) throw new AssertionError("Tuff UI font did not load");
+
+		TuffMenuScreen menu = context.computeOnClient(client -> new TuffMenuScreen(null));
+		context.setScreen(() -> menu);
+		context.waitTicks(15);
+		context.takeScreenshot("tuff-menu-mods");
+		context.runOnClient(client -> menu.openSettings(TuffClient.modules().crosshair));
+		context.waitTicks(15);
+		context.takeScreenshot("tuff-menu-drawer");
+		for (TuffMenuScreen.Page page : new TuffMenuScreen.Page[] {TuffMenuScreen.Page.THEME, TuffMenuScreen.Page.PACKS, TuffMenuScreen.Page.SETTINGS}) {
+			context.runOnClient(client -> menu.setPage(page));
+			context.waitTicks(12);
+			context.takeScreenshot("tuff-menu-" + page.name().toLowerCase());
+		}
+		context.setScreen(() -> null);
+		context.waitForScreen(TuffTitleScreen.class);
 
 		try (TestSingleplayerContext world = context.worldBuilder().create()) {
 			world.getConnection().waitForChunksRender();
@@ -64,7 +81,7 @@ public class TuffClientGameTest implements FabricClientGameTest {
 			context.takeScreenshot("tuff-hud-editor");
 
 			context.setScreen(() -> new TuffMenuScreen(null));
-			context.waitTicks(10);
+			context.waitTicks(15);
 			context.takeScreenshot("tuff-menu-ingame");
 			context.setScreen(() -> null);
 

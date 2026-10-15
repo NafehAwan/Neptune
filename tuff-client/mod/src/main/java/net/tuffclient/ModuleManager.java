@@ -22,6 +22,7 @@ import net.tuffclient.module.hud.SpeedModule;
 import net.tuffclient.module.util.CrosshairModule;
 import net.tuffclient.module.util.FullbrightModule;
 import net.tuffclient.module.util.HideScoreboardModule;
+import net.tuffclient.module.util.InterfaceModule;
 import net.tuffclient.module.util.TitleScreenModule;
 import net.tuffclient.module.util.ToggleSprintModule;
 import net.tuffclient.module.util.ZoomModule;
@@ -30,6 +31,7 @@ public final class ModuleManager {
 	private final List<Module> modules = new ArrayList<>();
 	private final List<HudModule> hud = new ArrayList<>();
 
+	public final InterfaceModule ui = add(new InterfaceModule());
 	public final TitleScreenModule titleScreen = add(new TitleScreenModule());
 	public final ZoomModule zoom = add(new ZoomModule());
 	public final FullbrightModule fullbright = add(new FullbrightModule());
@@ -63,6 +65,11 @@ public final class ModuleManager {
 
 	public List<HudModule> hud() {
 		return hud;
+	}
+
+	/** Modules shown as cards in the menu. */
+	public List<Module> visible() {
+		return modules.stream().filter(m -> !m.hidden()).toList();
 	}
 
 	public void tick(Minecraft client) {

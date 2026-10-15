@@ -29,35 +29,6 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Build
         run: ./gradlew build --stacktrace
-      - name: Dump vanilla API (temporary diagnostics)
-        run: |
-          JAR=""
-          for j in $(find ~/.gradle/caches/fabric-loom .gradle/loom-cache -name '*.jar' 2>/dev/null); do
-            if unzip -l "$j" 2>/dev/null | grep -q 'net/minecraft/client/Minecraft.class'; then JAR="$j"; break; fi
-          done
-          echo "=== font/pack/face/realms classes"
-          unzip -l "$JAR" | grep -oE "[a-z/]*(FontDescription|Style|PackRepository|PackSelectionScreen|PlayerFaceRenderer|PlayerFaceExtractor|ControlsScreen|KeyBindsScreen|RealmsMainScreen|RenderPipelines|/User|Util)\.class" | sort -u
-          dump() { echo "=== $1"; javap -cp "$JAR" "$1" 2>&1 | grep -vE "hashCode|equals|toString|Compiled from" | head -${2:-80}; }
-          dump net.minecraft.network.chat.Style 90
-          dump net.minecraft.network.chat.FontDescription
-          dump 'net.minecraft.network.chat.FontDescription$Resource'
-          dump net.minecraft.network.chat.MutableComponent 40
-          dump net.minecraft.server.packs.repository.PackRepository
-          dump net.minecraft.server.packs.repository.Pack 50
-          dump net.minecraft.client.gui.components.PlayerFaceRenderer
-          dump net.minecraft.client.gui.components.PlayerFaceExtractor
-          dump net.minecraft.client.User 30
-          dump net.minecraft.client.gui.screens.packs.PackSelectionScreen 20
-          dump net.minecraft.client.gui.screens.options.controls.ControlsScreen 15
-          dump net.minecraft.client.gui.screens.options.controls.KeyBindsScreen 15
-          dump com.mojang.realmsclient.RealmsMainScreen 15
-          dump net.minecraft.client.renderer.RenderPipelines 120
-          dump com.mojang.blaze3d.platform.Window 90
-          dump net.minecraft.util.Util 120
-          echo "=== Minecraft (filtered)"
-          javap -cp "$JAR" net.minecraft.client.Minecraft | grep -iE "pack|reload|user|texture|skin|window|profile|realms|stop" | head -40
-          echo "=== Options (filtered)"
-          javap -cp "$JAR" net.minecraft.client.Options | grep -iE "resourcePacks|incompatible|save\(|load" | head -20
       - uses: actions/upload-artifact@v4
         with:
           name: tuff-mod

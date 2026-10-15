@@ -45,22 +45,26 @@ public final class HudEditorScreen extends Screen {
 			g.outline(p[0] - 1, p[1] - 1, p[2] + 2, p[3] + 2, color);
 			if (m == hovered && dragging == null) {
 				String label = m.name + "  " + Math.round(m.scale.get() * 100) + "%";
-				int ly = p[1] > 12 ? p[1] - 11 : p[1] + p[3] + 3;
-				g.text(font, label, p[0], ly, Theme.COPPER_HI);
+				float lw = Ui.width(label, Ui.Font.SEMIBOLD) + 10;
+				float ly = p[1] > 16 ? p[1] - 15 : p[1] + p[3] + 3;
+				Ui.round(g, p[0], ly, lw, 13, 4, Theme.alpha(Theme.COPPER, 0.95f));
+				Ui.text(g, label, p[0] + 5, ly + 3, Theme.INK, Ui.Font.SEMIBOLD);
 			}
 		}
 		if (guideX != null) g.fill(guideX, 0, guideX + 1, height, Theme.COPPER);
 		if (guideY != null) g.fill(0, guideY, width, guideY + 1, Theme.COPPER);
 
-		String help = "Drag to move · Scroll to resize · Right-click to reset size · Esc when done";
-		int hw = font.width(help) + 12;
-		int hy = height - 52;
-		Theme.panel(g, width / 2 - hw / 2, hy, width / 2 + hw / 2, hy + 16, 0xE0141614, Theme.BORDER_STRONG);
-		Theme.centered(g, font, help, width / 2, hy + 4, Theme.MUTED);
+		String help = "Drag to move  ·  Scroll to resize  ·  Right-click to reset  ·  Esc when done";
+		float hw = Ui.width(help, Ui.Font.MEDIUM) + 20;
+		float hy = height - 54;
+		Ui.round(g, width / 2f - hw / 2, hy, hw, 18, 9, 0xE6161816, 0x26FFFFFF, 1);
+		Ui.centered(g, help, width / 2f, hy + 5.5f, Theme.MUTED, Ui.Font.MEDIUM);
 
-		int bw = 90, bx = width / 2 - bw / 2, by = height - 28;
-		Theme.pixelButton(g, bx, by, bx + bw, by + 18, Theme.inside(mouseX, mouseY, bx, by, bx + bw, by + 18) ? 1 : 0);
-		Theme.centered(g, font, "HUD MODULES", width / 2, by + 5, Theme.COPPER_INK);
+		int bw = 104, bx = width / 2 - bw / 2, by = height - 30;
+		boolean over = Theme.inside(mouseX, mouseY, bx, by, bx + bw, by + 20);
+		Ui.accentButton(g, bx, by, bw, 20, over ? 1 : 0, 1);
+		Ui.icon(g, "grid", bx + 10, by + 4, 12, Theme.INK);
+		Ui.text(g, "HUD Modules", bx + 28, by + 6, Theme.INK, Ui.Font.SEMIBOLD);
 	}
 
 	private HudModule at(double mx, double my) {
@@ -76,8 +80,8 @@ public final class HudEditorScreen extends Screen {
 
 	@Override
 	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
-		int bw = 90, bx = width / 2 - bw / 2, by = height - 28;
-		if (Theme.inside(event.x(), event.y(), bx, by, bx + bw, by + 18)) {
+		int bw = 104, bx = width / 2 - bw / 2, by = height - 30;
+		if (Theme.inside(event.x(), event.y(), bx, by, bx + bw, by + 20)) {
 			minecraft.gui.setScreen(new TuffMenuScreen(this, Category.HUD));
 			return true;
 		}

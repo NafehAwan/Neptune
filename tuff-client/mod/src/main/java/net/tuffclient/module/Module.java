@@ -32,6 +32,11 @@ public abstract class Module {
 		return settings;
 	}
 
+	/** Hidden modules hold settings but don't appear as mod cards. */
+	public boolean hidden() {
+		return false;
+	}
+
 	public boolean isEnabled() {
 		return enabled;
 	}

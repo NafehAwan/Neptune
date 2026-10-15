@@ -1,10 +1,31 @@
 package net.tuffclient.gui;
 
-import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-
-/** Tuff + Copper palette (ARGB) and small drawing helpers shared by every screen. */
+/**
+ * Tuff palette (ARGB). The accent colours follow the accent picked on the
+ * Theme page; everything else is the fixed tuff-stone base.
+ */
 public final class Theme {
+	public enum Accent {
+		COPPER("Copper", 0xFFD9824B, 0xFFF0A877, 0xFF9C5530),
+		AMETHYST("Amethyst", 0xFFA67CF0, 0xFFC4A6F7, 0xFF6E4AB0),
+		MINT("Mint", 0xFF4FC79A, 0xFF8FE3B0, 0xFF2E8B67),
+		SKY("Sky", 0xFF5AA9F0, 0xFF8EC9FF, 0xFF2F6FAE),
+		ROSE("Rose", 0xFFE8708A, 0xFFF4A3B5, 0xFFA8435A),
+		GOLD("Gold", 0xFFE3B23C, 0xFFF2D06B, 0xFF9C7A22);
+
+		public final String label;
+		public final int base;
+		public final int hi;
+		public final int lo;
+
+		Accent(String label, int base, int hi, int lo) {
+			this.label = label;
+			this.base = base;
+			this.hi = hi;
+			this.lo = lo;
+		}
+	}
+
 	public static final int BG = 0xFF141614;
 	public static final int SURFACE = 0xFF1E211F;
 	public static final int SURFACE_2 = 0xFF262A27;
@@ -14,15 +35,22 @@ public final class Theme {
 	public static final int TEXT = 0xFFE8E6E1;
 	public static final int MUTED = 0xFF8B8F88;
 	public static final int FAINT = 0xFF5F645D;
-	public static final int COPPER = 0xFFD9824B;
-	public static final int COPPER_HI = 0xFFF0A877;
-	public static final int COPPER_LO = 0xFF9C5530;
-	public static final int COPPER_INK = 0xFF1A0F08;
+	public static final int INK = 0xFF1A0F08;
 	public static final int ONLINE = 0xFF6FBF73;
 	public static final int DANGER = 0xFFD9584B;
-	public static final int SCRIM = 0xB00A0B0A;
+
+	/** Accent colours; reassigned by {@link #apply}. */
+	public static int COPPER = Accent.COPPER.base;
+	public static int COPPER_HI = Accent.COPPER.hi;
+	public static int COPPER_LO = Accent.COPPER.lo;
 
 	private Theme() {
+	}
+
+	public static void apply(Accent accent) {
+		COPPER = accent.base;
+		COPPER_HI = accent.hi;
+		COPPER_LO = accent.lo;
 	}
 
 	public static int alpha(int argb, float a) {
@@ -39,37 +67,7 @@ public final class Theme {
 		return (al << 24) | (r << 16) | (g << 8) | bl;
 	}
 
-	/** Filled box with a one-pixel border. */
-	public static void panel(GuiGraphicsExtractor g, int x1, int y1, int x2, int y2, int fill, int border) {
-		g.fill(x1, y1, x2, y2, border);
-		g.fill(x1 + 1, y1 + 1, x2 - 1, y2 - 1, fill);
-	}
-
-	/** Copper "pixel" button: bevelled 1px highlight and shadow. */
-	public static void pixelButton(GuiGraphicsExtractor g, int x1, int y1, int x2, int y2, float hover) {
-		int face = mix(COPPER, COPPER_HI, hover);
-		g.fill(x1 - 1, y1, x2 + 1, y2, 0xFF0D0E0D);
-		g.fill(x1, y1 - 1, x2, y2 + 1, 0xFF0D0E0D);
-		g.fill(x1, y1, x2, y2, face);
-		g.fill(x1, y1, x2, y1 + 1, COPPER_HI);
-		g.fill(x1, y1, x1 + 1, y2, COPPER_HI);
-		g.fill(x1, y2 - 1, x2, y2, COPPER_LO);
-		g.fill(x2 - 1, y1, x2, y2, COPPER_LO);
-	}
-
-	public static void centered(GuiGraphicsExtractor g, Font font, String text, int cx, int y, int color) {
-		g.text(font, text, cx - font.width(text) / 2, y, color);
-	}
-
-	/** Toggle switch, 18x10. */
-	public static void toggle(GuiGraphicsExtractor g, int x, int y, boolean on, float anim) {
-		int track = mix(SURFACE_3, COPPER_LO, anim);
-		g.fill(x, y, x + 18, y + 10, track);
-		int knob = x + 1 + Math.round(8 * anim);
-		g.fill(knob, y + 1, knob + 8, y + 9, on ? COPPER_HI : MUTED);
-	}
-
-	public static boolean inside(double mx, double my, int x1, int y1, int x2, int y2) {
+	public static boolean inside(double mx, double my, double x1, double y1, double x2, double y2) {
 		return mx >= x1 && mx < x2 && my >= y1 && my < y2;
 	}
 

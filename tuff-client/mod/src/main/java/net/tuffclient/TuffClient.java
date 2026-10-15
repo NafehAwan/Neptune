@@ -34,6 +34,7 @@ public final class TuffClient implements ClientModInitializer {
 	public void onInitializeClient() {
 		modules = new ModuleManager();
 		TuffConfig.load(modules);
+		modules.ui.applyAccent();
 
 		KeyMapping.Category category = KeyMapping.Category.register(Identifier.fromNamespaceAndPath(MOD_ID, "tuff"));
 		menuKey = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.tuff.menu", SDLScancode.SDL_SCANCODE_RSHIFT, category));

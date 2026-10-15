@@ -19,6 +19,8 @@ public abstract class HudModule extends Module {
 
 	public double x;
 	public double y;
+	public final double defaultX;
+	public final double defaultY;
 	public final NumberSetting scale = add(new NumberSetting("scale", "Scale", 1.0, 0.5, 2.0, 0.1));
 	public final BoolSetting background = add(new BoolSetting("background", "Background", true));
 	public final ChoiceSetting color = add(new ChoiceSetting("color", "Text color", 0, "White", "Copper", "Mint", "Sky", "Gold"));
@@ -31,6 +33,14 @@ public abstract class HudModule extends Module {
 		super(id, name, description, Category.HUD, enabled);
 		this.x = x;
 		this.y = y;
+		this.defaultX = x;
+		this.defaultY = y;
+	}
+
+	public void resetPosition() {
+		x = defaultX;
+		y = defaultY;
+		scale.set(1.0);
 	}
 
 	/** Draws at the origin; the manager has already translated and scaled. */

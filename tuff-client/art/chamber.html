@@ -1,0 +1,307 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Tuff chamber art</title>
+<body style="margin:0;background:#111">
+<canvas id="c"></canvas>
+<script>
+// Paints the Tuff Trial Chamber as smooth layers. render.mjs loads this page
+// with ?layer=<name> and saves the canvas as a PNG.
+const params = new URLSearchParams(location.search);
+const layer = params.get("layer") || "preview";
+const W = 2112, H = 1188;            // 10% larger than 1920x1080 for parallax room
+const HORIZON = Math.round(H * 0.70);
+const PILLARS = [0.13, 0.87];
+
+function rng(seed) { return () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; }; }
+const lerp = (a, b, t) => a + (b - a) * t;
+function rgba(hex, a = 1) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`;
+}
+function roundRect(g, x, y, w, h, r) {
+  g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
+  g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+}
+function canvas(w, h) { const c = document.createElement("canvas"); c.width = w; c.height = h; return [c, c.getContext("2d")]; }
+
+// ---------------------------------------------------------------- wall
+function wall() {
+  const [c, g] = canvas(W, HORIZON + 40);
+  const r = rng(7);
+  const base = g.createLinearGradient(0, 0, 0, c.height);
+  base.addColorStop(0, "#16181500"); base.addColorStop(0, "#1b1d1a"); base.addColorStop(1, "#3b3f37");
+  g.fillStyle = base; g.fillRect(0, 0, W, c.height);
+  // bricks
+  const bh = 46, bw = 104;
+  for (let row = 0; row * bh < c.height; row++) {
+    const off = (row % 2) * bw / 2;
+    for (let x = -bw + off; x < W + bw; x += bw) {
+      const y = row * bh;
+      const tone = 0.82 + r() * 0.3;
+      const depth = y / c.height;
+      const l = Math.round(lerp(34, 64, depth) * tone);
+      const grad = g.createLinearGradient(0, y, 0, y + bh);
+      grad.addColorStop(0, `rgb(${l + 8},${l + 10},${l + 4})`);
+      grad.addColorStop(1, `rgb(${l - 4},${l - 2},${l - 8})`);
+      g.fillStyle = grad;
+      roundRect(g, x + 3, y + 3, bw - 6, bh - 6, 5); g.fill();
+      g.strokeStyle = `rgba(255,255,240,${0.05 + depth * 0.05})`; g.lineWidth = 1.5;
+      g.beginPath(); g.moveTo(x + 8, y + 4.5); g.lineTo(x + bw - 8, y + 4.5); g.stroke();
+      // stone grain
+      for (let k = 0; k < 14; k++) {
+        g.fillStyle = r() < 0.5 ? "rgba(255,255,240,0.05)" : "rgba(0,0,0,0.12)";
+        g.beginPath(); g.arc(x + 8 + r() * (bw - 16), y + 8 + r() * (bh - 16), 1 + r() * 2.2, 0, Math.PI * 2); g.fill();
+      }
+    }
+  }
+  // arches with oxidised copper grates, between and beside the pillars
+  for (const cx of [0.32, 0.5, 0.68].map((f) => f * W)) {
+    const aw = 210, ah = 340, top = HORIZON - ah - 70, x = cx - aw / 2;
+    g.save();
+    g.beginPath(); g.moveTo(x, top + ah); g.lineTo(x, top + aw / 2); g.arc(cx, top + aw / 2, aw / 2, Math.PI, 0); g.lineTo(x + aw, top + ah); g.closePath();
+    g.lineWidth = 22; g.strokeStyle = "#4c5148"; g.stroke();
+    g.lineWidth = 6; g.strokeStyle = "rgba(255,255,240,0.08)"; g.stroke();
+    const inner = g.createLinearGradient(0, top, 0, top + ah);
+    inner.addColorStop(0, "#090a09"); inner.addColorStop(1, "#151714");
+    g.fillStyle = inner; g.fill(); g.clip();
+    for (let bx = x + 18; bx < x + aw; bx += 24) {
+      const bar = g.createLinearGradient(bx - 4, 0, bx + 4, 0);
+      bar.addColorStop(0, "#2c5a50"); bar.addColorStop(0.5, "#6fb3a1"); bar.addColorStop(1, "#244a42");
+      g.fillStyle = bar; g.fillRect(bx - 4, top, 8, ah);
+    }
+    for (let by = top + 70; by < top + ah; by += 64) {
+      const bar = g.createLinearGradient(0, by - 4, 0, by + 4);
+      bar.addColorStop(0, "#2c5a50"); bar.addColorStop(0.5, "#79bfad"); bar.addColorStop(1, "#244a42");
+      g.fillStyle = bar; g.fillRect(x, by - 4, aw, 8);
+    }
+    g.restore();
+    const sill = g.createLinearGradient(0, top + ah, 0, top + ah + 18);
+    sill.addColorStop(0, "#e09a64"); sill.addColorStop(1, "#7a3f22");
+    g.fillStyle = sill; roundRect(g, x - 18, top + ah, aw + 36, 18, 4); g.fill();
+  }
+  // warm light pools where the copper bulbs hang
+  g.globalCompositeOperation = "lighter";
+  for (const f of PILLARS) {
+    const lx = f * W, ly = HORIZON * 0.55;
+    const pool = g.createRadialGradient(lx, ly, 10, lx, ly, 520);
+    pool.addColorStop(0, "rgba(255,150,80,0.30)"); pool.addColorStop(1, "rgba(255,150,80,0)");
+    g.fillStyle = pool; g.fillRect(0, 0, W, c.height);
+  }
+  const center = g.createRadialGradient(W / 2, HORIZON, 20, W / 2, HORIZON, 700);
+  center.addColorStop(0, "rgba(240,120,60,0.22)"); center.addColorStop(1, "rgba(240,120,60,0)");
+  g.fillStyle = center; g.fillRect(0, 0, W, c.height);
+  g.globalCompositeOperation = "source-over";
+  // ceiling darkness
+  const ceil = g.createLinearGradient(0, 0, 0, c.height * 0.55);
+  ceil.addColorStop(0, "rgba(6,7,6,0.95)"); ceil.addColorStop(1, "rgba(6,7,6,0)");
+  g.fillStyle = ceil; g.fillRect(0, 0, W, c.height);
+  // depth softness
+  const [out, og] = canvas(W, H);
+  og.fillStyle = "#0b0c0b"; og.fillRect(0, 0, W, H);
+  og.filter = "blur(2.2px)"; og.drawImage(c, 0, 0);
+  return out;
+}
+
+// ---------------------------------------------------------------- pillars
+function pillars() {
+  const [c, g] = canvas(W, H);
+  const r = rng(11);
+  for (const f of PILLARS) {
+    const pw = 170, x = f * W - pw / 2;
+    const body = g.createLinearGradient(x, 0, x + pw, 0);
+    body.addColorStop(0, "#5f6359"); body.addColorStop(0.35, "#7b7f73"); body.addColorStop(0.7, "#5a5e54"); body.addColorStop(1, "#33362f");
+    g.fillStyle = body; g.fillRect(x, 0, pw, HORIZON);
+    for (let y = 0; y < HORIZON; y += 120) {
+      g.fillStyle = "rgba(0,0,0,0.35)"; g.fillRect(x, y, pw, 4);
+      g.fillStyle = "rgba(255,255,240,0.10)"; g.fillRect(x, y + 4, pw, 2);
+      // chiseled panel
+      g.strokeStyle = "rgba(0,0,0,0.38)"; g.lineWidth = 6; roundRect(g, x + 34, y + 26, pw - 68, 70, 6); g.stroke();
+      g.strokeStyle = "rgba(255,255,240,0.10)"; g.lineWidth = 2; roundRect(g, x + 38, y + 30, pw - 76, 62, 4); g.stroke();
+      g.fillStyle = "rgba(0,0,0,0.25)"; g.fillRect(x + pw / 2 - 18, y + 58, 36, 6);
+      for (let k = 0; k < 18; k++) {
+        g.fillStyle = r() < 0.5 ? "rgba(255,255,240,0.06)" : "rgba(0,0,0,0.12)";
+        g.beginPath(); g.arc(x + 6 + r() * (pw - 12), y + 8 + r() * 104, 1 + r() * 2, 0, Math.PI * 2); g.fill();
+      }
+    }
+    // plinth
+    const pl = g.createLinearGradient(0, HORIZON - 70, 0, HORIZON);
+    pl.addColorStop(0, "#80847a"); pl.addColorStop(1, "#43463f");
+    g.fillStyle = pl; roundRect(g, x - 26, HORIZON - 70, pw + 52, 74, 6); g.fill();
+    // copper bulb fixture
+    const bx = f * W, by = HORIZON * 0.55, bs = 92;
+    g.fillStyle = "#4a2a18"; roundRect(g, bx - bs / 2 - 8, by - bs / 2 - 8, bs + 16, bs + 16, 10); g.fill();
+    const frame = g.createLinearGradient(bx - bs / 2, by - bs / 2, bx + bs / 2, by + bs / 2);
+    frame.addColorStop(0, "#f2b07c"); frame.addColorStop(0.5, "#d9824b"); frame.addColorStop(1, "#8a4a26");
+    g.fillStyle = frame; roundRect(g, bx - bs / 2, by - bs / 2, bs, bs, 8); g.fill();
+    const core = g.createRadialGradient(bx, by, 4, bx, by, bs * 0.42);
+    core.addColorStop(0, "#fffbe9"); core.addColorStop(0.55, "#ffe0a0"); core.addColorStop(1, "#f6a65e");
+    g.fillStyle = core; roundRect(g, bx - bs * 0.34, by - bs * 0.34, bs * 0.68, bs * 0.68, 6); g.fill();
+    g.globalCompositeOperation = "lighter";
+    const bloom = g.createRadialGradient(bx, by, 10, bx, by, 260);
+    bloom.addColorStop(0, "rgba(255,190,120,0.55)"); bloom.addColorStop(1, "rgba(255,150,80,0)");
+    g.fillStyle = bloom; g.fillRect(bx - 260, by - 260, 520, 520);
+    g.globalCompositeOperation = "source-over";
+  }
+  // fade pillar tops into the ceiling
+  g.globalCompositeOperation = "destination-out";
+  const fade = g.createLinearGradient(0, 0, 0, H * 0.32);
+  fade.addColorStop(0, "rgba(0,0,0,0.9)"); fade.addColorStop(1, "rgba(0,0,0,0)");
+  g.fillStyle = fade; g.fillRect(0, 0, W, H * 0.32);
+  return c;
+}
+
+// ---------------------------------------------------------------- floor
+function floor() {
+  const [c, g] = canvas(W, H);
+  const vx = W / 2, vy = HORIZON - 320;          // vanishing point above the horizon
+  const rows = 14;
+  for (let i = 0; i < rows; i++) {
+    const t0 = Math.pow(i / rows, 1.8), t1 = Math.pow((i + 1) / rows, 1.8);
+    const y0 = lerp(HORIZON, H, t0), y1 = lerp(HORIZON, H, t1);
+    for (let j = -30; j <= 30; j++) {
+      const xAt = (y, k) => vx + (k * 150) * ((y - vy) / (HORIZON - vy));
+      const a = xAt(y0, j), b = xAt(y0, j + 1), cc = xAt(y1, j + 1), d = xAt(y1, j);
+      const shade = ((i + j) & 1) ? 0 : 6;
+      const near = (i + 0.5) / rows;
+      const l = Math.round(lerp(40, 70, near)) + shade;
+      g.fillStyle = `rgb(${l},${l + 3},${l - 4})`;
+      g.beginPath(); g.moveTo(a, y0); g.lineTo(b, y0); g.lineTo(cc, y1); g.lineTo(d, y1); g.closePath(); g.fill();
+      g.strokeStyle = "rgba(0,0,0,0.35)"; g.lineWidth = lerp(1, 4, near); g.stroke();
+      g.strokeStyle = "rgba(255,255,240,0.05)"; g.lineWidth = 1; g.beginPath(); g.moveTo(a, y0 + 1.5); g.lineTo(b, y0 + 1.5); g.stroke();
+    }
+  }
+  // reflections of the bulbs and the spawner glow
+  g.globalCompositeOperation = "lighter";
+  for (const [f, s] of [...PILLARS.map((p) => [p, 0.22]), [0.5, 0.30]]) {
+    const x = f * W;
+    const streak = g.createRadialGradient(x, HORIZON + 160, 10, x, HORIZON + 160, 420);
+    streak.addColorStop(0, `rgba(255,160,90,${s})`); streak.addColorStop(1, "rgba(255,160,90,0)");
+    g.save(); g.translate(x, HORIZON + 160); g.scale(0.55, 1); g.translate(-x, -(HORIZON + 160));
+    g.fillStyle = streak; g.fillRect(x - 900, HORIZON, 1800, H - HORIZON); g.restore();
+  }
+  g.globalCompositeOperation = "source-over";
+  // fog at the horizon and darkness at the bottom
+  const fog = g.createLinearGradient(0, HORIZON - 4, 0, HORIZON + 140);
+  fog.addColorStop(0, "rgba(28,30,26,1)"); fog.addColorStop(1, "rgba(28,30,26,0)");
+  g.fillStyle = fog; g.fillRect(0, HORIZON - 4, W, 150);
+  const dark = g.createLinearGradient(0, H * 0.82, 0, H);
+  dark.addColorStop(0, "rgba(12,13,12,0)"); dark.addColorStop(1, "rgba(12,13,12,0.85)");
+  g.fillStyle = dark; g.fillRect(0, H * 0.82, W, H * 0.18);
+  // keep the top transparent so the wall shows through
+  g.globalCompositeOperation = "destination-out"; g.fillRect(0, 0, W, HORIZON - 4);
+  return c;
+}
+
+// ---------------------------------------------------------------- spawner
+function spawner() {
+  const S = 520;
+  const [c, g] = canvas(S, S);
+  const cx = S / 2, cy = S / 2 - 30, s = 120;
+  // pedestal
+  const ped = g.createLinearGradient(0, cy + s + 20, 0, cy + s + 90);
+  ped.addColorStop(0, "#8a8e84"); ped.addColorStop(1, "#3f423b");
+  g.fillStyle = ped; roundRect(g, cx - s - 40, cy + s + 30, 2 * s + 80, 70, 10); g.fill();
+  g.fillStyle = "rgba(0,0,0,0.35)"; g.fillRect(cx - s - 40, cy + s + 30, 2 * s + 80, 6);
+  // cube projected at a fixed three-quarter view
+  const ang = 0.62, tilt = -0.38;
+  const P = (x, y, z) => {
+    const x1 = x * Math.cos(ang) - z * Math.sin(ang), z1 = x * Math.sin(ang) + z * Math.cos(ang);
+    const y2 = y * Math.cos(tilt) - z1 * Math.sin(tilt);
+    return [cx + x1, cy + y2];
+  };
+  const v = [[-s, -s, -s], [s, -s, -s], [s, s, -s], [-s, s, -s], [-s, -s, s], [s, -s, s], [s, s, s], [-s, s, s]].map((p) => P(...p));
+  const faces = [[0, 1, 2, 3], [5, 4, 7, 6], [4, 0, 3, 7], [1, 5, 6, 2], [4, 5, 1, 0], [3, 2, 6, 7]];
+  const facing = (f) => {
+    const [a, b, d] = [v[f[0]], v[f[1]], v[f[2]]];
+    return (b[0] - a[0]) * (d[1] - a[1]) - (b[1] - a[1]) * (d[0] - a[0]) < 0;
+  };
+  const cage = (f, frame, bars) => {
+    const p = f.map((i) => v[i]);
+    for (let k = 1; k < 5; k++) {
+      const u = k / 5;
+      g.strokeStyle = bars; g.lineWidth = 7; g.lineCap = "round";
+      g.beginPath(); g.moveTo(lerp(p[0][0], p[1][0], u), lerp(p[0][1], p[1][1], u)); g.lineTo(lerp(p[3][0], p[2][0], u), lerp(p[3][1], p[2][1], u)); g.stroke();
+      g.beginPath(); g.moveTo(lerp(p[0][0], p[3][0], u), lerp(p[0][1], p[3][1], u)); g.lineTo(lerp(p[1][0], p[2][0], u), lerp(p[1][1], p[2][1], u)); g.stroke();
+    }
+    g.strokeStyle = frame; g.lineWidth = 16; g.lineJoin = "round";
+    g.beginPath(); p.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.closePath(); g.stroke();
+  };
+  for (const f of faces) if (!facing(f)) cage(f, "#1e201d", "#262825");
+  // flame core between the back and front of the cage
+  g.globalCompositeOperation = "lighter";
+  const core = g.createRadialGradient(cx, cy + 20, 4, cx, cy + 20, 150);
+  core.addColorStop(0, "rgba(255,240,200,1)"); core.addColorStop(0.3, "rgba(255,170,90,0.85)"); core.addColorStop(1, "rgba(220,100,40,0)");
+  g.fillStyle = core; g.fillRect(0, 0, S, S);
+  g.globalCompositeOperation = "source-over";
+  const metal = g.createLinearGradient(cx - s, cy - s, cx + s, cy + s);
+  metal.addColorStop(0, "#8b9085"); metal.addColorStop(1, "#41443d");
+  for (const f of faces) if (facing(f)) cage(f, metal, "#565a51");
+  return c;
+}
+
+// ---------------------------------------------------------------- sprites
+function glow() {
+  const [c, g] = canvas(256, 256);
+  const gr = g.createRadialGradient(128, 128, 0, 128, 128, 128);
+  gr.addColorStop(0, "rgba(255,255,255,1)"); gr.addColorStop(0.25, "rgba(255,255,255,0.55)"); gr.addColorStop(1, "rgba(255,255,255,0)");
+  g.fillStyle = gr; g.fillRect(0, 0, 256, 256);
+  return c;
+}
+function particle() {
+  const [c, g] = canvas(32, 32);
+  const gr = g.createRadialGradient(16, 16, 0, 16, 16, 16);
+  gr.addColorStop(0, "rgba(255,255,255,1)"); gr.addColorStop(0.4, "rgba(255,255,255,0.7)"); gr.addColorStop(1, "rgba(255,255,255,0)");
+  g.fillStyle = gr; g.fillRect(0, 0, 32, 32);
+  return c;
+}
+function emblem() {
+  const S = 512;
+  const [c, g] = canvas(S, S);
+  g.save(); g.shadowColor = "rgba(0,0,0,0.55)"; g.shadowBlur = 40; g.shadowOffsetY = 18;
+  const stone = g.createLinearGradient(60, 40, 452, 470);
+  stone.addColorStop(0, "#8c9086"); stone.addColorStop(0.5, "#666a60"); stone.addColorStop(1, "#3c3f38");
+  g.fillStyle = stone; roundRect(g, 56, 40, 400, 400, 72); g.fill(); g.restore();
+  // speckled tuff texture
+  const r = rng(3);
+  g.save(); roundRect(g, 56, 40, 400, 400, 72); g.clip();
+  for (let k = 0; k < 900; k++) {
+    g.fillStyle = r() < 0.5 ? "rgba(255,255,240,0.07)" : "rgba(0,0,0,0.10)";
+    g.beginPath(); g.arc(56 + r() * 400, 40 + r() * 400, 1.5 + r() * 4, 0, Math.PI * 2); g.fill();
+  }
+  const bevel = g.createLinearGradient(0, 40, 0, 440);
+  bevel.addColorStop(0, "rgba(255,255,255,0.18)"); bevel.addColorStop(0.15, "rgba(255,255,255,0)"); bevel.addColorStop(0.85, "rgba(0,0,0,0)"); bevel.addColorStop(1, "rgba(0,0,0,0.3)");
+  g.fillStyle = bevel; g.fillRect(56, 40, 400, 400);
+  g.restore();
+  g.strokeStyle = "rgba(20,22,20,0.7)"; g.lineWidth = 8; roundRect(g, 60, 44, 392, 392, 68); g.stroke();
+  // copper T inlay
+  const T = new Path2D();
+  T.moveTo(126, 112); T.lineTo(386, 112); T.quadraticCurveTo(398, 112, 398, 124); T.lineTo(398, 182); T.quadraticCurveTo(398, 194, 386, 194);
+  T.lineTo(300, 194); T.lineTo(300, 374); T.quadraticCurveTo(300, 386, 288, 386); T.lineTo(224, 386); T.quadraticCurveTo(212, 386, 212, 374);
+  T.lineTo(212, 194); T.lineTo(126, 194); T.quadraticCurveTo(114, 194, 114, 182); T.lineTo(114, 124); T.quadraticCurveTo(114, 112, 126, 112); T.closePath();
+  g.save(); g.translate(6, 10); g.fillStyle = "rgba(0,0,0,0.45)"; g.filter = "blur(6px)"; g.fill(T); g.restore();
+  const cu = g.createLinearGradient(114, 112, 398, 386);
+  cu.addColorStop(0, "#ffd1a6"); cu.addColorStop(0.35, "#e8955c"); cu.addColorStop(0.7, "#c96f38"); cu.addColorStop(1, "#8a4523");
+  g.fillStyle = cu; g.fill(T);
+  g.save(); g.clip(T);
+  const shine = g.createLinearGradient(0, 112, 0, 200);
+  shine.addColorStop(0, "rgba(255,255,255,0.45)"); shine.addColorStop(1, "rgba(255,255,255,0)");
+  g.fillStyle = shine; g.fillRect(100, 100, 320, 100);
+  g.restore();
+  g.strokeStyle = "rgba(90,40,20,0.8)"; g.lineWidth = 4; g.stroke(T);
+  return c;
+}
+
+const layers = { wall, pillars, floor, spawner, glow, particle, emblem };
+const out = document.getElementById("c");
+if (layer === "preview") {
+  out.width = W; out.height = H;
+  const g = out.getContext("2d");
+  g.drawImage(wall(), 0, 0); g.drawImage(floor(), 0, 0); g.drawImage(pillars(), 0, 0);
+  g.drawImage(spawner(), W / 2 - 260, HORIZON - 330);
+} else {
+  const c = layers[layer]();
+  out.width = c.width; out.height = c.height;
+  out.getContext("2d").drawImage(c, 0, 0);
+}
+window.done = true;
+</script>
