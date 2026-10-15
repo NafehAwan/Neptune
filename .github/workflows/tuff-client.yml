@@ -41,8 +41,8 @@ jobs:
             net.minecraft.client.gui.Font net.minecraft.client.KeyMapping net.minecraft.client.gui.Gui \
             net.minecraft.client.multiplayer.PlayerInfo net.minecraft.client.multiplayer.ServerData \
             net.minecraft.client.resources.sounds.SimpleSoundInstance net.minecraft.client.Camera \
-            net.minecraft.world.effect.MobEffectInstance net.minecraft.client.OptionInstance \\
-            net.minecraft.client.gui.screens.TitleScreen net.minecraft.client.ToggleKeyMapping net.minecraft.client.DeltaTracker \\
+            net.minecraft.world.effect.MobEffectInstance net.minecraft.client.OptionInstance \
+            net.minecraft.client.gui.screens.TitleScreen net.minecraft.client.ToggleKeyMapping net.minecraft.client.DeltaTracker \
             net.minecraft.client.gui.components.Button net.minecraft.client.gui.Hud; do
             echo "=== $c"; javap -cp "$JAR" "$c" || true
           done
