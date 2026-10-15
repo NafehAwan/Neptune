@@ -22,7 +22,7 @@
   --fast: 150ms;
   --med: 220ms;
 
-  --font: "Inter Variable", "Inter", system-ui, sans-serif;
+  --font: "Poppins", system-ui, sans-serif;
   --mono: ui-monospace, "JetBrains Mono", "DejaVu Sans Mono", monospace;
 
   color-scheme: dark;
@@ -36,7 +36,7 @@ html, body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font);
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.45;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
@@ -50,10 +50,10 @@ h1, h2, h3, .pixel {
   font-family: var(--font);
   margin: 0;
 }
-h1 { font-size: 28px; line-height: 1.15; font-weight: 750; letter-spacing: -0.02em; }
-h2 { font-size: 17px; font-weight: 650; letter-spacing: -0.01em; }
-h3 { font-size: 11px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: 0.09em; }
-.pixel { font-weight: 650; letter-spacing: -0.01em; }
+h1 { font-size: 34px; line-height: 1.15; font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: 19.5px; font-weight: 600; letter-spacing: -0.01em; }
+h3 { font-size: 12.5px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.09em; }
+.pixel { font-weight: 600; letter-spacing: -0.01em; }
 
 p { margin: 0; }
 a { color: var(--accent); }
@@ -75,12 +75,12 @@ a { color: var(--accent); }
 /* Buttons */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  height: 34px; padding: 0 14px;
+  height: 38px; padding: 0 16px;
   border: 1px solid var(--border-strong);
   border-radius: 8px;
   background: var(--surface-2);
   color: var(--text);
-  font: 500 13px var(--font);
+  font: 500 15px var(--font);
   cursor: pointer;
   transition: background var(--fast) var(--ease), border-color var(--fast) var(--ease), transform var(--fast) var(--ease), color var(--fast);
   white-space: nowrap;
@@ -91,8 +91,8 @@ a { color: var(--accent); }
 .btn.ghost { background: transparent; border-color: transparent; color: var(--muted); }
 .btn.ghost:hover:not(:disabled) { background: var(--surface-2); color: var(--text); border-color: transparent; }
 .btn.danger:hover:not(:disabled) { background: rgba(217, 88, 75, 0.14); border-color: var(--danger); color: #f0a49b; }
-.btn.small { height: 28px; padding: 0 10px; font-size: 12px; }
-.btn.icon { width: 34px; padding: 0; }
+.btn.small { height: 31px; padding: 0 12px; font-size: 14px; }
+.btn.icon { width: 38px; padding: 0; }
 .btn.small.icon { width: 28px; }
 
 /* The copper button: soft gradient, inner highlight and a warm glow on hover. */
@@ -101,8 +101,8 @@ a { color: var(--accent); }
   color: var(--accent-ink);
   border: none;
   border-radius: 9px;
-  font-weight: 650;
-  font-size: 13.5px;
+  font-weight: 600;
+  font-size: 15.5px;
   letter-spacing: 0.01em;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 6px 18px rgba(217, 130, 75, 0.18);
 }
@@ -112,17 +112,17 @@ a { color: var(--accent); }
 /* Inputs */
 .input, select.input, textarea.input {
   width: 100%;
-  height: 34px;
-  padding: 0 11px;
+  height: 38px;
+  padding: 0 12px;
   background: var(--bg);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius);
   color: var(--text);
-  font: 13px var(--font);
+  font: 15px var(--font);
   transition: border-color var(--fast);
   user-select: text; -webkit-user-select: text;
 }
-textarea.input { height: auto; padding: 8px 11px; resize: vertical; font-family: var(--mono); font-size: 12px; }
+textarea.input { height: auto; padding: 8px 11px; resize: vertical; font-family: var(--mono); font-size: 14px; }
 .input:focus { outline: none; border-color: var(--accent); }
 select.input {
   appearance: none; -webkit-appearance: none;
@@ -130,7 +130,7 @@ select.input {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 5' shape-rendering='crispEdges'%3E%3Cpath fill='%238b8f88' d='M0 0h2v1H0zM6 0h2v1H6zM1 1h2v1H1zM5 1h2v1H5zM2 2h4v1H2zM3 3h2v1H3z'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 11px center; background-size: 10px 6px;
 }
-label.field { display: grid; gap: 6px; font-size: 12px; color: var(--muted); }
+label.field { display: grid; gap: 6px; font-size: 14px; color: var(--muted); }
 label.field > span { font-weight: 500; }
 
 input[type="range"] { width: 100%; accent-color: var(--accent); }
@@ -146,12 +146,12 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 
 /* Segmented control */
 .seg { display: inline-flex; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 2px; gap: 2px; }
-.seg button { border: 0; background: transparent; color: var(--muted); height: 28px; padding: 0 12px; border-radius: 4px; font: 500 12px var(--font); cursor: pointer; transition: background var(--fast), color var(--fast); }
+.seg button { border: 0; background: transparent; color: var(--muted); height: 31px; padding: 0 13px; border-radius: 4px; font: 500 14px var(--font); cursor: pointer; transition: background var(--fast), color var(--fast); }
 .seg button:hover { color: var(--text); }
 .seg button.on { background: var(--surface-3); color: var(--text); }
 
 /* Chips */
-.chip { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border-radius: 4px; background: var(--surface-2); border: 1px solid var(--border); color: var(--muted); font-size: 11.5px; font-weight: 500; white-space: nowrap; }
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 25px; padding: 0 8px; border-radius: 4px; background: var(--surface-2); border: 1px solid var(--border); color: var(--muted); font-size: 13px; font-weight: 500; white-space: nowrap; }
 .chip.copper { color: var(--accent-hover); border-color: rgba(217, 130, 75, 0.35); background: rgba(217, 130, 75, 0.08); }
 .dot { width: 7px; height: 7px; border-radius: 1px; background: var(--faint); flex: none; }
 .dot.on { background: var(--online); box-shadow: 0 0 8px rgba(111, 191, 115, 0.6); }
@@ -165,7 +165,7 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 .grow { flex: 1; min-width: 0; }
 .ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .empty { display: grid; place-items: center; gap: 10px; padding: 56px 20px; text-align: center; color: var(--muted); border: 1px dashed var(--border-strong); border-radius: var(--radius-lg); }
-.empty .pixel { color: var(--text); font-size: 14px; }
+.empty .pixel { color: var(--text); font-size: 16px; }
 
 .skeleton { background: linear-gradient(90deg, var(--surface) 0%, var(--surface-2) 50%, var(--surface) 100%); background-size: 200% 100%; animation: shimmer 1.4s linear infinite; border-radius: var(--radius); }
 @keyframes shimmer { to { background-position: -200% 0; } }

@@ -136,12 +136,12 @@
   .setting { display: flex; align-items: center; gap: 18px; padding: 12px 0; border-bottom: 1px solid var(--border); }
   .setting:last-child { border-bottom: 0; }
   .setting.col { display: grid; gap: 8px; }
-  .label { font-weight: 600; font-size: 13.5px; }
-  .hint { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .label { font-weight: 600; font-size: 15.5px; }
+  .hint { font-size: 14px; color: var(--muted); margin-top: 2px; }
   .val { color: var(--accent-hover); }
   .narrow { width: 90px; }
   .linkbtn { justify-self: start; padding-left: 0; }
   .about { padding-bottom: 18px; display: grid; gap: 6px; }
   .brand { color: var(--accent-hover); }
-  kbd { font: 11px var(--mono); padding: 1px 5px; border-radius: 4px; background: var(--surface-3); border: 1px solid var(--border-strong); }
+  kbd { font: 12.5px var(--mono); padding: 1px 5px; border-radius: 4px; background: var(--surface-3); border: 1px solid var(--border-strong); }
 </style>

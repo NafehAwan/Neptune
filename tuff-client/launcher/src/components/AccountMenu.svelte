@@ -68,20 +68,20 @@
     display: flex; align-items: center; gap: 9px; height: 34px; padding: 0 10px 0 6px;
     background: rgba(30, 33, 31, 0.75); backdrop-filter: blur(8px);
     border: 1px solid var(--border-strong); border-radius: 8px;
-    color: var(--text); font: 600 12.5px var(--font); cursor: pointer;
+    color: var(--text); font: 600 14.5px var(--font); cursor: pointer;
     transition: border-color var(--fast), background var(--fast);
   }
   .chip-btn:hover, .chip-btn.open { border-color: #4a504b; background: var(--surface-2); }
-  .kind { color: var(--faint); font-weight: 500; font-size: 11px; }
+  .kind { color: var(--faint); font-weight: 500; font-size: 12.5px; }
   .chip-btn :global(.icon) { color: var(--muted); }
   .menu { position: absolute; right: 0; top: 42px; width: 270px; padding: 6px; z-index: 30; box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5); }
   .acct { display: flex; align-items: center; gap: 4px; border-radius: 6px; }
   .acct:hover { background: var(--surface-2); }
   .pick { flex: 1; display: flex; align-items: center; gap: 10px; padding: 7px 8px; background: none; border: 0; color: var(--text); cursor: pointer; text-align: left; min-width: 0; }
   .pick .grow { display: grid; }
-  .n { font-weight: 600; font-size: 13px; }
-  .k { font-size: 11px; color: var(--faint); }
+  .n { font-weight: 600; font-size: 15px; }
+  .k { font-size: 12.5px; color: var(--faint); }
   .tick { color: var(--accent-hover); }
-  .add { width: 100%; display: flex; align-items: center; gap: 8px; margin-top: 4px; padding: 9px 10px; background: none; border: 0; border-top: 1px solid var(--border); color: var(--muted); font: 500 12.5px var(--font); cursor: pointer; }
+  .add { width: 100%; display: flex; align-items: center; gap: 8px; margin-top: 4px; padding: 9px 10px; background: none; border: 0; border-top: 1px solid var(--border); color: var(--muted); font: 500 14.5px var(--font); cursor: pointer; }
   .add:hover { color: var(--accent-hover); }
 </style>

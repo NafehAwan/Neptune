@@ -91,15 +91,15 @@
 <style>
   .console { display: flex; flex-direction: column; padding-bottom: 24px; }
   .inline { display: inline-block; margin-right: 4px; }
-  .crash { display: flex; gap: 12px; align-items: center; padding: 12px 14px; margin-bottom: 14px; border-radius: 9px; background: rgba(217, 88, 75, 0.08); border: 1px solid rgba(217, 88, 75, 0.35); font-size: 12.5px; }
-  .ct { font-weight: 650; color: #f0a49b; font-size: 13.5px; }
+  .crash { display: flex; gap: 12px; align-items: center; padding: 12px 14px; margin-bottom: 14px; border-radius: 9px; background: rgba(217, 88, 75, 0.08); border: 1px solid rgba(217, 88, 75, 0.35); font-size: 14.5px; }
+  .ct { font-weight: 600; color: #f0a49b; font-size: 15.5px; }
   .toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
   .search { width: 220px; height: 32px; }
-  .count { font-size: 12px; }
+  .count { font-size: 14px; }
   .log {
     flex: 1; min-height: 200px; overflow: auto; padding: 12px 14px;
     background: #0e100e; border: 1px solid var(--border); border-radius: 9px;
-    font: 12px/1.6 var(--mono); color: #c9c6be;
+    font: 13.5px/1.6 var(--mono); color: #c9c6be;
   }
   .line { white-space: pre-wrap; word-break: break-all; content-visibility: auto; contain-intrinsic-size: auto 19px; }
   .line.warn { color: var(--warn); }

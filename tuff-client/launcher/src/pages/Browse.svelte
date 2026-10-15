@@ -158,21 +158,21 @@
   .bar { display: flex; gap: 10px; margin-bottom: 12px; }
   .searchbox { position: relative; flex: 1; color: var(--faint); }
   .searchbox :global(.icon) { position: absolute; left: 12px; top: 10px; }
-  .searchbox .input { padding-left: 34px; height: 38px; font-size: 14px; }
+  .searchbox .input { padding-left: 34px; height: 38px; font-size: 16px; }
   .target { width: 260px; height: 38px; }
   .sort { width: 170px; height: 38px; }
   .kinds { margin-bottom: 18px; }
-  .note { font-size: 12.5px; color: var(--warn); margin-bottom: 14px; }
+  .note { font-size: 14.5px; color: var(--warn); margin-bottom: 14px; }
   .results { display: grid; gap: 8px; }
   .hit { display: flex; align-items: center; gap: 14px; padding: 14px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); transition: border-color var(--fast), transform var(--fast) var(--ease); }
   .hit:hover { border-color: var(--border-strong); }
   .hit img, .ph { width: 56px; height: 56px; border-radius: 10px; flex: none; background: var(--surface-2); }
   .ph { display: grid; place-items: center; color: var(--faint); }
   .t { gap: 8px; align-items: baseline; }
-  h4 { margin: 0; font-size: 15px; font-weight: 650; }
-  .by { font-size: 12px; color: var(--faint); white-space: nowrap; }
-  .desc { font-size: 12.5px; color: var(--muted); margin-top: 3px; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .stats { margin-top: 8px; gap: 8px; font-size: 11.5px; color: var(--faint); }
+  h4 { margin: 0; font-size: 17px; font-weight: 600; }
+  .by { font-size: 14px; color: var(--faint); white-space: nowrap; }
+  .desc { font-size: 14.5px; color: var(--muted); margin-top: 3px; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .stats { margin-top: 8px; gap: 8px; font-size: 13px; color: var(--faint); }
   .stats span { display: inline-flex; align-items: center; gap: 5px; }
   .tag { padding: 1px 7px; border-radius: 4px; background: var(--surface-2); }
   .install { width: 112px; flex: none; }

@@ -26,5 +26,5 @@
   .bar { width: 3px; align-self: stretch; background: var(--muted); flex: none; }
   .success .bar { background: var(--online); }
   .error .bar { background: var(--danger); }
-  p { flex: 1; font-size: 13px; padding-top: 4px; }
+  p { flex: 1; font-size: 15px; padding-top: 4px; }
 </style>

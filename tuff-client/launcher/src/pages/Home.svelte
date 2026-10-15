@@ -171,8 +171,8 @@
     font-size: clamp(54px, 7vw, 84px); line-height: 0.95; font-weight: 800; letter-spacing: 0.16em; padding-left: 0.16em; color: #f4efe6;
     text-shadow: 0 6px 30px rgba(0, 0, 0, 0.55);
   }
-  .sub { margin-top: 8px; font-size: 13px; font-weight: 650; letter-spacing: 0.7em; padding-left: 0.7em; color: var(--accent-hover); text-transform: uppercase; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8); }
-  .hello { margin-top: 18px; color: var(--muted); font-size: 13px; text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8); }
+  .sub { margin-top: 8px; font-size: 15px; font-weight: 600; letter-spacing: 0.7em; padding-left: 0.7em; color: var(--accent-hover); text-transform: uppercase; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8); }
+  .hello { margin-top: 18px; color: var(--muted); font-size: 15px; text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8); }
   .hello strong { color: var(--text); font-weight: 600; }
   @keyframes float { 50% { transform: translateY(-5px); } }
 
@@ -189,13 +189,13 @@
   .srv:disabled { cursor: default; opacity: 0.6; }
   .srv img, .fav { width: 28px; height: 28px; border-radius: 5px; image-rendering: pixelated; flex: none; }
   .fav { display: grid; place-items: center; background: var(--surface-3); color: var(--muted); }
-  .sname { display: block; font-weight: 600; font-size: 13px; }
-  .smeta { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--muted); }
+  .sname { display: block; font-weight: 600; font-size: 15px; }
+  .smeta { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
   .go { color: var(--faint); opacity: 0; transition: opacity var(--fast), color var(--fast); }
   .srv:hover .go { opacity: 1; color: var(--accent-hover); }
 
   .dock-wrap { position: absolute; left: 0; right: 0; bottom: 30px; display: grid; justify-items: center; gap: 10px; padding: 0 24px; }
-  .stage { font-size: 12px; color: var(--muted); background: rgba(20, 22, 20, 0.8); padding: 4px 10px; border-radius: 5px; border: 1px solid var(--border); }
+  .stage { font-size: 14px; color: var(--muted); background: rgba(20, 22, 20, 0.8); padding: 4px 10px; border-radius: 5px; border: 1px solid var(--border); }
   .dock {
     display: flex; align-items: center; gap: 12px; padding: 10px;
     background: rgba(20, 22, 20, 0.78); backdrop-filter: blur(14px);
@@ -211,8 +211,8 @@
   }
   .current:hover { background: var(--surface-2); border-color: var(--border-strong); }
   .meta { display: grid; min-width: 0; flex: 1; }
-  .pname { font-weight: 650; font-size: 14px; }
-  .pinfo { font-size: 12px; color: var(--muted); }
+  .pname { font-weight: 600; font-size: 16px; }
+  .pinfo { font-size: 14px; color: var(--muted); }
   .caret { color: var(--muted); transition: transform var(--med) var(--ease); transform: rotate(180deg); }
   .caret.up { transform: none; }
 
@@ -226,12 +226,12 @@
   .opt.on { background: rgba(217, 130, 75, 0.1); }
   .picker-foot { display: flex; justify-content: space-between; border-top: 1px solid var(--border); margin-top: 4px; padding-top: 6px; }
 
-  .play { position: relative; width: 220px; height: 52px; font-size: 16px; font-weight: 700; border-radius: 11px; overflow: hidden; display: grid; place-items: center; }
+  .play { position: relative; width: 220px; height: 52px; font-size: 18.5px; font-weight: 700; border-radius: 11px; overflow: hidden; display: grid; place-items: center; }
   .play .label { position: relative; display: inline-flex; align-items: center; gap: 10px; }
   .play .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent-hover); transition: width 200ms linear; }
   .play.running { background: linear-gradient(180deg, #5c9a60, #3c6e40); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 6px 18px rgba(111, 191, 115, 0.2); color: #f0faf0; grid-template-rows: auto auto; gap: 0; }
   .play.running:hover { background: linear-gradient(180deg, #ea8077, var(--danger)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 8px 22px rgba(217, 88, 75, 0.3); }
-  .play.running .hint { font: 500 11px var(--font); opacity: 0.8; letter-spacing: 0; }
+  .play.running .hint { font: 500 12.5px var(--font); opacity: 0.8; letter-spacing: 0; }
 
   .first { display: flex; align-items: center; gap: 16px; padding: 4px 4px 4px 12px; }
   .first > div { max-width: 280px; }

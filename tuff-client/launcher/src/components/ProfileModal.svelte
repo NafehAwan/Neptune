@@ -162,9 +162,9 @@
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .grid2 .seg { width: 100%; }
   .grid2 .seg button { flex: 1; }
-  .check { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); margin-top: -6px; }
+  .check { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); margin-top: -6px; }
   .check input { accent-color: var(--accent); }
   .mem { color: var(--accent-hover); }
-  .small { font-size: 11.5px; }
+  .small { font-size: 13px; }
   .adv { justify-self: start; padding-left: 0; }
 </style>

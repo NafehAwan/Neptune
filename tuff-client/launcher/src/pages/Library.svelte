@@ -283,28 +283,28 @@
   .item:hover { background: var(--surface); }
   .item.on { background: var(--surface); border-color: var(--border-strong); }
   .item .grow { display: grid; }
-  .name { font-weight: 600; font-size: 13.5px; }
-  .sub { font-size: 12px; color: var(--muted); }
+  .name { font-weight: 600; font-size: 15.5px; }
+  .sub { font-size: 14px; color: var(--muted); }
 
   .detail { padding: 20px; min-height: 420px; }
   .dhead { display: flex; gap: 16px; align-items: flex-start; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
   .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
-  .stat { font-size: 12px; margin-top: 8px; }
+  .stat { font-size: 14px; margin-top: 8px; }
   .actions { display: grid; gap: 8px; justify-items: end; }
   .playbtn { height: 40px; width: 136px; }
   .tight { gap: 4px; }
 
   .toolbar { display: flex; align-items: center; gap: 10px; margin: 16px 0 12px; flex-wrap: wrap; }
   .search { width: 160px; height: 32px; }
-  .updates { display: flex; align-items: center; gap: 12px; justify-content: space-between; padding: 10px 12px; margin-bottom: 10px; border-radius: 8px; background: rgba(217, 130, 75, 0.08); border: 1px solid rgba(217, 130, 75, 0.3); font-size: 12.5px; }
+  .updates { display: flex; align-items: center; gap: 12px; justify-content: space-between; padding: 10px 12px; margin-bottom: 10px; border-radius: 8px; background: rgba(217, 130, 75, 0.08); border: 1px solid rgba(217, 130, 75, 0.3); font-size: 14.5px; }
   .content { display: grid; gap: 6px; }
   .citem { display: flex; align-items: center; gap: 12px; padding: 7px 8px 7px 7px; border-radius: 8px; background: var(--bg); border: 1px solid var(--border); transition: opacity var(--fast); }
   .citem.off { opacity: 0.5; }
   .citem img, .ph { width: 34px; height: 34px; border-radius: 6px; flex: none; }
   .ph { display: grid; place-items: center; background: var(--surface-2); color: var(--faint); }
-  .ctitle { font-weight: 600; font-size: 13px; }
-  .cmeta { font-size: 11.5px; color: var(--faint); }
+  .ctitle { font-weight: 600; font-size: 15px; }
+  .cmeta { font-size: 13px; color: var(--faint); }
   .empty.small { padding: 34px 16px; }
-  .del { font-size: 13px; color: var(--muted); }
+  .del { font-size: 15px; color: var(--muted); }
   .del input { accent-color: var(--danger); }
 </style>

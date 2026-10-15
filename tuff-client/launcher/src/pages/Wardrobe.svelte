@@ -222,18 +222,18 @@
   canvas:active { cursor: grabbing; }
   .anims { margin-top: 6px; }
   .anims button { padding: 0 9px; }
-  .rot { position: absolute; top: 12px; right: 14px; display: flex; gap: 6px; align-items: center; font-size: 12px; color: var(--muted); }
+  .rot { position: absolute; top: 12px; right: 14px; display: flex; gap: 6px; align-items: center; font-size: 14px; color: var(--muted); }
   .rot input { accent-color: var(--accent); }
   .side { display: grid; gap: 14px; }
   .box { padding: 18px; display: grid; gap: 12px; }
-  .lab { font-size: 12px; color: var(--muted); font-weight: 500; }
+  .lab { font-size: 14px; color: var(--muted); font-weight: 500; }
   .field { display: grid; gap: 6px; justify-items: start; }
-  .pending { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 7px; background: rgba(217, 130, 75, 0.08); border: 1px solid rgba(217, 130, 75, 0.3); font-size: 12.5px; }
+  .pending { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 7px; background: rgba(217, 130, 75, 0.08); border: 1px solid rgba(217, 130, 75, 0.3); font-size: 14.5px; }
   .capes { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
   .cape { display: grid; justify-items: center; gap: 6px; padding: 10px 6px 8px; background: var(--bg); border: 2px solid var(--border); border-radius: 8px; color: var(--text); cursor: pointer; transition: border-color var(--fast); }
   .cape:hover { border-color: var(--border-strong); }
   .cape.on { border-color: var(--accent); }
   .cape-art { width: 40px; height: 64px; image-rendering: pixelated; background-repeat: no-repeat; background-size: 640px 320px; background-position: -4px -4px; }
-  .none { height: 64px; display: grid; place-items: center; color: var(--faint); font-size: 12px; }
-  .cname { font-size: 11px; color: var(--muted); max-width: 100%; }
+  .none { height: 64px; display: grid; place-items: center; color: var(--faint); font-size: 14px; }
+  .cname { font-size: 12.5px; color: var(--muted); max-width: 100%; }
 </style>

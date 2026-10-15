@@ -141,16 +141,16 @@
   .srv img, .fav { width: 48px; height: 48px; border-radius: 8px; image-rendering: pixelated; flex: none; }
   .fav { display: grid; place-items: center; background: var(--surface-2); color: var(--faint); }
   .t { gap: 10px; align-items: baseline; }
-  h4 { margin: 0; font-size: 15px; font-weight: 650; }
-  .addr { font-size: 11.5px; color: var(--faint); }
-  .motd { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
-  .uses { font-size: 11.5px; margin-top: 2px; }
-  .stats { display: grid; justify-items: end; gap: 2px; width: 130px; font-size: 12px; }
+  h4 { margin: 0; font-size: 17px; font-weight: 600; }
+  .addr { font-size: 13px; color: var(--faint); }
+  .motd { font-size: 14.5px; color: var(--muted); margin-top: 3px; }
+  .uses { font-size: 13px; margin-top: 2px; }
+  .stats { display: grid; justify-items: end; gap: 2px; width: 130px; font-size: 14px; }
   .players { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
   .lat.good { color: var(--online); }
   .lat.ok { color: var(--warn); }
   .lat.bad { color: var(--danger); }
-  .ver { max-width: 130px; font-size: 11px; }
+  .ver { max-width: 130px; font-size: 12.5px; }
   .acts { display: flex; align-items: center; gap: 2px; }
   .up { display: block; transform: rotate(180deg); }
   .joinbtn { margin-left: 8px; height: 36px; width: 92px; }

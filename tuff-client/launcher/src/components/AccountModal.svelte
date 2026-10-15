@@ -98,10 +98,10 @@
     padding: 18px; background: var(--bg); border: 1px dashed var(--accent-deep); border-radius: 8px;
     color: var(--accent-hover); cursor: pointer;
   }
-  .code .pixel { font-size: 28px; font-weight: 750; letter-spacing: 0.14em; font-variant-numeric: tabular-nums; }
-  .waiting { font-size: 13px; }
+  .code .pixel { font-size: 28px; font-weight: 700; letter-spacing: 0.14em; font-variant-numeric: tabular-nums; }
+  .waiting { font-size: 15px; }
   .big { height: 42px; }
   form { display: grid; gap: 12px; }
-  .small { font-size: 12px; }
-  .error { color: #f0a49b; font-size: 12.5px; background: rgba(217, 88, 75, 0.1); border: 1px solid rgba(217, 88, 75, 0.35); padding: 9px 11px; border-radius: 6px; }
+  .small { font-size: 14px; }
+  .error { color: #f0a49b; font-size: 14.5px; background: rgba(217, 88, 75, 0.1); border: 1px solid rgba(217, 88, 75, 0.35); padding: 9px 11px; border-radius: 6px; }
 </style>

@@ -69,7 +69,7 @@
   .tip {
     position: absolute; left: 54px; top: 50%; translate: 0 -50%;
     background: var(--surface-3); color: var(--text);
-    font: 500 12px var(--font); white-space: nowrap;
+    font: 500 14px var(--font); white-space: nowrap;
     padding: 5px 9px; border-radius: 5px; border: 1px solid var(--border-strong);
     opacity: 0; pointer-events: none; transform: translateX(-4px);
     transition: opacity var(--fast), transform var(--fast) var(--ease);
