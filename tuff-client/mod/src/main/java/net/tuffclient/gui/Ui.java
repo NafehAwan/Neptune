@@ -100,7 +100,7 @@ public final class Ui {
 	public static void round(GuiGraphicsExtractor g, float x, float y, float w, float h, float r, int argb) {
 		if ((argb >>> 24) == 0 || w <= 0 || h <= 0) return;
 		r = Math.max(0.5f, Math.min(r, Math.min(w, h) / 2));
-		float physical = r * mc().getWindow().getGuiScale();
+		float physical = r * scale();
 		int pick = RADII.length - 1;
 		for (int i = 0; i < RADII.length; i++) {
 			if (RADII[i] >= physical) {
@@ -141,8 +141,13 @@ public final class Ui {
 	/** 12x12 pixel icon, drawn at a whole multiple so it stays crisp. */
 	public static void icon(GuiGraphicsExtractor g, String name, float x, float y, int size, int argb) {
 		if ((argb >>> 24) == 0) return;
+		// Pixel icons stay crisp only at whole multiples of their 12px grid, on whole physical pixels.
+		float p = scale();
+		float drawn = Math.max(1, Math.round(size * p / 12f)) * 12 / p;
+		float off = (size - drawn) / 2;
 		g.pose().pushMatrix();
-		g.pose().translate(Math.round(x), Math.round(y));
+		g.pose().translate(Math.round((x + off) * p) / p, Math.round((y + off) * p) / p);
+		g.pose().scale(drawn / size, drawn / size);
 		g.blitSprite(RenderPipelines.GUI_TEXTURED, id("icon/" + name), 0, 0, size, size, argb);
 		g.pose().popMatrix();
 	}
@@ -180,7 +185,15 @@ public final class Ui {
 		round(g, x, y, w, h, Math.min(7, h / 2), Theme.alpha(fill, alpha), Theme.alpha(border, alpha), 1);
 	}
 
+	/** Extra scale a screen applies on top of the GUI scale (see {@link TuffMenuScreen}). */
+	public static float zoom = 1f;
+
 	public static int guiScale() {
 		return mc().getWindow().getGuiScale();
+	}
+
+	/** Physical pixels per GUI unit, including {@link #zoom}. */
+	public static float scale() {
+		return guiScale() * zoom;
 	}
 }

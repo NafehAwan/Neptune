@@ -10,6 +10,7 @@ import javax.imageio.ImageIO;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.world.effect.MobEffects;
 import net.tuffclient.TuffClient;
@@ -51,7 +52,8 @@ public class TuffClientGameTest implements FabricClientGameTest {
 				Ui.width("Tuff Client menu", Ui.Font.BODY) != client.font.width("Tuff Client menu"));
 		if (!customFont) throw new AssertionError("Tuff UI font did not load");
 
-		TuffMenuScreen menu = context.computeOnClient(client -> new TuffMenuScreen(null));
+		Screen title = context.computeOnClient(client -> client.gui.screen());
+		TuffMenuScreen menu = context.computeOnClient(client -> new TuffMenuScreen(title));
 		context.setScreen(() -> menu);
 		context.waitTicks(15);
 		context.takeScreenshot("tuff-menu-mods");
@@ -63,7 +65,7 @@ public class TuffClientGameTest implements FabricClientGameTest {
 			context.waitTicks(12);
 			context.takeScreenshot("tuff-menu-" + page.name().toLowerCase());
 		}
-		context.setScreen(() -> null);
+		context.runOnClient(client -> menu.onClose());
 		context.waitForScreen(TuffTitleScreen.class);
 
 		try (TestSingleplayerContext world = context.worldBuilder().create()) {

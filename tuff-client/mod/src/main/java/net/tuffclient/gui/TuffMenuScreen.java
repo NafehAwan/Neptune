@@ -66,7 +66,9 @@ public final class TuffMenuScreen extends Screen {
 			Map.entry("speed", "bolt"), Map.entry("memory", "chip"), Map.entry("zoom", "search"),
 			Map.entry("fullbright", "sun"), Map.entry("toggle_sprint", "sprint"), Map.entry("crosshair", "crosshair"),
 			Map.entry("hide_scoreboard", "list"), Map.entry("title_screen", "image"));
-	private static final int CARD_H = 80;
+	private static final int CARD_H = 90;
+	/** The menu is laid out in a space about this many units tall, whatever the GUI scale. */
+	private static final float VIRTUAL_HEIGHT = 400;
 	private static final int GAP = 8;
 	private static final int SIDEBAR = 112;
 
@@ -93,6 +95,7 @@ public final class TuffMenuScreen extends Screen {
 	private List<String> enabledPacks;
 	private List<String> availablePacks;
 	private boolean packsDirty;
+	private double clickX;
 
 	public TuffMenuScreen(Screen parent) {
 		this(parent, Page.MODS);
@@ -143,20 +146,39 @@ public final class TuffMenuScreen extends Screen {
 
 	// ------------------------------------------------------------------ layout
 
+	/**
+	 * GUI units per menu unit. Large GUI scales (the default on 1080p and up) would make the
+	 * menu huge and cramped, so it is drawn at a steady physical size instead, never larger
+	 * than vanilla would draw it.
+	 */
+	private float zoom() {
+		int gs = Ui.guiScale();
+		float unit = Math.max(1, Math.min(gs, height * gs / VIRTUAL_HEIGHT));
+		return unit / gs;
+	}
+
+	private float vw() {
+		return width / zoom();
+	}
+
+	private float vh() {
+		return height / zoom();
+	}
+
 	private float ww() {
-		return Math.max(360, Math.min(620, width * 0.9f));
+		return Math.max(360, Math.min(620, vw() * 0.9f));
 	}
 
 	private float wh() {
-		return Math.max(220, Math.min(370, height * 0.88f));
+		return Math.max(220, Math.min(370, vh() * 0.88f));
 	}
 
 	private float wx() {
-		return (width - ww()) / 2;
+		return (vw() - ww()) / 2;
 	}
 
 	private float wy() {
-		return (height - wh()) / 2;
+		return (vh() - wh()) / 2;
 	}
 
 	// ------------------------------------------------------------------ rendering
@@ -175,7 +197,9 @@ public final class TuffMenuScreen extends Screen {
 	}
 
 	@Override
-	public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
+	public void extractRenderState(GuiGraphicsExtractor g, int guiMouseX, int guiMouseY, float partialTick) {
+		float z = zoom();
+		int mouseX = Math.round(guiMouseX / z), mouseY = Math.round(guiMouseY / z);
 		long now = System.nanoTime();
 		dt = Math.min(0.1f, (now - last) / 1e9f);
 		last = now;
@@ -187,10 +211,12 @@ public final class TuffMenuScreen extends Screen {
 
 		float x = wx(), y = wy(), w = ww(), h = wh();
 		float s = 0.96f + 0.04f * open;
+		Ui.zoom = z;
 		g.pose().pushMatrix();
-		g.pose().translate(width / 2f, height / 2f);
+		g.pose().scale(z, z);
+		g.pose().translate(vw() / 2f, vh() / 2f);
 		g.pose().scale(s, s);
-		g.pose().translate(-width / 2f, -height / 2f);
+		g.pose().translate(-vw() / 2f, -vh() / 2f);
 		float a = open;
 
 		Ui.shadow(g, x, y, w, h, 22, 0.55f * a);
@@ -210,6 +236,7 @@ public final class TuffMenuScreen extends Screen {
 		if (drawerAnim > 0.01f && drawer != null) drawer(g, mouseX, mouseY, x, y, w, h, a);
 		else if (drawerAnim > 0.01f) drawerAnim = 0;
 		g.pose().popMatrix();
+		Ui.zoom = 1f;
 	}
 
 	private void sidebar(GuiGraphicsExtractor g, int mouseX, int mouseY, float x, float y, float h, float a) {
@@ -351,10 +378,13 @@ public final class TuffMenuScreen extends Screen {
 		scrollbar(g, gx + gw + 6, gy, gh, a);
 
 		float fy = y + h - 17;
-		Ui.text(g, "Click to toggle  ·  Right-click or the gear for options  ·  Type to search", mx + 18, fy, Theme.alpha(Theme.FAINT, a), Ui.Font.BODY);
+		String hint = "Click to toggle  ·  Right-click or the gear for options  ·  Type to search";
 		String mc = net.fabricmc.loader.api.FabricLoader.getInstance().getModContainer("minecraft")
 				.map(c -> c.getMetadata().getVersion().getFriendlyString()).orElse("");
-		Ui.right(g, "Tuff Client  ·  " + mc, mx + mw - 18, fy, Theme.alpha(Theme.FAINT, a), Ui.Font.BODY);
+		String version = "Tuff Client  ·  " + mc;
+		boolean both = Ui.width(hint, Ui.Font.BODY) + 16 + Ui.width(version, Ui.Font.BODY) <= mw - 36;
+		Ui.text(g, Ui.ellipsize(hint, Ui.Font.BODY, Math.round(mw - 36)), mx + 18, fy, Theme.alpha(Theme.FAINT, a), Ui.Font.BODY);
+		if (both) Ui.right(g, version, mx + mw - 18, fy, Theme.alpha(Theme.FAINT, a), Ui.Font.BODY);
 	}
 
 	private void scrollbar(GuiGraphicsExtractor g, float x, float y, float h, float a) {
@@ -374,11 +404,16 @@ public final class TuffMenuScreen extends Screen {
 		Ui.round(g, x, y - lift, w, CARD_H, 9, Theme.alpha(fill, a), Theme.alpha(border, a), 1);
 		Ui.icon(g, ICONS.getOrDefault(m.id, "cube"), x + w / 2 - 12, y - lift + 10, 24, Theme.alpha(Theme.mix(0xFF6B7069, Theme.COPPER, on), a));
 		Ui.centered(g, Ui.ellipsize(m.name, Ui.Font.SEMIBOLD, Math.round(w - 14)), x + w / 2, y - lift + 39, Theme.alpha(Theme.TEXT, a), Ui.Font.SEMIBOLD);
-		Ui.centered(g, Ui.ellipsize(m.description, Ui.Font.BODY, Math.round(w - 14)), x + w / 2, y - lift + 51, Theme.alpha(Theme.MUTED, a), Ui.Font.BODY);
-		g.fill(Math.round(x + 9), Math.round(y - lift + 62), Math.round(x + w - 9), Math.round(y - lift + 63), Theme.alpha(0x14FFFFFF, a));
+		List<String> lines = wrap(m.description, Ui.Font.BODY, Math.round(w - 16));
+		for (int i = 0; i < Math.min(2, lines.size()); i++) {
+			String line = lines.get(i);
+			if (i == 1 && lines.size() > 2) line = Ui.ellipsize(String.join(" ", lines.subList(1, lines.size())), Ui.Font.BODY, Math.round(w - 16));
+			Ui.centered(g, line, x + w / 2, y - lift + 51 + i * 10, Theme.alpha(Theme.MUTED, a), Ui.Font.BODY);
+		}
+		g.fill(Math.round(x + 9), Math.round(y - lift + 72), Math.round(x + w - 9), Math.round(y - lift + 73), Theme.alpha(0x14FFFFFF, a));
 		boolean hasSettings = !m.settings().isEmpty();
 		if (hasSettings) {
-			float gx = x + 9, gy = y - lift + 66;
+			float gx = x + 9, gy = y - lift + 76;
 			boolean gearOver = inView && Theme.inside(mouseX, mouseY, gx - 3, gy - 2, gx + 15, gy + 14);
 			Ui.icon(g, "gear", gx, gy, 12, Theme.alpha(gearOver ? Theme.COPPER_HI : Theme.mix(Theme.FAINT, Theme.MUTED, hv), a));
 			if (inView) hit(gx - 3, gy - 2, gx + 15, gy + 14, e -> {
@@ -386,7 +421,7 @@ public final class TuffMenuScreen extends Screen {
 				openSettings(m);
 			});
 		}
-		Ui.toggle(g, x + w - 9 - 22, y - lift + 66, on, a);
+		Ui.toggle(g, x + w - 9 - 22, y - lift + 76, on, a);
 		if (inView) hit(x, y, x + w, y + CARD_H, e -> {
 			click();
 			if (e.button() == 1 && hasSettings) openSettings(m);
@@ -491,7 +526,7 @@ public final class TuffMenuScreen extends Screen {
 			dragging = n;
 			dragX1 = x + 2;
 			dragX2 = x + w - 2;
-			updateSlider(e.x());
+			updateSlider(clickX);
 		});
 		return y + 32;
 	}
@@ -555,7 +590,7 @@ public final class TuffMenuScreen extends Screen {
 		float hv = anim("opt:" + label, over, 16);
 		Ui.round(g, x, y, w, 34, 9, Theme.alpha(Theme.mix(0xFF1B1E1C, 0xFF212522, hv), a), Theme.alpha(0x12FFFFFF, a), 1);
 		Ui.text(g, label, x + 12, y + 8, Theme.alpha(Theme.TEXT, a), Ui.Font.SEMIBOLD);
-		Ui.text(g, hint, x + 12, y + 20, Theme.alpha(Theme.MUTED, a), Ui.Font.BODY);
+		Ui.text(g, Ui.ellipsize(hint, Ui.Font.BODY, Math.round(w - 58)), x + 12, y + 20, Theme.alpha(Theme.MUTED, a), Ui.Font.BODY);
 		Ui.toggle(g, x + w - 12 - 22, y + 11, anim("optT:" + label, value, 14), a);
 		hit(x, y, x + w, y + 34, e -> {
 			click();
@@ -567,8 +602,8 @@ public final class TuffMenuScreen extends Screen {
 	private float actionRow(GuiGraphicsExtractor g, int mouseX, int mouseY, float x, float y, float w, String label, String hint, String button, Runnable action, float a) {
 		Ui.round(g, x, y, w, 34, 9, Theme.alpha(0xFF1B1E1C, a), Theme.alpha(0x12FFFFFF, a), 1);
 		Ui.text(g, label, x + 12, y + 8, Theme.alpha(Theme.TEXT, a), Ui.Font.SEMIBOLD);
-		Ui.text(g, hint, x + 12, y + 20, Theme.alpha(Theme.MUTED, a), Ui.Font.BODY);
 		float bw = Ui.width(button, Ui.Font.SEMIBOLD) + 18, bx = x + w - 10 - bw, by = y + 8;
+		Ui.text(g, Ui.ellipsize(hint, Ui.Font.BODY, Math.round(w - 32 - bw)), x + 12, y + 20, Theme.alpha(Theme.MUTED, a), Ui.Font.BODY);
 		boolean over = Theme.inside(mouseX, mouseY, bx, by, bx + bw, by + 18);
 		Ui.glassButton(g, bx, by, bw, 18, anim("act:" + label, over, 16), a);
 		Ui.centered(g, button, bx + bw / 2, by + 5, Theme.alpha(Theme.TEXT, a), Ui.Font.SEMIBOLD);
@@ -587,11 +622,11 @@ public final class TuffMenuScreen extends Screen {
 		cy = optionRow(g, mouseX, mouseY, px, cy, pw, "Tuff title screen", "Use the Tuff main menu instead of the vanilla one.", title.isEnabled(), title::toggle, a);
 		cy = optionRow(g, mouseX, mouseY, px, cy, pw, "Animated background", "Parallax, glowing bulbs and embers on the title screen.", title.animate.get(), title.animate::toggle, a);
 		cy = actionRow(g, mouseX, mouseY, px, cy, pw, "Keybinds", "Menu is Right Shift, zoom is C by default.", "Open", () -> minecraft.gui.setScreen(new KeyBindsScreen(this, minecraft.options)), a);
-		actionRow(g, mouseX, mouseY, px, cy, pw, "HUD layout", "Move every HUD module back to its default spot.", "Reset", () -> {
+		cy = actionRow(g, mouseX, mouseY, px, cy, pw, "HUD layout", "Move every HUD module back to its default spot.", "Reset", () -> {
 			for (HudModule m : modules().hud()) m.resetPosition();
 			TuffConfig.save(modules());
 		}, a);
-		Ui.text(g, "Settings are saved to config/tuff/config.json", px, y + h - 17, Theme.alpha(Theme.FAINT, a), Ui.Font.BODY);
+		if (cy < y + h - 22) Ui.text(g, "Settings are saved to config/tuff/config.json", px, y + h - 17, Theme.alpha(Theme.FAINT, a), Ui.Font.BODY);
 	}
 
 	// ------------------------------------------------------------------ packs page
@@ -671,7 +706,7 @@ public final class TuffMenuScreen extends Screen {
 		boolean over = Theme.inside(mouseX, mouseY, x, y, x + w, y + 28) && mouseY >= top && mouseY < bottom;
 		float hv = anim("pack:" + enabled + id, over, 16);
 		Ui.round(g, x, y, w, 28, 8, Theme.alpha(Theme.mix(0xFF1B1E1C, 0xFF222623, hv), a), Theme.alpha(enabled ? Theme.alpha(Theme.COPPER, 0.35f) : 0x12FFFFFF, a), 1);
-		float textW = w - 20 - (enabled ? 48 : 20);
+		float textW = w - 20 - (required ? Ui.width("Built-in", Ui.Font.BODY) + 8 : enabled ? 48 : 20);
 		Ui.text(g, Ui.ellipsize(title, Ui.Font.SEMIBOLD, Math.round(textW)), x + 10, y + 6, Theme.alpha(Theme.TEXT, a), Ui.Font.SEMIBOLD);
 		Ui.text(g, Ui.ellipsize(desc, Ui.Font.BODY, Math.round(textW)), x + 10, y + 17, Theme.alpha(Theme.MUTED, a), Ui.Font.BODY);
 		if (required) {
@@ -715,14 +750,17 @@ public final class TuffMenuScreen extends Screen {
 
 	@Override
 	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+		float z = zoom();
+		double x = event.x() / z, y = event.y() / z;
+		clickX = x;
 		for (int i = hits.size() - 1; i >= 0; i--) {
 			Hit h = hits.get(i);
-			if (Theme.inside(event.x(), event.y(), h.x1(), h.y1(), h.x2(), h.y2())) {
+			if (Theme.inside(x, y, h.x1(), h.y1(), h.x2(), h.y2())) {
 				h.action().accept(event);
 				return true;
 			}
 		}
-		if (!Theme.inside(event.x(), event.y(), wx(), wy(), wx() + ww(), wy() + wh())) {
+		if (!Theme.inside(x, y, wx(), wy(), wx() + ww(), wy() + wh())) {
 			onClose();
 			return true;
 		}
@@ -732,7 +770,7 @@ public final class TuffMenuScreen extends Screen {
 	@Override
 	public boolean mouseDragged(MouseButtonEvent event, double dx, double dy) {
 		if (dragging != null) {
-			updateSlider(event.x());
+			updateSlider(event.x() / zoom());
 			return true;
 		}
 		return super.mouseDragged(event, dx, dy);
@@ -746,7 +784,7 @@ public final class TuffMenuScreen extends Screen {
 
 	@Override
 	public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-		if (drawer != null && mouseX > wx() + ww() - 210) {
+		if (drawer != null && mouseX / zoom() > wx() + ww() - 210) {
 			drawerScroll = (float) Math.max(0, Math.min(drawerMax, drawerScroll - scrollY * 18));
 		} else {
 			scrollTarget = (float) Math.max(0, Math.min(maxScroll, scrollTarget - scrollY * 30));
