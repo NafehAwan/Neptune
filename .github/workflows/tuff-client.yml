@@ -56,6 +56,13 @@ jobs:
         # Same setup as Fabric API's own client tests: Mesa's software Vulkan driver.
         run: |
           timeout 15m xvfb-run -a -s "-screen 0 1280x720x24 +extension GLX +render -noreset" ./gradlew runClientGameTest --stacktrace
+      - name: Print screenshot previews
+        if: always()
+        run: |
+          for f in $(find . -path '*screenshots*' -name '*.png' | sort); do
+            convert "$f" -resize 960x -quality 70 /tmp/preview.jpg
+            echo "SHOT $(basename "$f") $(base64 -w0 /tmp/preview.jpg)"
+          done
       - name: Show game log
         if: failure()
         run: find . -name latest.log -path '*logs*' -exec tail -n 150 {} \;

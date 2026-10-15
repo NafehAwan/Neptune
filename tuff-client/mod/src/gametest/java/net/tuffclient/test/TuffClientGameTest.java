@@ -3,6 +3,7 @@ package net.tuffclient.test;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
+import net.minecraft.client.gui.screens.TitleScreen;
 import net.tuffclient.TuffClient;
 import net.tuffclient.gui.HudEditorScreen;
 import net.tuffclient.gui.TuffMenuScreen;
@@ -52,5 +53,11 @@ public class TuffClientGameTest implements FabricClientGameTest {
 				TuffClient.modules().fullbright.setEnabled(false);
 			});
 		}
+
+		// Leaving the world lands on the Tuff title screen again; the test
+		// framework requires the vanilla one at the end, so switch it off.
+		context.waitForScreen(TuffTitleScreen.class);
+		context.runOnClient(client -> TuffClient.modules().titleScreen.setEnabled(false));
+		context.setScreen(TitleScreen::new);
 	}
 }
