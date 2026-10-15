@@ -336,7 +336,7 @@ public final class TuffMenuScreen extends Screen {
 			default -> "";
 		};
 		Ui.text(g, page.label, x + 18, y + TOP + 13, Theme.alpha(Theme.TEXT, a), Ui.Font.TITLE);
-		Ui.text(g, subtitle, x + 26 + Ui.width(page.label, Ui.Font.TITLE), y + TOP + 18.5f, Theme.alpha(Theme.MUTED, a), Ui.Font.BODY);
+		Ui.text(g, subtitle, x + 26 + Ui.width(page.label, Ui.Font.TITLE), y + TOP + 15, Theme.alpha(Theme.MUTED, a), Ui.Font.BODY);
 	}
 
 	// ------------------------------------------------------------------ mods page
@@ -621,7 +621,7 @@ public final class TuffMenuScreen extends Screen {
 			boolean selected = modules().ui.accent.get() == i;
 			boolean over = Theme.inside(mouseX, mouseY, sx, sy, sx + sw, sy + 46);
 			float act = anim("acc:" + i, selected, 14), hv = anim("accH:" + i, over, 16);
-			Ui.round(g, sx, sy, sw, 46, 9, Theme.alpha(Theme.mix(0xFF1B1E1C, 0xFF232724, hv), a), Theme.alpha(Theme.mix(0x14FFFFFF, acc.base, act), a), 1 + act * 0.5f);
+			Ui.round(g, sx, sy, sw, 46, 9, Theme.alpha(Theme.mix(0xFF1B1E1C, 0xFF232724, hv), a), Theme.alpha(Theme.mix(0x14FFFFFF, acc.base, act), a), 1);
 			Ui.circle(g, sx + sw / 2, sy + 17, 9, Theme.alpha(acc.base, a));
 			Ui.round(g, sx + sw / 2 - 6, sy + 10, 12, 5, 2.5f, Theme.alpha(0x40FFFFFF, a));
 			if (act > 0.05f) Ui.icon(g, "check", sx + sw / 2 - 6, sy + 11, 12, Theme.alpha(0xFFFFFFFF, act * a));
