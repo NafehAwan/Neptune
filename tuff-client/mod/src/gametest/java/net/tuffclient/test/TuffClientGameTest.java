@@ -60,19 +60,36 @@ public class TuffClientGameTest implements FabricClientGameTest {
 		context.waitTicks(15);
 		context.takeScreenshot("tuff-menu-mods");
 
-		// Clicking a card's ENABLED/DISABLED bar toggles the module.
+		// Clicking a card's switch toggles the module.
 		Module scoreboard = context.computeOnClient(client -> TuffClient.modules().hideScoreboard);
 		boolean before = context.computeOnClient(client -> scoreboard.isEnabled());
-		double[] bar = context.computeOnClient(client -> menu.statusBarPosition(scoreboard.id));
+		double[] bar = context.computeOnClient(client -> menu.switchPosition(scoreboard.id));
 		if (bar == null) throw new AssertionError("Hide Scoreboard card was not drawn");
 		context.getInput().setCursorPos(bar[0], bar[1]);
 		context.waitTicks(1);
 		context.getInput().pressMouse(0);
 		context.waitTicks(2);
-		if (context.computeOnClient(client -> scoreboard.isEnabled()) == before) throw new AssertionError("Clicking the status bar did not toggle the module");
+		if (context.computeOnClient(client -> scoreboard.isEnabled()) == before) throw new AssertionError("Clicking the switch did not toggle the module");
 		context.waitTicks(12);
 		context.takeScreenshot("tuff-menu-toggled");
 		context.runOnClient(client -> scoreboard.setEnabled(before));
+
+		// The heart marks a favorite.
+		Module fps = context.computeOnClient(client -> TuffClient.modules().zoom);
+		double[] heart = context.computeOnClient(client -> menu.heartPosition(fps.id));
+		if (heart == null) throw new AssertionError("Zoom card was not drawn");
+		context.getInput().setCursorPos(heart[0], heart[1]);
+		context.waitTicks(1);
+		context.getInput().pressMouse(0);
+		context.waitTicks(2);
+		if (!context.computeOnClient(client -> fps.favorite)) throw new AssertionError("Clicking the heart did not favorite the module");
+		context.runOnClient(client -> menu.setListView(true));
+		context.waitTicks(10);
+		context.takeScreenshot("tuff-menu-list");
+		context.runOnClient(client -> {
+			menu.setListView(false);
+			fps.favorite = false;
+		});
 		context.runOnClient(client -> menu.openSettings(TuffClient.modules().crosshair));
 		context.waitTicks(15);
 		context.takeScreenshot("tuff-menu-drawer");

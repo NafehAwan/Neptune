@@ -11,7 +11,8 @@ public final class Theme {
 		MINT("Mint", 0xFF4FC79A, 0xFF8FE3B0, 0xFF2E8B67),
 		SKY("Sky", 0xFF5AA9F0, 0xFF8EC9FF, 0xFF2F6FAE),
 		ROSE("Rose", 0xFFE8708A, 0xFFF4A3B5, 0xFFA8435A),
-		GOLD("Gold", 0xFFE3B23C, 0xFFF2D06B, 0xFF9C7A22);
+		GOLD("Gold", 0xFFE3B23C, 0xFFF2D06B, 0xFF9C7A22),
+		RED("Red", 0xFFE53935, 0xFFFF5A5A, 0xFFA82020);
 
 		public final String label;
 		public final int base;
@@ -44,10 +45,18 @@ public final class Theme {
 	public static final int DISABLED = 0xFFA8373A;
 	public static final int DISABLED_HI = 0xFFC44448;
 
-	/** Accent colours; reassigned by {@link #apply}. */
-	public static int COPPER = Accent.COPPER.base;
-	public static int COPPER_HI = Accent.COPPER.hi;
-	public static int COPPER_LO = Accent.COPPER.lo;
+	/** Mod menu surfaces. */
+	public static final int PANEL = 0xDC0F0F11;
+	public static final int SIDEBAR = 0xE80B0B0D;
+	public static final int CARD = 0xC01C1C20;
+	public static final int CARD_HOVER = 0xD826262B;
+	public static final int CHIP = 0xFF2A2A30;
+	public static final int BADGE_NEW = 0xFF2FB34A;
+
+	/** Accent colours; reassigned by {@link #apply}. Red is the default. */
+	public static int COPPER = Accent.RED.base;
+	public static int COPPER_HI = Accent.RED.hi;
+	public static int COPPER_LO = Accent.RED.lo;
 
 	private Theme() {
 	}

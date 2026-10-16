@@ -14,6 +14,8 @@ public abstract class Module {
 	public final Category category;
 	private final List<Setting<?>> settings = new ArrayList<>();
 	private boolean enabled;
+	/** Starred in the mod menu; shown under the Favorites filter. */
+	public boolean favorite;
 
 	protected Module(String id, String name, String description, Category category, boolean enabledByDefault) {
 		this.id = id;
@@ -65,6 +67,7 @@ public abstract class Module {
 	public JsonObject save() {
 		JsonObject json = new JsonObject();
 		json.addProperty("enabled", enabled);
+		if (favorite) json.addProperty("favorite", true);
 		JsonObject values = new JsonObject();
 		for (Setting<?> s : settings) values.add(s.id, s.toJson());
 		json.add("settings", values);
@@ -73,6 +76,7 @@ public abstract class Module {
 
 	public void load(JsonObject json) {
 		if (json.has("enabled")) enabled = json.get("enabled").getAsBoolean();
+		favorite = json.has("favorite") && json.get("favorite").getAsBoolean();
 		if (json.has("settings") && json.get("settings").isJsonObject()) {
 			JsonObject values = json.getAsJsonObject("settings");
 			for (Setting<?> s : settings) {

@@ -20,7 +20,9 @@ public final class Ui {
 		/** Small print: counts, hints, footers. */
 		SMALL("small"),
 		/** Bold small capitals for status bars. */
-		CAPS("caps");
+		CAPS("caps"),
+		/** Tiny labels under sidebar icons and on badges. */
+		TINY("tiny");
 
 		/** One copy per oversample level, so glyphs are rasterised near the size they are shown at. */
 		private final FontDescription[] variants = new FontDescription[MAX_OVERSAMPLE];
@@ -197,6 +199,53 @@ public final class Ui {
 		int fill = Theme.mix(0xC81B1D1B, 0xE62A2E2B, hover);
 		int border = Theme.mix(0x30FFFFFF, Theme.alpha(Theme.COPPER, 0.85f), hover);
 		round(g, x, y, w, h, Math.min(7, h / 2), Theme.alpha(fill, alpha), Theme.alpha(border, alpha), 1);
+	}
+
+	private static final int[] LUCIDE_SIZES = {32, 64, 128};
+
+	/** Draws a smooth Lucide line icon, picking the sprite size closest to its on-screen size. */
+	public static void lucide(GuiGraphicsExtractor g, String name, float x, float y, float size, int argb) {
+		if ((argb >>> 24) == 0) return;
+		float physical = size * scale();
+		int pick = LUCIDE_SIZES[LUCIDE_SIZES.length - 1];
+		for (int s : LUCIDE_SIZES) {
+			if (s >= physical * 0.85f) {
+				pick = s;
+				break;
+			}
+		}
+		g.pose().pushMatrix();
+		g.pose().translate(x, y);
+		g.pose().scale(size / pick, size / pick);
+		g.blitSprite(RenderPipelines.GUI_TEXTURED, id("lucide/" + pick + "/" + name), 0, 0, pick, pick, argb);
+		g.pose().popMatrix();
+	}
+
+	/**
+	 * A header tab with a rounded left side and a slanted right edge (wider at the top),
+	 * filled one physical pixel row at a time so the slant stays smooth.
+	 */
+	public static void slantTab(GuiGraphicsExtractor g, float x, float y, float w, float h, float slant, int argb) {
+		if ((argb >>> 24) == 0) return;
+		round(g, x, y, w - slant + 4, h, Math.min(4, h / 2), argb);
+		float p = scale();
+		g.pose().pushMatrix();
+		g.pose().scale(1 / p, 1 / p);
+		int left = Math.round((x + w - slant) * p);
+		int top = Math.round(y * p), bottom = Math.round((y + h) * p);
+		for (int row = top; row < bottom; row++) {
+			float t = (row + 0.5f - top) / Math.max(1, bottom - top);
+			int right = Math.round((x + w - slant * t) * p);
+			if (right > left) g.fill(left, row, right, row + 1, argb);
+		}
+		g.pose().popMatrix();
+	}
+
+	/** A small pill switch like the one on Lunar-style mod cards. */
+	public static void pillSwitch(GuiGraphicsExtractor g, float x, float y, float anim, float alpha) {
+		int track = Theme.mix(0xFF3A3A40, Theme.COPPER, anim);
+		round(g, x, y, 20, 10, 5, Theme.alpha(track, alpha));
+		circle(g, x + 5 + 10 * anim, y + 5, 3.5f, Theme.alpha(Theme.mix(0xFFB8B8BE, 0xFFFFFFFF, anim), alpha));
 	}
 
 	/** Extra scale a screen applies on top of the GUI scale (see {@link TuffMenuScreen}). */
