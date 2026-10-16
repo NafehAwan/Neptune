@@ -449,9 +449,9 @@ public final class TuffMenuScreen extends Screen {
 
 	private void mods(GuiGraphicsExtractor g, int mouseX, int mouseY, float x, float y, float w, float h, float a) {
 		float gx = x + 8, gy = y + 26, gw = w - 16, gh = h - 26 - 8;
-		int cols = listView ? 1 : gw >= 380 ? 4 : 3;
+		int cols = listView ? 1 : gw >= 560 ? 4 : 3;
 		float cw = (gw - GAP * (cols - 1)) / cols;
-		float ch = listView ? 28 : Math.max(58, Math.min(80, cw * 0.64f));
+		float ch = listView ? 28 : Math.max(62, Math.min(92, cw * 0.62f));
 		List<Module> list = filtered(tab);
 		int rows = (list.size() + cols - 1) / cols;
 		maxScroll = Math.max(0, rows * (ch + GAP) - GAP - gh);
@@ -529,7 +529,7 @@ public final class TuffMenuScreen extends Screen {
 		// centre: a live preview for HUD mods in a world, otherwise a big line icon
 		float areaTop = y + 12, areaBottom = y + h - 17;
 		if (!preview(g, m, x + w / 2, (areaTop + areaBottom) / 2, w - 18, areaBottom - areaTop, on, a)) {
-			float size = Math.min(30, areaBottom - areaTop);
+			float size = Math.min(36, areaBottom - areaTop - 2);
 			int color = Theme.mix(0xFF55555C, 0xFFFFFFFF, on);
 			Ui.lucide(g, ICONS.getOrDefault(m.id, "grid"), x + w / 2 - size / 2, (areaTop + areaBottom) / 2 - size / 2, size, Theme.alpha(color, a));
 		}

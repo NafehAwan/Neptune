@@ -90,7 +90,7 @@ profiles automatically.
   HUD) beside a dark panel with a red "Mod Menu" tab, and a steady size at any
   GUI scale.
   - *Mods*: filter chips (All, New, Favorites, HUD, Utility, Visual), search,
-    and a 4-column grid of cards with a big icon or a live HUD preview, a heart
+    and a 3-column grid of cards with a big icon or a live HUD preview, a heart
     to favorite, and a switch. Grid or list view; right-click or the gear opens
     a settings drawer (switches, choices and sliders).
   - *Theme*: accent color (Red by default, Copper, Amethyst, Mint, Sky, Rose, Gold), background
