@@ -535,7 +535,7 @@ public final class TuffMenuScreen extends Screen {
 		}
 
 		// name and switch
-		Ui.text(g, Ui.ellipsize(m.name, Ui.Font.SEMIBOLD, Math.round(w - 36)), x + 6, y + h - 14, Theme.alpha(Theme.mix(0xFF8A8A92, 0xFFFFFFFF, on), a), Ui.Font.SEMIBOLD);
+		Ui.text(g, Ui.ellipsize(m.name, Ui.Font.NAME, Math.round(w - 34)), x + 6, y + h - 13.5f, Theme.alpha(Theme.mix(0xFF8A8A92, 0xFFFFFFFF, on), a), Ui.Font.NAME);
 		float sx = x + w - 6 - 20, sy = y + h - 14;
 		Ui.pillSwitch(g, sx, sy, on, a);
 		switches.put(m.id, new float[] {sx + 10, sy + 5});

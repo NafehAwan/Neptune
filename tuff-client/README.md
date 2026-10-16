@@ -86,12 +86,14 @@ profiles automatically.
   bulbs, a glowing spawner and drifting embers, drawn at full screen
   resolution. Rounded buttons, an account chip, and a toolbar that opens the
   menu on any page.
-- **Mod menu** (Right Shift): a wide window with a top bar (Mods, Theme, Packs,
-  Settings, Edit HUD) that keeps a steady size at any GUI scale.
-  - *Mods*: category tabs with counts and a grid of cards, each with a large
-    icon and a green ENABLED / red DISABLED bar. Type to search; right-click or
-    the gear opens a settings drawer (switches, choices and sliders).
-  - *Theme*: accent color (Copper, Amethyst, Mint, Sky, Rose, Gold), background
+- **Mod menu** (Right Shift): a left sidebar (Mods, Theme, Packs, Settings,
+  HUD) beside a dark panel with a red "Mod Menu" tab, and a steady size at any
+  GUI scale.
+  - *Mods*: filter chips (All, New, Favorites, HUD, Utility, Visual), search,
+    and a 4-column grid of cards with a big icon or a live HUD preview, a heart
+    to favorite, and a switch. Grid or list view; right-click or the gear opens
+    a settings drawer (switches, choices and sliders).
+  - *Theme*: accent color (Red by default, Copper, Amethyst, Mint, Sky, Rose, Gold), background
     blur and animations.
   - *Packs*: enable, disable and reorder resource packs.
   - *Settings*: title screen and background toggles, keybinds, HUD reset.
@@ -108,7 +110,8 @@ Settings are saved to `config/tuff/config.json`.
 
 `art/chamber.html` paints the chamber layers on a canvas; `art/render.mjs`
 renders them with Playwright into the mod and the launcher, and
-`art/sprites.py` builds the mod's icon and rounded-corner sprites.
+`art/sprites.py` builds the mod's pixel icons and rounded-corner sprites, and
+`art/icons.mjs` renders the menu's Lucide line icons (ISC license).
 
 ```sh
 PLAYWRIGHT_PATH=$(npm root -g)/playwright node tuff-client/art/render.mjs

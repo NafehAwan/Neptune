@@ -57,6 +57,8 @@ public class TuffClientGameTest implements FabricClientGameTest {
 		Screen title = context.computeOnClient(client -> client.gui.screen());
 		TuffMenuScreen menu = context.computeOnClient(client -> new TuffMenuScreen(title));
 		context.setScreen(() -> menu);
+		// Park the cursor in a corner so screenshots show no hover state or tooltip.
+		context.getInput().setCursorPos(4, 4);
 		context.waitTicks(15);
 		context.takeScreenshot("tuff-menu-mods");
 
@@ -70,6 +72,7 @@ public class TuffClientGameTest implements FabricClientGameTest {
 		context.getInput().pressMouse(0);
 		context.waitTicks(2);
 		if (context.computeOnClient(client -> scoreboard.isEnabled()) == before) throw new AssertionError("Clicking the switch did not toggle the module");
+		context.getInput().setCursorPos(4, 4);
 		context.waitTicks(12);
 		context.takeScreenshot("tuff-menu-toggled");
 		context.runOnClient(client -> scoreboard.setEnabled(before));
@@ -83,6 +86,7 @@ public class TuffClientGameTest implements FabricClientGameTest {
 		context.getInput().pressMouse(0);
 		context.waitTicks(2);
 		if (!context.computeOnClient(client -> fps.favorite)) throw new AssertionError("Clicking the heart did not favorite the module");
+		context.getInput().setCursorPos(4, 4);
 		context.runOnClient(client -> menu.setListView(true));
 		context.waitTicks(10);
 		context.takeScreenshot("tuff-menu-list");
@@ -116,6 +120,7 @@ public class TuffClientGameTest implements FabricClientGameTest {
 			context.takeScreenshot("tuff-hud-editor");
 
 			context.setScreen(() -> new TuffMenuScreen(null));
+			context.getInput().setCursorPos(4, 4);
 			context.waitTicks(15);
 			context.takeScreenshot("tuff-menu-ingame");
 			context.setScreen(() -> null);

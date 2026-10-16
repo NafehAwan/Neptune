@@ -22,7 +22,9 @@ public final class Ui {
 		/** Bold small capitals for status bars. */
 		CAPS("caps"),
 		/** Tiny labels under sidebar icons and on badges. */
-		TINY("tiny");
+		TINY("tiny"),
+		/** Mod names on cards. */
+		NAME("name");
 
 		/** One copy per oversample level, so glyphs are rasterised near the size they are shown at. */
 		private final FontDescription[] variants = new FontDescription[MAX_OVERSAMPLE];
