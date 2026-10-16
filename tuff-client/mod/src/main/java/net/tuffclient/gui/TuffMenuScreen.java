@@ -451,7 +451,8 @@ public final class TuffMenuScreen extends Screen {
 		float gx = x + 8, gy = y + 26, gw = w - 16, gh = h - 26 - 8;
 		int cols = listView ? 1 : gw >= 560 ? 4 : 3;
 		float cw = (gw - GAP * (cols - 1)) / cols;
-		float ch = listView ? 28 : Math.max(62, Math.min(92, cw * 0.62f));
+		// three rows fit in the panel, like the reference layout
+		float ch = listView ? 28 : Math.max(56, Math.min(cw * 0.62f, (gh - 2 * GAP) / 3f));
 		List<Module> list = filtered(tab);
 		int rows = (list.size() + cols - 1) / cols;
 		maxScroll = Math.max(0, rows * (ch + GAP) - GAP - gh);
