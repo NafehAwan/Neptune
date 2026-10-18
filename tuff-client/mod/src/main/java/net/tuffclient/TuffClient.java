@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 
 public final class TuffClient implements ClientModInitializer {
 	public static final String MOD_ID = "tuff";
-	public static final Logger LOGGER = LoggerFactory.getLogger("Tuff Client");
+	public static final Logger LOGGER = LoggerFactory.getLogger("Glade");
 	private static ModuleManager modules;
 	private static KeyMapping menuKey;
 	private static KeyMapping zoomKey;
@@ -64,6 +64,6 @@ public final class TuffClient implements ClientModInitializer {
 				modules.crosshair.render(graphics);
 			}
 		});
-		LOGGER.info("Tuff Client loaded with {} modules", modules.all().size());
+		LOGGER.info("Glade loaded with {} modules", modules.all().size());
 	}
 }

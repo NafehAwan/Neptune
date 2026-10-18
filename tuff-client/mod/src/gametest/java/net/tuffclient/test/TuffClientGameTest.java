@@ -14,6 +14,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.world.effect.MobEffects;
 import net.tuffclient.TuffClient;
+import net.tuffclient.account.Accounts;
 import net.tuffclient.gui.HudEditorScreen;
 import net.tuffclient.gui.TuffMenuScreen;
 import net.tuffclient.gui.TuffTitleScreen;
@@ -49,10 +50,35 @@ public class TuffClientGameTest implements FabricClientGameTest {
 		context.waitTicks(40);
 		context.takeScreenshot("tuff-title");
 
-		// The Inter font must actually be loaded (its widths differ from the game font).
+		// The UI fonts must actually be loaded (their widths differ from the game font).
 		boolean customFont = context.computeOnClient(client ->
-				Ui.width("Tuff Client menu", Ui.Font.BODY) != client.font.width("Tuff Client menu"));
-		if (!customFont) throw new AssertionError("Tuff UI font did not load");
+				Ui.width("Glade menu", Ui.Font.BODY) != client.font.width("Glade menu")
+						&& Ui.width("Glade", Ui.Font.DISPLAY) != client.font.width("Glade"));
+		if (!customFont) throw new AssertionError("Glade UI fonts did not load");
+
+		// The account menu: 3D heads, and offline accounts switch on the spot and back again.
+		context.getInput().setCursorPos(4, 400);
+		context.runOnClient(client -> ((TuffTitleScreen) client.gui.screen()).setAccountMenuOpen(true));
+		context.waitTicks(12);
+		context.takeScreenshot("glade-account-menu");
+		String original = context.computeOnClient(client -> client.getUser().getName());
+		context.runOnClient(client -> Accounts.addOffline("GladeTester"));
+		context.waitTicks(8);
+		if (!"GladeTester".equals(context.computeOnClient(client -> client.getUser().getName()))) {
+			throw new AssertionError("Adding an offline account did not switch to it");
+		}
+		context.takeScreenshot("glade-account-switched");
+		context.runOnClient(client -> {
+			Accounts.Account tester = Accounts.current();
+			String why = Accounts.switchTo(Accounts.launchAccount());
+			if (why != null) throw new AssertionError("Could not switch back: " + why);
+			Accounts.remove(tester);
+			((TuffTitleScreen) client.gui.screen()).setAccountMenuOpen(false);
+		});
+		if (!original.equals(context.computeOnClient(client -> client.getUser().getName()))) {
+			throw new AssertionError("Switching back did not restore the original account");
+		}
+		context.waitTicks(8);
 
 		Screen title = context.computeOnClient(client -> client.gui.screen());
 		TuffMenuScreen menu = context.computeOnClient(client -> new TuffMenuScreen(title));

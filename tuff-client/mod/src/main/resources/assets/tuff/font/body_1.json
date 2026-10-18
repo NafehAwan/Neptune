@@ -2,7 +2,7 @@
   "providers": [
     {
       "type": "ttf",
-      "file": "tuff:poppins-regular.ttf",
+      "file": "tuff:jakarta-regular.ttf",
       "size": 9,
       "oversample": 1,
       "shift": [

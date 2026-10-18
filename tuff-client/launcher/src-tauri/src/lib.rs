@@ -469,6 +469,19 @@ fn list_accounts_inner(state: &AppState) -> (Vec<Account>, Option<String>) {
     (accounts, active)
 }
 
+/// Shares the account list with the in-game account menu: ids, names and kinds only, never tokens.
+fn write_account_list(state: &AppState, game_dir: &Path) {
+    let (accounts, active) = list_accounts_inner(state);
+    let list = AccountList { accounts: accounts.iter().map(AccountView::from).collect(), active };
+    let dir = game_dir.join("config").join("tuff");
+    let written = std::fs::create_dir_all(&dir)
+        .map_err(anyhow::Error::from)
+        .and_then(|_| Ok(std::fs::write(dir.join("accounts.json"), serde_json::to_vec_pretty(&list)?)?));
+    if let Err(e) = written {
+        eprintln!("could not share the account list with the game: {e}");
+    }
+}
+
 // ---------------------------------------------------------------- launching
 
 #[derive(Serialize, Clone)]
@@ -563,6 +576,7 @@ async fn launch(app: AppHandle, state: State<'_, AppState>, profile_id: String, 
 
     let game_dir = state.paths.instance(&profile.id);
     std::fs::create_dir_all(&game_dir).map_err(|e| e.to_string())?;
+    write_account_list(&state, &game_dir);
     let session = match account.kind {
         AccountKind::Msa => launch::Session {
             name: account.name.clone(),

@@ -31,6 +31,21 @@ jobs:
         run: |
           set -o pipefail
           ./gradlew build 2>&1 | tee build.log || { echo "=== COMPILE ERRORS"; grep -E "error:" -A3 build.log | head -120; exit 1; }
+      - name: Print skin and account APIs
+        if: always()
+        run: |
+          JAR=""
+          for j in $(find ~/.gradle/caches/fabric-loom .gradle/loom-cache -name '*.jar' 2>/dev/null); do
+            if unzip -l "$j" 2>/dev/null | grep -q 'net/minecraft/client/Minecraft.class'; then JAR="$j"; break; fi
+          done
+          AUTHLIB=$(find ~/.gradle/caches -name 'authlib-*.jar' 2>/dev/null | head -1)
+          dump() { echo "=== $1"; javap -p -cp "$JAR:$AUTHLIB" "$1" 2>&1 | grep -vE "lambda\$|hashCode|equals|toString|Compiled from" | head -${2:-60}; }
+          dump net.minecraft.world.entity.player.PlayerSkin
+          dump net.minecraft.client.resources.SkinManager
+          dump net.minecraft.client.resources.DefaultPlayerSkin
+          dump 'net.minecraft.core.ClientAsset$Texture'
+          dump com.mojang.authlib.GameProfile
+          javap -p -cp "$JAR" net.minecraft.client.Minecraft | grep -iE "user|profile|skin" | head -30
       - uses: actions/upload-artifact@v4
         with:
           name: tuff-mod
@@ -65,6 +80,10 @@ jobs:
             echo "Screenshot $(basename "$f"): $(identify -format '%wx%h' "$f")"
             convert "$f" -resize 960x -quality 70 /tmp/preview.jpg || continue
             echo "SHOT $(basename "$f") $(base64 -w0 /tmp/preview.jpg)"
+          done
+          for f in $(find . -path '*screenshots*' -name '*glade-account*.png' | sort); do
+            convert "$f" -gravity northwest -crop 960x700+0+0 +repage -quality 92 /tmp/crop.jpg || continue
+            echo "SHOT crop-$(basename "$f") $(base64 -w0 /tmp/crop.jpg)"
           done
           # Full-resolution crops show real text quality.
           for f in $(find . -path '*screenshots*' -name '*tuff-menu-mods*.png' -o -path '*screenshots*' -name '*tuff-title*.png' | sort); do

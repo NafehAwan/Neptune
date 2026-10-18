@@ -40,7 +40,7 @@ public final class KeystrokesModule extends HudModule {
 		}
 		if (showSpace.get()) {
 			key(g, font, 6, client.options.keyJump, "", 0, y, w, 10, dt);
-			g.fill(w / 2 - 10, y + 4, w / 2 + 10, y + 5, glow[6] > 0.5f ? Theme.INK : Theme.MUTED);
+			g.fill(w / 2 - 10, y + 4, w / 2 + 10, y + 5, glow[6] > 0.5f ? Theme.INK : Theme.HUD_MUTED);
 			y += 10 + GAP;
 		}
 		width = w;

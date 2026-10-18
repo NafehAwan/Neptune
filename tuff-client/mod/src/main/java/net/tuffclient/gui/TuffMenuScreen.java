@@ -32,7 +32,7 @@ import net.tuffclient.setting.ChoiceSetting;
 import net.tuffclient.setting.NumberSetting;
 import net.tuffclient.setting.Setting;
 
-/** The Tuff mod menu: a top bar with Mods, Theme, Packs and Settings pages and a grid of mod cards. */
+/** The Glade mod menu: a top bar with Mods, Theme, Packs and Settings pages and a grid of mod cards. */
 public final class TuffMenuScreen extends Screen {
 	public enum Page {
 		MODS("Mods", "grid"), THEME("Theme", "palette"), PACKS("Packs", "package"), SETTINGS("Settings", "settings");
@@ -79,7 +79,7 @@ public final class TuffMenuScreen extends Screen {
 	private final Screen parent;
 	private final List<Hit> hits = new ArrayList<>();
 	private final Map<String, Float> anim = new HashMap<>();
-	private final TitleBackground background = new TitleBackground();
+	private final GroveBackground background = new GroveBackground();
 	private Page page;
 	private Tab tab = Tab.ALL;
 	private String query = "";
@@ -113,7 +113,7 @@ public final class TuffMenuScreen extends Screen {
 	}
 
 	public TuffMenuScreen(Screen parent, Page page) {
-		super(Component.literal("Tuff"));
+		super(Component.literal("Glade"));
 		this.parent = parent;
 		this.page = page;
 	}
@@ -245,13 +245,13 @@ public final class TuffMenuScreen extends Screen {
 	@Override
 	public void extractBackground(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
 		if (minecraft.level == null) {
-			background.render(g, width, height, mouseX, mouseY, TuffClient.modules().titleScreen.animate.get());
-			g.fill(0, 0, width, height, 0x8A080908);
+			background.render(g, width, height, TuffClient.modules().titleScreen.animate.get());
+			g.fill(0, 0, width, height, 0x59F6F4EE);
 		} else if (modules().ui.blur.get()) {
 			extractBlurredBackground(g);
-			g.fill(0, 0, width, height, 0x55000000);
+			g.fill(0, 0, width, height, 0x2EF6F4EE);
 		} else {
-			g.fill(0, 0, width, height, 0x99000000);
+			g.fill(0, 0, width, height, 0x73E9EEE7);
 		}
 	}
 
@@ -284,8 +284,8 @@ public final class TuffMenuScreen extends Screen {
 		sidebar(g, mouseX, mouseY, sideX(), py, ph, a);
 		toolbar(g, mouseX, mouseY, px + pw, py - 22, a);
 
-		Ui.shadow(g, px, py, pw, ph, 18, 0.5f * a);
-		Ui.round(g, px, py, pw, ph, 6, Theme.alpha(Theme.PANEL, a), Theme.alpha(0x14FFFFFF, a), 1);
+		Ui.shadow(g, px, py, pw, ph, 18, 0.2f * a);
+		Ui.round(g, px, py, pw, ph, 8, Theme.alpha(Theme.PANEL, a), Theme.alpha(Theme.GLASS_RIM, a), 1);
 
 		float pa = a * pageFade;
 		float slide = (1 - pageFade) * 6;
@@ -316,15 +316,15 @@ public final class TuffMenuScreen extends Screen {
 		for (String l : lines) tw = Math.max(tw, Ui.width(l, Ui.Font.SMALL));
 		float th = lines.size() * 9 + 7;
 		float tx = Math.min(mouseX + 10, vw() - tw - 14), ty = Math.min(mouseY + 12, vh() - th - 4);
-		Ui.round(g, tx, ty, tw + 12, th, 4, 0xF0141417, 0x26FFFFFF, 1);
+		Ui.round(g, tx, ty, tw + 12, th, 5, 0xF7FFFFFF, Theme.LINE, 1);
 		for (int i = 0; i < lines.size(); i++) Ui.text(g, lines.get(i), tx + 6, ty + 4 + i * 9, Theme.TEXT, Ui.Font.SMALL);
 	}
 
 	private void sidebar(GuiGraphicsExtractor g, int mouseX, int mouseY, float x, float y, float ph, float a) {
 		int items = Page.values().length + 1;
 		float h = Math.min(ph, 40 + items * 38 + 4);
-		Ui.shadow(g, x, y, SIDE, h, 14, 0.45f * a);
-		Ui.round(g, x, y, SIDE, h, 6, Theme.alpha(Theme.SIDEBAR, a), Theme.alpha(0x14FFFFFF, a), 1);
+		Ui.shadow(g, x, y, SIDE, h, 14, 0.18f * a);
+		Ui.round(g, x, y, SIDE, h, 8, Theme.alpha(Theme.SIDEBAR, a), Theme.alpha(Theme.GLASS_RIM, a), 1);
 		Ui.image(g, EMBLEM, x + SIDE / 2f - 12, y + 8, 24, 24, 512, 512, Theme.alpha(0xFFFFFFFF, a));
 		float iy = y + 40;
 		for (Page p : Page.values()) {
@@ -339,8 +339,8 @@ public final class TuffMenuScreen extends Screen {
 		boolean over = Theme.inside(mouseX, mouseY, x, y, x + w, y + h);
 		float hv = anim("side:" + label, over, 16), act = anim("sideA:" + label, active, 14);
 		if (act > 0.01f) Ui.round(g, x, y, w, h, 5, Theme.alpha(Theme.COPPER, act * a));
-		if (hv > 0.01f && !active) Ui.round(g, x, y, w, h, 5, Theme.alpha(0xFFFFFFFF, 0.07f * hv * a));
-		int color = Theme.mix(Theme.mix(0xFF8A8A92, 0xFFFFFFFF, hv), 0xFFFFFFFF, act);
+		if (hv > 0.01f && !active) Ui.round(g, x, y, w, h, 5, Theme.alpha(Theme.COPPER, 0.09f * hv * a));
+		int color = Theme.mix(Theme.mix(Theme.MUTED, Theme.TEXT, hv), Theme.INK, act);
 		Ui.lucide(g, icon, x + w / 2 - 6.5f, y + 6, 13, Theme.alpha(color, a));
 		Ui.centered(g, label, x + w / 2, y + 23, Theme.alpha(color, a), Ui.Font.TINY);
 		hit(x, y, x + w, y + h, e -> {
@@ -354,14 +354,14 @@ public final class TuffMenuScreen extends Screen {
 		String[] tips = {"Edit HUD", "Favorites", "Grid view", "List view", "Close"};
 		float bw = 18, gap = 2, w = icons.length * bw + (icons.length - 1) * gap + 6;
 		float x = right - w;
-		Ui.round(g, x, y, w, 18, 5, Theme.alpha(0xE60D0D0F, a), Theme.alpha(0x14FFFFFF, a), 1);
+		Ui.round(g, x, y, w, 18, 6, Theme.alpha(Theme.GLASS_STRONG, a), Theme.alpha(Theme.GLASS_RIM, a), 1);
 		for (int i = 0; i < icons.length; i++) {
 			float bx = x + 3 + i * (bw + gap);
 			boolean over = Theme.inside(mouseX, mouseY, bx, y, bx + bw, y + 18);
 			boolean on = (i == 1 && tab == Tab.FAVORITES) || (i == 2 && !listView) || (i == 3 && listView);
 			float hv = anim("tool:" + i, over, 16);
-			if (hv > 0.01f) Ui.round(g, bx, y + 2, bw, 14, 4, Theme.alpha(0xFFFFFFFF, 0.08f * hv * a));
-			int color = on ? (i == 1 ? Theme.COPPER : 0xFFFFFFFF) : Theme.mix(0xFF8A8A92, 0xFFFFFFFF, hv);
+			if (hv > 0.01f) Ui.round(g, bx, y + 2, bw, 14, 4, Theme.alpha(Theme.COPPER, 0.1f * hv * a));
+			int color = on ? Theme.COPPER : Theme.mix(Theme.MUTED, Theme.TEXT, hv);
 			Ui.lucide(g, i == 1 && on ? "heart_fill" : icons[i], bx + bw / 2 - 5, y + 4, 10, Theme.alpha(color, a));
 			if (over) tooltip = tips[i];
 			final int index = i;
@@ -382,19 +382,18 @@ public final class TuffMenuScreen extends Screen {
 		}
 	}
 
-	/** Red slanted tab with the page name, plus the filter chips and search on the Mods page. */
+	/** The page name in Fraunces, plus the filter chips and search on the Mods page. */
 	private void header(GuiGraphicsExtractor g, int mouseX, int mouseY, float x, float y, float w, float a) {
-		String title = page == Page.MODS ? "Mod Menu" : page.label;
-		float tw = Ui.width(title, Ui.Font.BOLD) + 26;
-		Ui.slantTab(g, x, y, tw, 20, 8, Theme.alpha(Theme.COPPER, a));
-		Ui.text(g, title, x + 9, y + 5, Theme.alpha(0xFFFFFFFF, a), Ui.Font.BOLD);
+		String title = page.label;
+		float tw = Ui.width(title, Ui.Font.DISPLAY_SM) + 20;
+		Ui.text(g, title, x + 10, y + 3, Theme.alpha(Theme.TEXT, a), Ui.Font.DISPLAY_SM);
 		if (page != Page.MODS) {
 			String subtitle = switch (page) {
 				case THEME -> "Accent colour and menu style";
 				case PACKS -> "Resource packs, top of the list wins";
 				default -> "Title screen, keybinds and HUD";
 			};
-			Ui.text(g, subtitle, x + tw + 8, y + 7, Theme.alpha(0xFF8A8A92, a), Ui.Font.SMALL);
+			Ui.text(g, subtitle, x + tw + 8, y + 7, Theme.alpha(Theme.MUTED, a), Ui.Font.SMALL);
 			return;
 		}
 
@@ -406,7 +405,7 @@ public final class TuffMenuScreen extends Screen {
 			boolean over = Theme.inside(mouseX, mouseY, cx, cy, cx + cw, cy + 13);
 			float act = anim("chip:" + t, active, 14), hv = anim("chipH:" + t, over, 16);
 			if (act > 0.01f) Ui.round(g, cx, cy, cw, 13, 6.5f, Theme.alpha(Theme.CHIP, act * a));
-			int color = Theme.mix(Theme.mix(0xFF8A8A92, 0xFFFFFFFF, hv), 0xFFFFFFFF, act);
+			int color = Theme.mix(Theme.mix(Theme.MUTED, Theme.TEXT, hv), Theme.COPPER, act);
 			Ui.text(g, t.label, cx + 6, cy + 3, Theme.alpha(color, a), Ui.Font.SMALL);
 			hit(cx, cy, cx + cw, cy + 13, e -> {
 				click();
@@ -419,11 +418,11 @@ public final class TuffMenuScreen extends Screen {
 		// search
 		float sw = Math.max(70, Math.min(100, x + w - 8 - cx - 6)), sx = x + w - 8 - sw, sy = y + 3;
 		boolean typing = !query.isEmpty();
-		Ui.round(g, sx, sy, sw, 15, 4, Theme.alpha(0xFF141417, a), Theme.alpha(typing ? Theme.COPPER : 0x1AFFFFFF, a), 1);
-		Ui.lucide(g, "search", sx + 5, sy + 3.5f, 8, Theme.alpha(typing ? 0xFFFFFFFF : 0xFF7A7A82, a));
+		Ui.round(g, sx, sy, sw, 15, 5, Theme.alpha(0xE6FFFFFF, a), Theme.alpha(typing ? Theme.COPPER : Theme.LINE, a), 1);
+		Ui.lucide(g, "search", sx + 5, sy + 3.5f, 8, Theme.alpha(typing ? Theme.TEXT : Theme.FAINT, a));
 		boolean blink = (System.nanoTime() / 530_000_000L) % 2 == 0;
 		String shown = typing ? query + (blink ? "|" : "") : "Search Mods";
-		Ui.text(g, Ui.ellipsize(shown, Ui.Font.SMALL, Math.round(sw - 22)), sx + 16, sy + 4, Theme.alpha(typing ? 0xFFFFFFFF : 0xFF7A7A82, a), Ui.Font.SMALL);
+		Ui.text(g, Ui.ellipsize(shown, Ui.Font.SMALL, Math.round(sw - 22)), sx + 16, sy + 4, Theme.alpha(typing ? Theme.TEXT : Theme.FAINT, a), Ui.Font.SMALL);
 	}
 
 	// ------------------------------------------------------------------ mods page
@@ -469,7 +468,7 @@ public final class TuffMenuScreen extends Screen {
 		g.disableScissor();
 		if (list.isEmpty()) {
 			String empty = tab == Tab.FAVORITES ? "No favorites yet. Click a heart to add one." : query.isEmpty() ? "Nothing here yet" : "No mods match \"" + query + "\"";
-			Ui.centered(g, empty, gx + gw / 2, gy + 40, Theme.alpha(0xFF8A8A92, a), Ui.Font.MEDIUM);
+			Ui.centered(g, empty, gx + gw / 2, gy + 40, Theme.alpha(Theme.MUTED, a), Ui.Font.MEDIUM);
 		}
 		scrollbar(g, gx + gw + 3, gy, gh, a);
 	}
@@ -478,7 +477,7 @@ public final class TuffMenuScreen extends Screen {
 		if (maxScroll <= 0) return;
 		float thumb = Math.max(24, h * h / (h + maxScroll));
 		float ty = y + (h - thumb) * (scroll / maxScroll);
-		Ui.round(g, x, ty, 2.5f, thumb, 1.25f, Theme.alpha(0x40FFFFFF, a));
+		Ui.round(g, x, ty, 2.5f, thumb, 1.25f, Theme.alpha(0x401F2A22, a));
 	}
 
 	/** Whole-card hit first, so the heart and gear (registered later) win their own clicks. */
@@ -492,7 +491,7 @@ public final class TuffMenuScreen extends Screen {
 
 	private void heart(GuiGraphicsExtractor g, int mouseX, int mouseY, Module m, float x, float y, float a, boolean inView, float clipTop, float clipBottom) {
 		boolean over = inView && Theme.inside(mouseX, mouseY, x - 3, y - 3, x + 12, y + 12);
-		int color = m.favorite ? Theme.COPPER : over ? 0xFFFFFFFF : 0xFF6E6E76;
+		int color = m.favorite ? Theme.COPPER : over ? Theme.TEXT : Theme.ICON_OFF;
 		Ui.lucide(g, m.favorite ? "heart_fill" : "heart", x, y, 9, Theme.alpha(color, a));
 		hearts.put(m.id, new float[] {x + 4.5f, y + 4.5f});
 		if (y - 3 >= clipTop && y + 12 <= clipBottom) hit(x - 3, y - 3, x + 12, y + 12, e -> {
@@ -504,7 +503,7 @@ public final class TuffMenuScreen extends Screen {
 
 	private void gear(GuiGraphicsExtractor g, int mouseX, int mouseY, Module m, float x, float y, float a, float clipTop, float clipBottom) {
 		boolean over = Theme.inside(mouseX, mouseY, x - 3, y - 3, x + 12, y + 12);
-		Ui.lucide(g, "settings", x, y, 9, Theme.alpha(over ? 0xFFFFFFFF : 0xFF9A9AA2, a));
+		Ui.lucide(g, "settings", x, y, 9, Theme.alpha(over ? Theme.TEXT : Theme.MUTED, a));
 		if (y - 3 >= clipTop && y + 12 <= clipBottom) hit(x - 3, y - 3, x + 12, y + 12, e -> {
 			click();
 			openSettings(m);
@@ -516,7 +515,7 @@ public final class TuffMenuScreen extends Screen {
 		if (over) hovered = m;
 		float hv = anim("card:" + m.id, over, 14);
 		float on = anim("on:" + m.id, m.isEnabled(), 12);
-		Ui.round(g, x, y, w, h, 4, Theme.alpha(Theme.mix(Theme.CARD, Theme.CARD_HOVER, hv), a), Theme.alpha(Theme.mix(0x10FFFFFF, Theme.alpha(Theme.COPPER, 0.55f), hv), a), 1);
+		Ui.round(g, x, y, w, h, 4, Theme.alpha(Theme.mix(Theme.CARD, Theme.CARD_HOVER, hv), a), Theme.alpha(Theme.mix(Theme.GLASS_RIM, Theme.alpha(Theme.COPPER, 0.45f), hv), a), 1);
 		cardHit(m, x, y, w, h, clipTop, clipBottom);
 
 		if (NEW_MODS.contains(m.id)) {
@@ -531,12 +530,12 @@ public final class TuffMenuScreen extends Screen {
 		float areaTop = y + 12, areaBottom = y + h - 17;
 		if (!preview(g, m, x + w / 2, (areaTop + areaBottom) / 2, w - 18, areaBottom - areaTop, on, a)) {
 			float size = Math.min(36, areaBottom - areaTop - 2);
-			int color = Theme.mix(0xFF55555C, 0xFFFFFFFF, on);
+			int color = Theme.mix(Theme.ICON_OFF, Theme.COPPER, on);
 			Ui.lucide(g, ICONS.getOrDefault(m.id, "grid"), x + w / 2 - size / 2, (areaTop + areaBottom) / 2 - size / 2, size, Theme.alpha(color, a));
 		}
 
 		// name and switch
-		Ui.text(g, Ui.ellipsize(m.name, Ui.Font.NAME, Math.round(w - 34)), x + 6, y + h - 13.5f, Theme.alpha(Theme.mix(0xFF8A8A92, 0xFFFFFFFF, on), a), Ui.Font.NAME);
+		Ui.text(g, Ui.ellipsize(m.name, Ui.Font.NAME, Math.round(w - 34)), x + 6, y + h - 13.5f, Theme.alpha(Theme.mix(Theme.MUTED, Theme.TEXT, on), a), Ui.Font.NAME);
 		float sx = x + w - 6 - 20, sy = y + h - 14;
 		Ui.pillSwitch(g, sx, sy, on, a);
 		switches.put(m.id, new float[] {sx + 10, sy + 5});
@@ -547,6 +546,8 @@ public final class TuffMenuScreen extends Screen {
 		if (!(m instanceof HudModule hud) || minecraft.player == null || a < 0.5f) return false;
 		float pw = Math.max(1, hud.width()), ph = Math.max(1, hud.height());
 		float s = Math.min(1.4f, Math.min(maxW / pw, maxH / ph));
+		// HUD text is light, made for the world, so previews sit on a small dark tile
+		Ui.round(g, cx - pw * s / 2 - 3, cy - ph * s / 2 - 3, pw * s + 6, ph * s + 6, 4, Theme.alpha(0xE62A3A30, a));
 		g.pose().pushMatrix();
 		g.pose().translate(cx - pw * s / 2, cy - ph * s / 2);
 		g.pose().scale(s, s);
@@ -557,7 +558,7 @@ public final class TuffMenuScreen extends Screen {
 			return false;
 		}
 		g.pose().popMatrix();
-		if (on < 0.99f) Ui.round(g, cx - pw * s / 2 - 1, cy - ph * s / 2 - 1, pw * s + 2, ph * s + 2, 2, Theme.alpha(0xFF1C1C20, 0.6f * (1 - on) * a));
+		if (on < 0.99f) Ui.round(g, cx - pw * s / 2 - 1, cy - ph * s / 2 - 1, pw * s + 2, ph * s + 2, 2, Theme.alpha(0xFFF6F4EE, 0.6f * (1 - on) * a));
 		return true;
 	}
 
@@ -566,17 +567,17 @@ public final class TuffMenuScreen extends Screen {
 		if (over) hovered = m;
 		float hv = anim("card:" + m.id, over, 14);
 		float on = anim("on:" + m.id, m.isEnabled(), 12);
-		Ui.round(g, x, y, w, h, 4, Theme.alpha(Theme.mix(Theme.CARD, Theme.CARD_HOVER, hv), a), Theme.alpha(Theme.mix(0x10FFFFFF, Theme.alpha(Theme.COPPER, 0.55f), hv), a), 1);
+		Ui.round(g, x, y, w, h, 4, Theme.alpha(Theme.mix(Theme.CARD, Theme.CARD_HOVER, hv), a), Theme.alpha(Theme.mix(Theme.GLASS_RIM, Theme.alpha(Theme.COPPER, 0.45f), hv), a), 1);
 		cardHit(m, x, y, w, h, clipTop, clipBottom);
-		Ui.lucide(g, ICONS.getOrDefault(m.id, "grid"), x + 8, y + 6, 16, Theme.alpha(Theme.mix(0xFF55555C, 0xFFFFFFFF, on), a));
+		Ui.lucide(g, ICONS.getOrDefault(m.id, "grid"), x + 8, y + 6, 16, Theme.alpha(Theme.mix(Theme.ICON_OFF, Theme.COPPER, on), a));
 		float nx = x + 32;
-		Ui.text(g, m.name, nx, y + 4.5f, Theme.alpha(Theme.mix(0xFF8A8A92, 0xFFFFFFFF, on), a), Ui.Font.SEMIBOLD);
+		Ui.text(g, m.name, nx, y + 4.5f, Theme.alpha(Theme.mix(Theme.MUTED, Theme.TEXT, on), a), Ui.Font.SEMIBOLD);
 		if (NEW_MODS.contains(m.id)) {
 			float bx = nx + Ui.width(m.name, Ui.Font.SEMIBOLD) + 5;
 			Ui.round(g, bx, y + 5.5f, Ui.width("NEW", Ui.Font.TINY) + 7, 8, 2, Theme.alpha(Theme.BADGE_NEW, a));
 			Ui.text(g, "NEW", bx + 3.5f, y + 6.5f, Theme.alpha(0xFFFFFFFF, a), Ui.Font.TINY);
 		}
-		Ui.text(g, Ui.ellipsize(m.description, Ui.Font.SMALL, Math.round(w - 32 - 80)), nx, y + 16, Theme.alpha(0xFF7A7A82, a), Ui.Font.SMALL);
+		Ui.text(g, Ui.ellipsize(m.description, Ui.Font.SMALL, Math.round(w - 32 - 80)), nx, y + 16, Theme.alpha(Theme.MUTED, a), Ui.Font.SMALL);
 		float sx = x + w - 8 - 20, sy = y + h / 2 - 5;
 		Ui.pillSwitch(g, sx, sy, on, a);
 		switches.put(m.id, new float[] {sx + 10, sy + 5});
@@ -594,9 +595,9 @@ public final class TuffMenuScreen extends Screen {
 		drawerLeft = dx;
 		hit(x, y, dx, y + h, e -> drawer = null);
 		g.enableScissor(Math.round(x), Math.round(y), Math.round(x + w), Math.round(y + h));
-		Ui.round(g, x + 1, y - 12, w - 2, h + 11, 11, Theme.alpha(0x66000000, ease * a));
-		Ui.shadow(g, dx, y, dw, h, 16, 0.5f * ease);
-		Ui.round(g, dx, y, dw + 12, h, 12, Theme.alpha(0xFF1A1D1B, a), Theme.alpha(0x22FFFFFF, a), 1);
+		Ui.round(g, x + 1, y - 12, w - 2, h + 11, 11, Theme.alpha(0x8CF6F4EE, ease * a));
+		Ui.shadow(g, dx, y, dw, h, 16, 0.2f * ease);
+		Ui.round(g, dx, y, dw + 12, h, 12, Theme.alpha(0xFAFBFAF6, a), Theme.alpha(Theme.GLASS_RIM, a), 1);
 		hit(dx, y, x + w, y + h, e -> { });
 
 		float px = dx + 14, pw = dw - 28;
@@ -634,7 +635,7 @@ public final class TuffMenuScreen extends Screen {
 	private float drawerMax;
 
 	private float row(GuiGraphicsExtractor g, int mouseX, int mouseY, float x, float y, float w, String label, boolean value, Runnable toggle, float a, float top, float bottom) {
-		Ui.round(g, x, y, w, 26, 7, Theme.alpha(0xFF222623, a));
+		Ui.round(g, x, y, w, 26, 7, Theme.alpha(0xFFEEF1EB, a));
 		Ui.text(g, label, x + 9, y + 9, Theme.alpha(Theme.TEXT, a), Ui.Font.MEDIUM);
 		Ui.toggle(g, x + w - 9 - 22, y + 7, anim("row:" + drawer.id + label, value, 14), a);
 		if (y + 26 > top && y < bottom) hit(x, Math.max(y, top), x + w, Math.min(y + 26, bottom), e -> {
@@ -657,7 +658,7 @@ public final class TuffMenuScreen extends Screen {
 			boolean selected = c.get() == i;
 			boolean over = Theme.inside(mouseX, mouseY, cx, cy, cx + pw, cy + 17);
 			float act = anim("chip:" + drawer.id + c.id + i, selected, 16);
-			Ui.round(g, cx, cy, pw, 17, 6, Theme.alpha(Theme.mix(over ? 0xFF2C302D : 0xFF222623, Theme.alpha(Theme.COPPER, 0.9f), act), a));
+			Ui.round(g, cx, cy, pw, 17, 6, Theme.alpha(Theme.mix(over ? 0xFFE3E8E1 : 0xFFEEF1EB, Theme.COPPER, act), a));
 			Ui.text(g, opt, cx + 7, cy + 5, Theme.alpha(Theme.mix(Theme.TEXT, Theme.INK, act), a), Ui.Font.MEDIUM);
 			final int index = i;
 			if (cy + 17 > top && cy < bottom) hit(cx, Math.max(cy, top), cx + pw, Math.min(cy + 17, bottom), e -> {
@@ -674,9 +675,10 @@ public final class TuffMenuScreen extends Screen {
 		Ui.text(g, n.name, x + 2, y + 2, Theme.alpha(Theme.TEXT, a), Ui.Font.MEDIUM);
 		Ui.right(g, n.display(), x + w - 2, y + 2, Theme.alpha(Theme.COPPER_HI, a), Ui.Font.SEMIBOLD);
 		float ty = y + 18, frac = (float) n.fraction();
-		Ui.round(g, x + 2, ty, w - 4, 4, 2, Theme.alpha(0xFF2F3430, a));
+		Ui.round(g, x + 2, ty, w - 4, 4, 2, Theme.alpha(Theme.OFF, a));
 		Ui.round(g, x + 2, ty, Math.max(4, (w - 4) * frac), 4, 2, Theme.alpha(Theme.COPPER, a));
 		float kx = x + 2 + (w - 4) * frac;
+		Ui.circle(g, kx, ty + 2.4f, dragging == n ? 5.5f : 4.5f, Theme.alpha(0x2A1E3C28, a));
 		Ui.circle(g, kx, ty + 2, dragging == n ? 5.5f : 4.5f, Theme.alpha(0xFFFFFFFF, a));
 		if (ty + 8 > top && ty - 4 < bottom) hit(x, ty - 6, x + w, ty + 10, e -> {
 			dragging = n;
@@ -724,7 +726,7 @@ public final class TuffMenuScreen extends Screen {
 			boolean selected = modules().ui.accent.get() == i;
 			boolean over = Theme.inside(mouseX, mouseY, sx, sy, sx + sw, sy + 46);
 			float act = anim("acc:" + i, selected, 14), hv = anim("accH:" + i, over, 16);
-			Ui.round(g, sx, sy, sw, 46, 9, Theme.alpha(Theme.mix(0xFF1B1E1C, 0xFF232724, hv), a), Theme.alpha(Theme.mix(0x14FFFFFF, acc.base, act), a), 1);
+			Ui.round(g, sx, sy, sw, 46, 9, Theme.alpha(Theme.mix(0xB3FFFFFF, 0xF2FFFFFF, hv), a), Theme.alpha(Theme.mix(Theme.GLASS_RIM, acc.base, act), a), 1);
 			Ui.circle(g, sx + sw / 2, sy + 17, 9, Theme.alpha(acc.base, a));
 			Ui.round(g, sx + sw / 2 - 6, sy + 10, 12, 5, 2.5f, Theme.alpha(0x40FFFFFF, a));
 			if (act > 0.05f) Ui.lucide(g, "check", sx + sw / 2 - 5, sy + 12, 10, Theme.alpha(0xFFFFFFFF, act * a));
@@ -737,14 +739,14 @@ public final class TuffMenuScreen extends Screen {
 			});
 		}
 		cy += ((accents.length + cols - 1) / cols) * 52 + 10;
-		cy = optionRow(g, mouseX, mouseY, px, cy, pw, "Background blur", "Blur the game behind Tuff menus.", modules().ui.blur.get(), modules().ui.blur::toggle, a);
+		cy = optionRow(g, mouseX, mouseY, px, cy, pw, "Background blur", "Blur the game behind Glade menus.", modules().ui.blur.get(), modules().ui.blur::toggle, a);
 		cy = optionRow(g, mouseX, mouseY, px, cy, pw, "Menu animations", "Smooth transitions, hovers and scrolling.", modules().ui.animations.get(), modules().ui.animations::toggle, a);
 	}
 
 	private float optionRow(GuiGraphicsExtractor g, int mouseX, int mouseY, float x, float y, float w, String label, String hint, boolean value, Runnable toggle, float a) {
 		boolean over = Theme.inside(mouseX, mouseY, x, y, x + w, y + 34);
 		float hv = anim("opt:" + label, over, 16);
-		Ui.round(g, x, y, w, 34, 9, Theme.alpha(Theme.mix(0xFF1B1E1C, 0xFF212522, hv), a), Theme.alpha(0x12FFFFFF, a), 1);
+		Ui.round(g, x, y, w, 34, 9, Theme.alpha(Theme.mix(0xB3FFFFFF, 0xF2FFFFFF, hv), a), Theme.alpha(Theme.GLASS_RIM, a), 1);
 		Ui.text(g, label, x + 12, y + 8, Theme.alpha(Theme.TEXT, a), Ui.Font.SEMIBOLD);
 		Ui.text(g, Ui.ellipsize(hint, Ui.Font.BODY, Math.round(w - 58)), x + 12, y + 20, Theme.alpha(Theme.MUTED, a), Ui.Font.BODY);
 		Ui.toggle(g, x + w - 12 - 22, y + 11, anim("optT:" + label, value, 14), a);
@@ -756,7 +758,7 @@ public final class TuffMenuScreen extends Screen {
 	}
 
 	private float actionRow(GuiGraphicsExtractor g, int mouseX, int mouseY, float x, float y, float w, String label, String hint, String button, Runnable action, float a) {
-		Ui.round(g, x, y, w, 34, 9, Theme.alpha(0xFF1B1E1C, a), Theme.alpha(0x12FFFFFF, a), 1);
+		Ui.round(g, x, y, w, 34, 9, Theme.alpha(0xB3FFFFFF, a), Theme.alpha(Theme.GLASS_RIM, a), 1);
 		Ui.text(g, label, x + 12, y + 8, Theme.alpha(Theme.TEXT, a), Ui.Font.SEMIBOLD);
 		float bw = Ui.width(button, Ui.Font.SEMIBOLD) + 18, bx = x + w - 10 - bw, by = y + 8;
 		Ui.text(g, Ui.ellipsize(hint, Ui.Font.BODY, Math.round(w - 32 - bw)), x + 12, y + 20, Theme.alpha(Theme.MUTED, a), Ui.Font.BODY);
@@ -775,8 +777,8 @@ public final class TuffMenuScreen extends Screen {
 	private void settings(GuiGraphicsExtractor g, int mouseX, int mouseY, float mx, float y, float mw, float h, float a) {
 		float px = mx + 18, pw = mw - 36, cy = y + 52;
 		var title = modules().titleScreen;
-		cy = optionRow(g, mouseX, mouseY, px, cy, pw, "Tuff title screen", "Use the Tuff main menu instead of the vanilla one.", title.isEnabled(), title::toggle, a);
-		cy = optionRow(g, mouseX, mouseY, px, cy, pw, "Animated background", "Parallax, glowing bulbs and embers on the title screen.", title.animate.get(), title.animate::toggle, a);
+		cy = optionRow(g, mouseX, mouseY, px, cy, pw, "Glade title screen", "Use the Glade main menu instead of the vanilla one.", title.isEnabled(), title::toggle, a);
+		cy = optionRow(g, mouseX, mouseY, px, cy, pw, "Animated background", "Drifting clouds, a moving sun and swaying trees.", title.animate.get(), title.animate::toggle, a);
 		cy = actionRow(g, mouseX, mouseY, px, cy, pw, "Keybinds", "Menu is Right Shift, zoom is C by default.", "Open", () -> minecraft.gui.setScreen(new KeyBindsScreen(this, minecraft.options)), a);
 		cy = actionRow(g, mouseX, mouseY, px, cy, pw, "HUD layout", "Move every HUD module back to its default spot.", "Reset", () -> {
 			for (HudModule m : modules().hud()) m.resetPosition();
@@ -861,7 +863,7 @@ public final class TuffMenuScreen extends Screen {
 		boolean fixed = pack != null && pack.isFixedPosition();
 		boolean over = Theme.inside(mouseX, mouseY, x, y, x + w, y + 28) && mouseY >= top && mouseY < bottom;
 		float hv = anim("pack:" + enabled + id, over, 16);
-		Ui.round(g, x, y, w, 28, 8, Theme.alpha(Theme.mix(0xFF1B1E1C, 0xFF222623, hv), a), Theme.alpha(enabled ? Theme.alpha(Theme.COPPER, 0.35f) : 0x12FFFFFF, a), 1);
+		Ui.round(g, x, y, w, 28, 8, Theme.alpha(Theme.mix(0xB3FFFFFF, 0xF2FFFFFF, hv), a), Theme.alpha(enabled ? Theme.alpha(Theme.COPPER, 0.4f) : Theme.GLASS_RIM, a), 1);
 		float textW = w - 20 - (required ? Ui.width("Built-in", Ui.Font.BODY) + 8 : enabled ? 48 : 20);
 		Ui.text(g, Ui.ellipsize(title, Ui.Font.SEMIBOLD, Math.round(textW)), x + 10, y + 6, Theme.alpha(Theme.TEXT, a), Ui.Font.SEMIBOLD);
 		Ui.text(g, Ui.ellipsize(desc, Ui.Font.BODY, Math.round(textW)), x + 10, y + 17, Theme.alpha(Theme.MUTED, a), Ui.Font.BODY);
@@ -894,7 +896,7 @@ public final class TuffMenuScreen extends Screen {
 
 	private void iconButton(GuiGraphicsExtractor g, int mouseX, int mouseY, String icon, float x, float y, float a, float top, float bottom, Runnable action) {
 		boolean over = Theme.inside(mouseX, mouseY, x - 2, y - 2, x + 14, y + 14) && mouseY >= top && mouseY < bottom;
-		if (over) Ui.round(g, x - 2, y - 2, 16, 16, 4, Theme.alpha(0x22FFFFFF, a));
+		if (over) Ui.round(g, x - 2, y - 2, 16, 16, 4, Theme.alpha(Theme.COPPER, 0.1f * a));
 		Ui.lucide(g, icon, x + 1, y + 1, 10, Theme.alpha(over ? Theme.COPPER_HI : Theme.MUTED, a));
 		if (y + 14 > top && y < bottom) hit(x - 2, y - 2, x + 14, y + 14, e -> {
 			click();
