@@ -53,7 +53,7 @@ export async function mockCall(cmd: string, args: Record<string, any> = {}): Pro
   await delay(120);
   switch (cmd) {
     case "app_info":
-      return { version: "1.0.0", dataDir: "~/.local/share/tuff-client", totalMemoryMb: 16384, suggestedMemoryMb: 4096, msLoginConfigured: false, discordConfigured: false, tuffModBundled: true, tuffMcVersion: "26.3" };
+      return { version: "1.0.0", dataDir: "~/.local/share/tuff-client", totalMemoryMb: 16384, suggestedMemoryMb: 4096, msLoginConfigured: false, curseforgeConfigured: true, discordConfigured: false, tuffModBundled: true, tuffMcVersion: "26.3" };
     case "get_settings": return settings;
     case "save_settings": settings = args.settings; return settings;
     case "list_profiles": return profiles;
@@ -103,6 +103,15 @@ export async function mockCall(cmd: string, args: Record<string, any> = {}): Pro
     case "list_screenshots": return [];
     case "skin_profile": throw "Skins and capes need a Microsoft account.";
     case "list_presets": return PRESETS;
+    case "curseforge_search": {
+      const names = ["Just Enough Items", "Xaero's Minimap", "AppleSkin", "Mouse Tweaks", "Jade", "Waystones"];
+      const hits = names.filter((n) => n.toLowerCase().includes((args.query ?? "").toLowerCase())).map((n, i) => ({
+        project_id: `cf:${238222 + i}`, slug: n.toLowerCase().replace(/\W+/g, "-"), title: n, description: "A popular CurseForge project.",
+        author: "someone", icon_url: null, downloads: 9_000_000 / (i + 1), follows: 1200, categories: ["utility"], project_type: args.kind,
+      }));
+      return { hits, total_hits: hits.length, offset: 0, limit: 20 };
+    }
+    case "curseforge_install": return ["CurseForge project"];
     case "create_preset_profile": {
       const preset = PRESETS.find((p) => p.id === args.preset)!;
       await new Promise((r) => setTimeout(r, 1200));

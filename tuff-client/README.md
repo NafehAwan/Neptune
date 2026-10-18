@@ -46,10 +46,13 @@ game look alike.
   Mods without a build for the profile's version are skipped and listed.
   Custom profiles take any version, vanilla or Fabric. The list lives in
   `launcher/src-tauri/src/presets.rs`.
-- **Mods**: Modrinth search for mods, resource packs, shaders and modpacks,
-  filtered to the profile. Installs required dependencies (and Iris for
-  shaders), checks for updates in one request, lets you toggle or remove
-  content, and imports `.mrpack` files.
+- **Mods**: search Modrinth or CurseForge for mods, resource packs and
+  shaders (and Modrinth modpacks), filtered to the chosen profile, and install
+  straight into that profile's folder. Installs required dependencies (and Iris
+  for shaders), checks for updates in one request, lets you toggle or remove
+  content, and imports `.mrpack` files. CurseForge needs a free API key from
+  console.curseforge.com, set in Settings → Mod sources or baked in at build
+  time with `GLADE_CF_API_KEY`.
 - **Servers**: live player counts, MOTD, favicon and ping (Server List Ping
   with SRV lookup). Join goes straight into the server.
 - **Wardrobe**: 3D skin preview with animations; upload or reset skins, pick

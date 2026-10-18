@@ -81,6 +81,9 @@ export const api = {
   search: (query: string, kind: T.ContentKind, gameVersion: string | null, loader: string | null, sort: string, offset: number) =>
     call<T.SearchResult>("modrinth_search", { query, kind, gameVersion, loader, sort, offset }),
   install: (profileId: string, projectId: string, kind: T.ContentKind) => call<string[]>("modrinth_install", { profileId, projectId, kind }),
+  cfSearch: (query: string, kind: T.ContentKind, gameVersion: string | null, loader: string | null, sort: string, offset: number) =>
+    call<T.SearchResult>("curseforge_search", { query, kind, gameVersion, loader, sort, offset }),
+  cfInstall: (profileId: string, projectId: string, kind: T.ContentKind) => call<string[]>("curseforge_install", { profileId, projectId, kind }),
   contentList: (profileId: string, kind: T.ContentKind) => call<T.ContentItem[]>("content_list", { profileId, kind }),
   contentToggle: (profileId: string, kind: T.ContentKind, file: string, enabled: boolean) =>
     call<void>("content_toggle", { profileId, kind, file, enabled }),

@@ -2,7 +2,7 @@
   import Icon from "../components/Icon.svelte";
   import { api } from "../lib/api";
   import { compact } from "../lib/format";
-  import { app, refreshProfiles, selectedProfile } from "../lib/state.svelte";
+  import { app, go, refreshProfiles, selectedProfile } from "../lib/state.svelte";
   import { toast } from "../lib/toast.svelte";
   import type { ContentKind, SearchHit } from "../lib/types";
 
@@ -20,6 +20,9 @@
     { id: "updated", label: "Recently updated" },
   ];
 
+  type Source = "modrinth" | "curseforge";
+  let source = $state<Source>((localStorage.getItem("glade.browse.source") as Source) || "modrinth");
+  const cfReady = $derived(!!app.info?.curseforgeConfigured);
   let kind = $state<ContentKind>((sessionStorage.getItem("tuff.browse.kind") as ContentKind) || "mod");
   sessionStorage.removeItem("tuff.browse.kind");
   let profileId = $state<string | null>(app.focusProfile ?? selectedProfile()?.id ?? null);
@@ -44,7 +47,9 @@
     try {
       const filterVersion = kind === "modpack" ? null : profile?.gameVersion ?? null;
       const loader = profile?.loader === "fabric" ? "fabric" : null;
-      const r = await api.search(query, kind, filterVersion, kind === "mod" ? loader ?? "fabric" : loader, sort, append ? hits.length : 0);
+      if (source === "curseforge" && !cfReady) { hits = []; total = 0; return; }
+      const find = source === "curseforge" ? api.cfSearch : api.search;
+      const r = await find(query, kind, filterVersion, kind === "mod" ? loader ?? "fabric" : loader, sort, append ? hits.length : 0);
       if (gen !== generation) return;
       hits = append ? [...hits, ...r.hits] : r.hits;
       total = r.total_hits;
@@ -56,7 +61,9 @@
   }
 
   $effect(() => {
-    kind; sort; profileId;
+    kind; sort; profileId; source;
+    try { localStorage.setItem("glade.browse.source", source); } catch {}
+    if (source === "curseforge" && kind === "modpack") kind = "mod";
     const q = query;
     clearTimeout(timer);
     timer = setTimeout(() => search(false), q ? 300 : 0);
@@ -77,7 +84,7 @@
         toast(`${p.name} is ready in your library`, "success");
       } else {
         if (!profile) throw "Pick a profile to install into.";
-        const titles = await api.install(profile.id, hit.project_id, kind);
+        const titles = await (hit.project_id.startsWith("cf:") ? api.cfInstall : api.install)(profile.id, hit.project_id, kind);
         const extra = titles.length > 1 ? ` (+${titles.length - 1} dependenc${titles.length === 2 ? "y" : "ies"})` : "";
         toast(`Installed ${hit.title}${extra} into ${profile.name}`, "success");
         installed = new Set([...installed, hit.project_id]);
@@ -94,7 +101,7 @@
   <div class="page-head">
     <div>
       <h1>Mods</h1>
-      <p class="muted">Search Modrinth. Results only show content that works with your selected profile.</p>
+      <p class="muted">Search Modrinth or CurseForge and install straight into a profile. Results only show content that works with it.</p>
     </div>
   </div>
 
@@ -113,16 +120,33 @@
       {#each sorts as s}<option value={s.id}>{s.label}</option>{/each}
     </select>
   </div>
-  <div class="seg kinds">
-    {#each kinds as k}<button class:on={kind === k.kind} onclick={() => (kind = k.kind)}>{k.label}</button>{/each}
+  <div class="row tabs">
+    <div class="seg kinds">
+      {#each kinds as k}
+        {#if !(source === "curseforge" && k.kind === "modpack")}<button class:on={kind === k.kind} onclick={() => (kind = k.kind)}>{k.label}</button>{/if}
+      {/each}
+    </div>
+    <div class="seg sources" title="Where to search">
+      <button class:on={source === "modrinth"} onclick={() => (source = "modrinth")}>Modrinth</button>
+      <button class:on={source === "curseforge"} onclick={() => (source = "curseforge")}>CurseForge</button>
+    </div>
   </div>
+  {#if profile && kind !== "modpack"}
+    <p class="target-note">Installing into <strong>{profile.name}</strong> · {profile.loader === "fabric" ? "Fabric" : "Vanilla"} {profile.gameVersion}</p>
+  {/if}
 
   {#if kind === "mod" && profile?.loader === "vanilla"}
     <p class="note">Mods need a Fabric profile. <strong>{profile.name}</strong> is vanilla, so pick or create a Fabric profile to install mods.</p>
   {/if}
 
-  {#if error}
-    <div class="empty"><p class="pixel">Couldn't reach Modrinth</p><p class="selectable">{error}</p><button class="btn" onclick={() => search()}>Retry</button></div>
+  {#if source === "curseforge" && !cfReady}
+    <div class="empty">
+      <p class="pixel">CurseForge needs an API key</p>
+      <p>CurseForge asks launchers for a free API key. Add yours once in Settings → Mod sources, then search here.</p>
+      <div class="row"><button class="btn primary" onclick={() => go("settings")}>Open settings</button><button class="btn ghost" onclick={() => (source = "modrinth")}>Use Modrinth</button></div>
+    </div>
+  {:else if error}
+    <div class="empty"><p class="pixel">Couldn't reach {source === "curseforge" ? "CurseForge" : "Modrinth"}</p><p class="selectable">{error}</p><button class="btn" onclick={() => search()}>Retry</button></div>
   {:else}
     <div class="results">
       {#each hits as hit, i (hit.project_id)}
@@ -161,7 +185,9 @@
   .searchbox .input { padding-left: 34px; height: 38px; font-size: 16px; }
   .target { width: 260px; height: 38px; }
   .sort { width: 170px; height: 38px; }
-  .kinds { margin-bottom: 18px; }
+  .tabs { justify-content: space-between; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+  .target-note { font-size: 13px; color: var(--muted); margin-bottom: 14px; }
+  .target-note strong { color: var(--text); }
   .note { font-size: 14.5px; color: var(--warn); margin-bottom: 14px; }
   .results { display: grid; gap: 8px; }
   .hit { display: flex; align-items: center; gap: 14px; padding: 14px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); transition: border-color var(--fast), transform var(--fast) var(--ease); }
