@@ -407,6 +407,20 @@ function logos() {
     <div class="lgrid">${a.join("")}${b.join("")}</div></div>`;
 }
 
+// close-ups of the skin heads: flat and 3D from several angles
+function heads() {
+  document.body.style.background = "#F2F4EF";
+  const row = (kind, label) => `<div style="display:flex;align-items:center;gap:36px;padding:26px 40px">
+      <div style="width:150px"><div style="font-weight:700;font-size:16px">${label}</div><div class="muted" style="font-size:12px">${kind === "default" ? "default skin" : "sample skin"}</div></div>
+      ${HEAD(kind, 96)}
+      ${[-35, 0, 35, 125, 215].map((y) => `<div style="width:130px;height:130px;display:grid;place-items:center">${HEAD3D(kind, 88, y)}</div>`).join("")}
+    </div>`;
+  root.innerHTML = `<div style="position:absolute;inset:0;padding:20px;font-family:'Plus Jakarta Sans';color:#1F2A22">
+    <div style="font-size:22px;font-weight:700;padding:0 40px">Skin heads</div>
+    <div class="muted" style="font-size:13px;padding:4px 40px 0">Cut from 64x64 skin files: flat head (face + hat layer), then the 3D head turning, with the hat layer as a second, larger cube.</div>
+    ${row("sample", "NafehAwan")}${row("default", "Builder (offline)")}</div>`;
+}
+
 function overview() {
   document.body.style.background = "#0D0D0F";
   const rows = [["title", "Title screen"], ["menu", "Mod menu"], ["launcher", "Launcher"]];
@@ -433,5 +447,7 @@ function motion() {
 }
 
 applyTheme();
-({ board, title: titleScreen, menu: modsMenu, launcher, logos, overview, motion })[screen]();
-document.fonts.ready.then(() => { document.body.dataset.ready = "1"; });
+SKINS_READY.then(() => {
+  ({ board, title: titleScreen, menu: modsMenu, launcher, logos, overview, motion, heads })[screen]();
+  return document.fonts.ready;
+}).then(() => { document.body.dataset.ready = "1"; });
