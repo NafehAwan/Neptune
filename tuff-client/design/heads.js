@@ -47,8 +47,9 @@
 
   const skinOf = (kind) => faces[kind === "sample" ? "explorer" : kind] || faces.default;
 
-  // flat head for chips and lists
-  window.HEAD = (kind, size) => `<img src="${skinOf(kind).flat}" width="${size}" height="${size}" style="image-rendering:pixelated;border-radius:${Math.max(2, Math.round(size * 0.12))}px;display:block;flex:none">`;
+  // small 3D head for chips and lists: a fixed three-quarter view that fills its box
+  window.HEAD = (kind, size) =>
+    `<canvas data-head3d="${kind === "sample" ? "explorer" : kind}" data-yaw="-32" data-pitch="-20" data-dist="30" width="${size * 3}" height="${size * 3}" style="width:${size}px;height:${size}px;display:block;flex:none"></canvas>`;
 
   // 3D head: a canvas that head3d.js renders with three.js (base head plus voxel hat layer)
   window.HEAD3D = (kind, size, yaw, pitch = -18) =>

@@ -417,7 +417,7 @@ function heads() {
     </div>`;
   root.innerHTML = `<div style="position:absolute;inset:0;padding:20px;font-family:'Plus Jakarta Sans';color:#1F2A22">
     <div style="font-size:22px;font-weight:700;padding:0 40px">Skin heads</div>
-    <div class="muted" style="font-size:13px;padding:4px 40px 0">Cut from 64x64 skin files: the flat head (face + outer layer), then the 3D head turning. The outer layer is real 3D: every pixel is its own block standing off the head.</div>
+    <div class="muted" style="font-size:13px;padding:4px 40px 0">Every head is 3D, cut from a 64x64 skin file: the small head used on the account button and in lists, then the big head turning. The outer layer is real 3D: every pixel is its own block standing off the head.</div>
     ${row("sample", "NafehAwan")}${row("default", "Builder (offline)")}</div>`;
 }
 

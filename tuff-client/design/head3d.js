@@ -79,35 +79,40 @@
   const heads = {};
   let renderer;
 
+  // One shared WebGL renderer draws every head, then each is copied into its own 2D canvas,
+  // so a page can show any number of heads without running out of WebGL contexts.
   window.HEADS3D_MOUNT = () => {
     const canvases = document.querySelectorAll("canvas[data-head3d]");
+    if (!canvases.length) return;
+    if (!renderer) {
+      renderer = new T.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
+      renderer.outputColorSpace = T.SRGBColorSpace;
+    }
     canvases.forEach((cv) => {
       const kind = cv.dataset.head3d;
       if (!heads[kind]) heads[kind] = buildHead(SKIN_IMAGE(kind));
-      const r = new T.WebGLRenderer({ canvas: cv, alpha: true, antialias: true, preserveDrawingBuffer: true });
-      r.outputColorSpace = T.SRGBColorSpace;
+      renderer.setSize(cv.width, cv.height, false);
+      renderer.setClearColor(0x000000, 0);
       const scene = new T.Scene();
       scene.add(new T.AmbientLight(0xffffff, 1.6));
       const sun = new T.DirectionalLight(0xffffff, 1.9);
       sun.position.set(-4, 8, 10);
       scene.add(sun);
-      const head = heads[kind].clone();
-      head.rotation.order = "XYZ";
-      head.rotation.x = (-(+cv.dataset.pitch) * Math.PI) / 180;
-      head.rotation.y = ((+cv.dataset.yaw) * Math.PI) / 180;
-      // rotate around the vertical axis first, then tilt towards the camera
-      const holder = new T.Group();
+      // turn around the vertical axis, then tilt towards the camera
       const spin = new T.Group();
       spin.rotation.y = ((+cv.dataset.yaw) * Math.PI) / 180;
-      head.rotation.set(0, 0, 0);
-      spin.add(head);
-      holder.rotation.x = ((-(+cv.dataset.pitch)) * Math.PI) / 180;
-      holder.add(spin);
-      scene.add(holder);
-      const cam = new T.PerspectiveCamera(24, 1, 1, 200);
-      cam.position.set(0, 0, 37);
+      spin.add(heads[kind].clone());
+      const tilt = new T.Group();
+      tilt.rotation.x = ((-(+cv.dataset.pitch)) * Math.PI) / 180;
+      tilt.add(spin);
+      scene.add(tilt);
+      const cam = new T.PerspectiveCamera(24, cv.width / cv.height, 1, 200);
+      cam.position.set(0, 0, +(cv.dataset.dist || 37));
       cam.lookAt(0, 0, 0);
-      r.render(scene, cam);
+      renderer.render(scene, cam);
+      const g = cv.getContext("2d");
+      g.clearRect(0, 0, cv.width, cv.height);
+      g.drawImage(renderer.domElement, 0, 0);
     });
   };
 })();
