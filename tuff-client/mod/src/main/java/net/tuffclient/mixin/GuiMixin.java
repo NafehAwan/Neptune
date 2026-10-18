@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
-/** Swaps the vanilla title screen for the Tuff one when the module is on. */
+/** Swaps the vanilla title screen for the Glade one when the module is on. */
 @Mixin(Gui.class)
 public abstract class GuiMixin {
 	@ModifyVariable(method = "setScreen", at = @At("HEAD"), argsOnly = true)

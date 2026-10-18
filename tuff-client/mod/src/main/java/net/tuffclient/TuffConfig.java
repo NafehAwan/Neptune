@@ -32,7 +32,7 @@ public final class TuffConfig {
 				if (all.has(m.id) && all.get(m.id).isJsonObject()) m.load(all.getAsJsonObject(m.id));
 			}
 		} catch (IOException | RuntimeException e) {
-			TuffClient.LOGGER.warn("Couldn't read Tuff config, using defaults", e);
+			TuffClient.LOGGER.warn("Couldn't read Glade config, using defaults", e);
 		}
 	}
 
@@ -45,7 +45,7 @@ public final class TuffConfig {
 			Files.writeString(tmp, GSON.toJson(all), StandardCharsets.UTF_8);
 			Files.move(tmp, FILE, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
 		} catch (IOException e) {
-			TuffClient.LOGGER.warn("Couldn't save Tuff config", e);
+			TuffClient.LOGGER.warn("Couldn't save Glade config", e);
 		}
 	}
 }

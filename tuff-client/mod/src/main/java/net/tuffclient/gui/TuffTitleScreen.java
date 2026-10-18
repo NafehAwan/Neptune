@@ -65,7 +65,7 @@ public final class TuffTitleScreen extends Screen {
 		boolean compact = height < 300;
 		float bw = Math.max(160, Math.min(210, width * 0.3f));
 		float bh = compact ? 20 : 22, gap = compact ? 4 : 5;
-		float head = compact ? 76 : 96;
+		float head = compact ? 70 : 88;
 		cardW = bw + 44;
 		cardH = 14 + head + 12 + bh * 3 + gap * 2 + 18;
 		cardX = width / 2f - cardW / 2;
@@ -119,9 +119,10 @@ public final class TuffTitleScreen extends Screen {
 		float emblem = compact ? 22 : 28;
 		float ey = cardY + lift + 14 + breathe;
 		Ui.image(g, EMBLEM, width / 2f - emblem / 2, ey, emblem, emblem, 512, 512, Theme.alpha(0xFFFFFFFF, a));
-		float wordY = ey + emblem + (compact ? 0 : 2);
+		// the display font draws its glyphs well above the anchor, so the anchor sits low
+		float wordY = ey + emblem + (compact ? 18 : 21);
 		Ui.centered(g, "Glade", width / 2f, wordY, Theme.alpha(Theme.TEXT, a), Ui.Font.DISPLAY);
-		Ui.centered(g, "A calmer way to play.", width / 2f, wordY + (compact ? 30 : 36), Theme.alpha(Theme.MUTED, a), Ui.Font.BODY);
+		Ui.centered(g, "A calmer way to play.", width / 2f, wordY + 14, Theme.alpha(Theme.MUTED, a), Ui.Font.BODY);
 
 		// buttons
 		Box hovered = null;

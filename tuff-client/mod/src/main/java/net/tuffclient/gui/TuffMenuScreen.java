@@ -386,7 +386,7 @@ public final class TuffMenuScreen extends Screen {
 	private void header(GuiGraphicsExtractor g, int mouseX, int mouseY, float x, float y, float w, float a) {
 		String title = page.label;
 		float tw = Ui.width(title, Ui.Font.DISPLAY_SM) + 20;
-		Ui.text(g, title, x + 10, y + 3, Theme.alpha(Theme.TEXT, a), Ui.Font.DISPLAY_SM);
+		Ui.text(g, title, x + 10, y + 8, Theme.alpha(Theme.TEXT, a), Ui.Font.DISPLAY_SM);
 		if (page != Page.MODS) {
 			String subtitle = switch (page) {
 				case THEME -> "Accent colour and menu style";
