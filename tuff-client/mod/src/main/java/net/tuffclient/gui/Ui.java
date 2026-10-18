@@ -9,7 +9,7 @@ import net.minecraft.resources.Identifier;
 import net.tuffclient.TuffClient;
 
 /**
- * Drawing toolkit for the Tuff screens: Inter text, anti-aliased rounded
+ * Drawing toolkit for the Glade screens: Plus Jakarta Sans and Fraunces text, anti-aliased rounded
  * shapes, tinted pixel icons and smoothly scaled textures. Positions are
  * floats and go through the pose matrix, so animations never snap to whole
  * GUI pixels.
@@ -24,7 +24,15 @@ public final class Ui {
 		/** Tiny labels under sidebar icons and on badges. */
 		TINY("tiny"),
 		/** Mod names on cards. */
-		NAME("name");
+		NAME("name"),
+
+		// Mockup fonts, sized in mockup pixels (see {@link #mockup}): the name says size and weight.
+		UI_11_SB("ui11sb"), UI_11_5("ui11_5"), UI_12("ui12"), UI_12_5_M("ui12_5m"), UI_12_5("ui12_5"),
+		UI_13_SB("ui13sb"), UI_13_5_SB("ui13_5sb"), UI_14("ui14"), UI_14_SB("ui14sb"), UI_15_SB("ui15sb"), UI_16_B("ui16b"),
+		/** Fraunces italic: the wordmark, page titles and account names. */
+		HEAD_96("head96"), HEAD_30("head30"), HEAD_22("head22"),
+		/** Geist Mono for small labels and numbers. */
+		MONO_10_5("mono10_5"), MONO_10_5_M("mono10_5m"), MONO_11_M("mono11m"), MONO_11_5("mono11_5");
 
 		/** One copy per oversample level, so glyphs are rasterised near the size they are shown at. */
 		private final FontDescription[] variants = new FontDescription[MAX_OVERSAMPLE];
@@ -78,6 +86,44 @@ public final class Ui {
 		g.pose().translate(x, y);
 		g.text(mc().font, text(s, font), 0, 0, color, false);
 		g.pose().popMatrix();
+	}
+
+	/**
+	 * Text drawn at the game's fixed baseline, 7 units below the anchor, whatever
+	 * the font size: these place text by its baseline instead, like CSS does.
+	 */
+	public static void textAt(GuiGraphicsExtractor g, String s, float x, float baseline, int color, Font font) {
+		text(g, s, x, baseline - 7, color, font);
+	}
+
+	public static void centeredAt(GuiGraphicsExtractor g, String s, float cx, float baseline, int color, Font font) {
+		text(g, s, cx - width(s, font) / 2f, baseline - 7, color, font);
+	}
+
+	public static void rightAt(GuiGraphicsExtractor g, String s, float rx, float baseline, int color, Font font) {
+		text(g, s, rx - width(s, font), baseline - 7, color, font);
+	}
+
+	/** Baseline that centres a line of a {@code px}-sized font (cap height) on {@code cy}. */
+	public static float mid(float cy, float px) {
+		return cy + px * 0.36f;
+	}
+
+	// ------------------------------------------------------------------ mockup space
+
+	/**
+	 * GUI units per mockup pixel. The Grove Glass mockups are laid out at
+	 * 1280x720; screens drawn in that space look the same at any window size.
+	 */
+	public static float mockup(int guiHeight) {
+		return guiHeight / 720f;
+	}
+
+	/** Frosted glass, as in the mockups: soft green shadow, translucent white, bright rim and top highlight. */
+	public static void frost(GuiGraphicsExtractor g, float x, float y, float w, float h, float r, int fill, float shadow, float alpha) {
+		if (shadow > 0) shadow(g, x, y, w, h, 26, shadow * alpha);
+		round(g, x, y, w, h, r, Theme.alpha(fill, alpha), Theme.alpha(0xB3FFFFFF, alpha), 1);
+		round(g, x + r * 0.7f, y + 1, w - r * 1.4f, 1, 0.5f, Theme.alpha(0xCCFFFFFF, alpha));
 	}
 
 	public static void centered(GuiGraphicsExtractor g, String s, float cx, float y, int color, Font font) {
@@ -150,7 +196,7 @@ public final class Ui {
 		g.pose().pushMatrix();
 		g.pose().translate(x - spread, y - spread + spread * 0.35f);
 		g.pose().scale(s, s);
-		g.blitSprite(RenderPipelines.GUI_TEXTURED, SHADOW, 0, 0, Math.round((w + 2 * spread) / s), Math.round((h + 2 * spread) / s), Theme.alpha(0xFF000000, alpha));
+		g.blitSprite(RenderPipelines.GUI_TEXTURED, SHADOW, 0, 0, Math.round((w + 2 * spread) / s), Math.round((h + 2 * spread) / s), Theme.alpha(0xFF1E3C28, alpha));
 		g.pose().popMatrix();
 	}
 
@@ -184,10 +230,11 @@ public final class Ui {
 
 	/** Animated switch, 22x12. */
 	public static void toggle(GuiGraphicsExtractor g, float x, float y, float anim, float alpha) {
-		int track = Theme.mix(0xFF3A3F3B, Theme.COPPER, anim);
+		int track = Theme.mix(Theme.OFF, Theme.COPPER, anim);
 		round(g, x, y, 22, 12, 6, Theme.alpha(track, alpha));
 		float knob = x + 2 + 10 * anim;
-		circle(g, knob + 4, y + 6, 4, Theme.alpha(Theme.mix(0xFFB9BCB4, 0xFFFFFFFF, anim), alpha));
+		circle(g, knob + 4, y + 6.4f, 4, Theme.alpha(0x221E3C28, alpha));
+		circle(g, knob + 4, y + 6, 4, Theme.alpha(0xFFFFFFFF, alpha));
 	}
 
 	/** Accent pill button with a soft highlight. */
@@ -196,11 +243,21 @@ public final class Ui {
 		round(g, x + 1, y + 1, w - 2, h / 2f - 1, Math.min(6, h / 2), Theme.alpha(0x22FFFFFF, alpha));
 	}
 
-	/** Dark glass button. */
+	/** Frosted glass button. */
 	public static void glassButton(GuiGraphicsExtractor g, float x, float y, float w, float h, float hover, float alpha) {
-		int fill = Theme.mix(0xC81B1D1B, 0xE62A2E2B, hover);
-		int border = Theme.mix(0x30FFFFFF, Theme.alpha(Theme.COPPER, 0.85f), hover);
+		int fill = Theme.mix(0x9CFFFFFF, 0xEBFFFFFF, hover);
+		int border = Theme.mix(Theme.GLASS_RIM, Theme.alpha(Theme.COPPER, 0.45f), hover);
 		round(g, x, y, w, h, Math.min(7, h / 2), Theme.alpha(fill, alpha), Theme.alpha(border, alpha), 1);
+	}
+
+	/**
+	 * A frosted glass panel: soft green-tinted shadow, translucent white body
+	 * and a bright rim with a highlight along the top edge.
+	 */
+	public static void glass(GuiGraphicsExtractor g, float x, float y, float w, float h, float r, int fill, float alpha) {
+		shadow(g, x, y, w, h, 16, 0.16f * alpha);
+		round(g, x, y, w, h, r, Theme.alpha(fill, alpha), Theme.alpha(Theme.GLASS_RIM, alpha), 1);
+		round(g, x + r * 0.6f, y + 1, w - r * 1.2f, 1, 0.5f, Theme.alpha(0x99FFFFFF, alpha));
 	}
 
 	private static final int[] LUCIDE_SIZES = {32, 64, 128};
@@ -223,31 +280,11 @@ public final class Ui {
 		g.pose().popMatrix();
 	}
 
-	/**
-	 * A header tab with a rounded left side and a slanted right edge (wider at the top),
-	 * filled one physical pixel row at a time so the slant stays smooth.
-	 */
-	public static void slantTab(GuiGraphicsExtractor g, float x, float y, float w, float h, float slant, int argb) {
-		if ((argb >>> 24) == 0) return;
-		round(g, x, y, w - slant + 4, h, Math.min(4, h / 2), argb);
-		float p = scale();
-		g.pose().pushMatrix();
-		g.pose().scale(1 / p, 1 / p);
-		int left = Math.round((x + w - slant) * p);
-		int top = Math.round(y * p), bottom = Math.round((y + h) * p);
-		for (int row = top; row < bottom; row++) {
-			float t = (row + 0.5f - top) / Math.max(1, bottom - top);
-			int right = Math.round((x + w - slant * t) * p);
-			if (right > left) g.fill(left, row, right, row + 1, argb);
-		}
-		g.pose().popMatrix();
-	}
-
 	/** A small pill switch like the one on Lunar-style mod cards. */
 	public static void pillSwitch(GuiGraphicsExtractor g, float x, float y, float anim, float alpha) {
-		int track = Theme.mix(0xFF3A3A40, Theme.COPPER, anim);
+		int track = Theme.mix(Theme.OFF, Theme.COPPER, anim);
 		round(g, x, y, 20, 10, 5, Theme.alpha(track, alpha));
-		circle(g, x + 5 + 10 * anim, y + 5, 3.5f, Theme.alpha(Theme.mix(0xFFB8B8BE, 0xFFFFFFFF, anim), alpha));
+		circle(g, x + 5 + 10 * anim, y + 5, 3.5f, Theme.alpha(0xFFFFFFFF, alpha));
 	}
 
 	/** Extra scale a screen applies on top of the GUI scale (see {@link TuffMenuScreen}). */

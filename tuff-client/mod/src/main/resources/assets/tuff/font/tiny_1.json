@@ -2,7 +2,7 @@
   "providers": [
     {
       "type": "ttf",
-      "file": "tuff:poppins-semibold.ttf",
+      "file": "tuff:jakarta-semibold.ttf",
       "size": 6,
       "oversample": 1,
       "shift": [

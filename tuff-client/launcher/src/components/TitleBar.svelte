@@ -19,7 +19,7 @@
   .titlebar {
     position: absolute; top: 0; left: 0; right: 0; height: 48px; z-index: 20;
     display: flex; align-items: center; gap: 10px; padding: 0 8px 0 20px;
-    background: linear-gradient(180deg, var(--bg) 60%, transparent);
+    background: transparent;
   }
   .titlebar.transparent { background: transparent; }
   .spacer { flex: 1; height: 100%; }
@@ -29,6 +29,6 @@
     background: transparent; border: 0; border-radius: 6px; color: var(--muted); cursor: pointer;
     transition: background var(--fast), color var(--fast);
   }
-  .ctl:hover { background: var(--surface-2); color: var(--text); }
+  .ctl:hover { background: rgba(255, 255, 255, 0.7); color: var(--text); }
   .ctl.close:hover { background: var(--danger); color: white; }
 </style>

@@ -24,7 +24,7 @@ const ICONS = {
   search: ["search"], settings: ["settings"], palette: ["palette"], package: ["package"],
   sliders: ["sliders-horizontal"], close: ["x"], chevron: ["chevron-down"], check: ["check"],
   plus: ["plus"], up: ["arrow-up"], down: ["arrow-down"],
-  user: ["user"], user_plus: ["user-plus"], trash: ["trash-2"],
+  user: ["user"], user_plus: ["user-plus"], trash: ["trash-2"], play: ["play"], logout: ["log-out"], cloud: ["cloud"],
 };
 const SIZES = [32, 64, 128];
 

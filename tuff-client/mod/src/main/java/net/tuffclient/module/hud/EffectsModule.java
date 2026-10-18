@@ -33,7 +33,7 @@ public final class EffectsModule extends HudModule {
 			if (preview) {
 				box(g, 90, 22);
 				g.text(font, "Speed II", 24, 3, textColor());
-				g.text(font, "1:30", 24, 12, Theme.MUTED);
+				g.text(font, "1:30", 24, 12, Theme.HUD_MUTED);
 			} else {
 				width = 0;
 				height = 0;
@@ -48,7 +48,7 @@ public final class EffectsModule extends HudModule {
 			g.blitSprite(RenderPipelines.GUI_TEXTURED, Hud.getMobEffectSprite(e.getEffect()), 3, y + 2, 18, 18);
 			g.text(font, name(e), 24, y + 3, textColor());
 			String time = e.isInfiniteDuration() ? "**:**" : duration(e.getDuration());
-			g.text(font, time, 24, y + 12, e.endsWithin(200) ? Theme.DANGER : Theme.MUTED);
+			g.text(font, time, 24, y + 12, e.endsWithin(200) ? Theme.DANGER : Theme.HUD_MUTED);
 			y += 22;
 		}
 	}

@@ -19,9 +19,10 @@
   .toasts { position: fixed; right: 18px; bottom: 18px; z-index: 80; display: grid; gap: 8px; width: 340px; }
   .toast {
     display: flex; align-items: flex-start; gap: 10px;
-    background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: 8px;
+    background: rgba(255, 255, 255, 0.72); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border); border-radius: 14px;
     padding: 10px 6px 10px 0; overflow: hidden;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 14px 34px rgba(30, 60, 40, 0.16);
   }
   .bar { width: 3px; align-self: stretch; background: var(--muted); flex: none; }
   .success .bar { background: var(--online); }

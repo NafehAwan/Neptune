@@ -50,10 +50,11 @@ public class TuffClientGameTest implements FabricClientGameTest {
 		context.waitTicks(40);
 		context.takeScreenshot("tuff-title");
 
-		// The Poppins UI font must actually be loaded (its widths differ from the game font).
+		// The UI fonts must actually be loaded (their widths differ from the game font).
 		boolean customFont = context.computeOnClient(client ->
-				Ui.width("Glade menu", Ui.Font.BODY) != client.font.width("Glade menu"));
-		if (!customFont) throw new AssertionError("Glade UI font did not load");
+				Ui.width("Glade menu", Ui.Font.BODY) != client.font.width("Glade menu")
+						&& Ui.width("Glade", Ui.Font.HEAD_30) != client.font.width("Glade"));
+		if (!customFont) throw new AssertionError("Glade UI fonts did not load");
 
 		// The account menu: 3D heads, and offline accounts switch on the spot and back again.
 		context.getInput().setCursorPos(4, 400);
@@ -87,11 +88,11 @@ public class TuffClientGameTest implements FabricClientGameTest {
 		context.waitTicks(15);
 		context.takeScreenshot("tuff-menu-mods");
 
-		// Clicking a card's switch toggles the module.
-		Module scoreboard = context.computeOnClient(client -> TuffClient.modules().hideScoreboard);
+		// Clicking a mod's switch toggles the module.
+		Module scoreboard = context.computeOnClient(client -> TuffClient.modules().fullbright);
 		boolean before = context.computeOnClient(client -> scoreboard.isEnabled());
 		double[] bar = context.computeOnClient(client -> menu.switchPosition(scoreboard.id));
-		if (bar == null) throw new AssertionError("Hide Scoreboard card was not drawn");
+		if (bar == null) throw new AssertionError("Fullbright row was not drawn");
 		context.getInput().setCursorPos(bar[0], bar[1]);
 		context.waitTicks(1);
 		context.getInput().pressMouse(0);

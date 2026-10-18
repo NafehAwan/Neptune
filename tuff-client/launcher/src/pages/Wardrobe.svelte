@@ -5,6 +5,7 @@
   import { activeAccount, app } from "../lib/state.svelte";
   import { toast } from "../lib/toast.svelte";
   import type { SkinProfile } from "../lib/types";
+  import { fallbackSkin } from "../lib/skins.svelte";
 
   type Viewer = import("skinview3d").SkinViewer;
   type Anim = "idle" | "walk" | "run" | "wave" | "crouch";
@@ -24,21 +25,6 @@
   const activeSkin = $derived(profile?.skins.find((s) => s.state === "ACTIVE") ?? profile?.skins[0] ?? null);
   const activeCape = $derived(profile?.capes.find((c) => c.state === "ACTIVE") ?? null);
 
-  /** An original placeholder skin: a tuff-grey mannequin with copper trim. */
-  function mannequin(): string {
-    const c = document.createElement("canvas");
-    c.width = 64; c.height = 64;
-    const g = c.getContext("2d")!;
-    const fill = (col: string, x: number, y: number, w: number, h: number) => { g.fillStyle = col; g.fillRect(x, y, w, h); };
-    fill("#8b8f88", 0, 0, 32, 16);
-    fill("#9a9e96", 8, 8, 8, 8);
-    fill("#d9824b", 9, 12, 2, 1); fill("#d9824b", 13, 12, 2, 1);
-    fill("#3a3f3b", 16, 16, 24, 16); fill("#d9824b", 16, 26, 24, 1);
-    fill("#6d7066", 40, 16, 16, 16); fill("#6d7066", 32, 48, 16, 16);
-    fill("#2c302d", 0, 16, 16, 16); fill("#2c302d", 16, 48, 16, 16);
-    return c.toDataURL();
-  }
-
   function applyAnimation() {
     if (!viewer || !skinview) return;
     const s = skinview;
@@ -54,7 +40,7 @@
     (async () => {
       skinview = await import("skinview3d");
       if (disposed) return;
-      viewer = new skinview.SkinViewer({ canvas, width: 300, height: 420, skin: mannequin() });
+      viewer = new skinview.SkinViewer({ canvas, width: 300, height: 420, skin: fallbackSkin() });
       viewer.zoom = 0.85;
       viewer.fov = 40;
       viewer.autoRotate = rotate;
@@ -216,7 +202,7 @@
   .layout { display: grid; grid-template-columns: 340px 1fr; gap: 18px; align-items: start; }
   .stage {
     position: relative; display: grid; justify-items: center; padding: 18px 0 16px; overflow: hidden;
-    background: radial-gradient(70% 60% at 50% 40%, rgba(217, 130, 75, 0.14), transparent 70%), var(--surface);
+    background: radial-gradient(70% 60% at 50% 40%, rgba(47, 107, 79, 0.14), transparent 70%), var(--surface);
   }
   canvas { width: 300px; height: 420px; cursor: grab; }
   canvas:active { cursor: grabbing; }
@@ -228,7 +214,7 @@
   .box { padding: 18px; display: grid; gap: 12px; }
   .lab { font-size: 14px; color: var(--muted); font-weight: 500; }
   .field { display: grid; gap: 6px; justify-items: start; }
-  .pending { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 7px; background: rgba(217, 130, 75, 0.08); border: 1px solid rgba(217, 130, 75, 0.3); font-size: 14.5px; }
+  .pending { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 7px; background: rgba(47, 107, 79, 0.08); border: 1px solid rgba(47, 107, 79, 0.3); font-size: 14.5px; }
   .capes { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
   .cape { display: grid; justify-items: center; gap: 6px; padding: 10px 6px 8px; background: var(--bg); border: 2px solid var(--border); border-radius: 8px; color: var(--text); cursor: pointer; transition: border-color var(--fast); }
   .cape:hover { border-color: var(--border-strong); }
