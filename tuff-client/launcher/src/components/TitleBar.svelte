@@ -17,8 +17,8 @@
 
 <style>
   .titlebar {
-    position: absolute; top: 0; left: 0; right: 0; height: 48px; z-index: 20;
-    display: flex; align-items: center; gap: 10px; padding: 0 8px 0 20px;
+    position: absolute; top: 0; left: 0; right: 0; height: 62px; z-index: 20;
+    display: flex; align-items: flex-start; gap: 10px; padding: 14px 8px 0 20px;
     background: transparent;
   }
   .titlebar.transparent { background: transparent; }

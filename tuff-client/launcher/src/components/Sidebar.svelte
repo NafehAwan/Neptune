@@ -7,7 +7,7 @@
     { route: "home", icon: "home", label: "Home" },
     { route: "library", icon: "library", label: "Library" },
     { route: "browse", icon: "cube", label: "Mods" },
-    { route: "servers", icon: "globe", label: "Servers" },
+    { route: "servers", icon: "server", label: "Servers" },
     { route: "wardrobe", icon: "shirt", label: "Wardrobe" },
     { route: "screenshots", icon: "camera", label: "Screenshots" },
   ];
@@ -27,7 +27,7 @@
 
 <nav class="sidebar">
   <button class="logo" onclick={() => go("home")} aria-label="Glade home">
-    <img src={logo} alt="" width="36" height="36" />
+    <img src={logo} alt="" width="34" height="34" />
   </button>
   <div class="group">
     {#each items as i, n}{@render item(i, n + 1)}{/each}
@@ -41,35 +41,31 @@
   .sidebar {
     width: 68px; flex: none; height: 100%;
     display: flex; flex-direction: column; align-items: center;
-    padding: 14px 0 16px;
-    background: rgba(255, 255, 255, 0.34);
-    backdrop-filter: blur(22px) saturate(1.4); -webkit-backdrop-filter: blur(22px) saturate(1.4);
-    border-right: 1px solid rgba(255, 255, 255, 0.65);
+    padding: 14px 0;
+    background: rgba(255, 255, 255, 0.32);
+    backdrop-filter: blur(20px) saturate(1.4); -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    border-right: 1px solid rgba(255, 255, 255, 0.6);
     position: relative; z-index: 5;
   }
-  .logo { background: none; border: 0; padding: 0; margin-bottom: 22px; cursor: pointer; transition: transform var(--med) var(--ease); }
+  .logo { background: none; border: 0; padding: 0; margin-bottom: 14px; cursor: pointer; transition: transform var(--med) var(--ease); }
   .logo:hover { transform: rotate(-6deg) scale(1.06); }
-  .logo img { display: block; filter: drop-shadow(0 4px 8px rgba(30, 60, 40, 0.25)); }
+  .logo img { display: block; }
   .group { display: grid; gap: 6px; }
   .bottom { margin-top: auto; }
   .nav {
     position: relative; width: 42px; height: 42px;
     display: grid; place-items: center;
-    background: transparent; border: 0; border-radius: 12px;
+    background: transparent; border: 0; border-radius: 10px;
     color: var(--muted); cursor: pointer;
     transition: color var(--fast), background var(--fast);
   }
-  .nav:hover { color: var(--text); background: rgba(255, 255, 255, 0.55); }
-  .nav.active { color: var(--accent); background: rgba(255, 255, 255, 0.78); box-shadow: 0 2px 8px rgba(30, 60, 40, 0.1); }
-  .nav.active::before {
-    content: ""; position: absolute; left: -13px; top: 12px; width: 4px; height: 18px;
-    background: var(--accent); border-radius: 0 3px 3px 0;
-  }
+  .nav:hover { color: var(--text); background: rgba(255, 255, 255, 0.4); }
+  .nav.active { color: var(--text); background: rgba(255, 255, 255, 0.6); }
   .live { position: absolute; top: 8px; right: 8px; width: 7px; height: 7px; border-radius: 50%; background: var(--online); box-shadow: 0 0 6px var(--online); }
   .tip {
     position: absolute; left: 54px; top: 50%; translate: 0 -50%;
     background: rgba(255, 255, 255, 0.92); color: var(--text);
-    font: 600 13.5px var(--font); white-space: nowrap;
+    font: 600 12.5px var(--font); white-space: nowrap;
     padding: 5px 10px; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 6px 18px rgba(30, 60, 40, 0.12);
     opacity: 0; pointer-events: none; transform: translateX(-4px);
     transition: opacity var(--fast), transform var(--fast) var(--ease);

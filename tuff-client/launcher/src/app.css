@@ -7,7 +7,7 @@
   --border: rgba(31, 42, 34, 0.09);
   --border-strong: rgba(31, 42, 34, 0.16);
   --text: #1F2A22;
-  --muted: #5B675E;
+  --muted: #6B756C;
   --faint: #879189;
   --accent: #2F6B4F;
   --accent-hover: #3A7D5E;
@@ -18,11 +18,11 @@
   --danger: #C2463B;
 
   /* frosted glass */
-  --glass: rgba(255, 255, 255, 0.46);
+  --glass: rgba(255, 255, 255, 0.38);
   --glass-strong: rgba(255, 255, 255, 0.66);
-  --glass-border: rgba(255, 255, 255, 0.72);
-  --glass-blur: blur(22px) saturate(1.45);
-  --glass-shadow: 0 18px 50px rgba(30, 60, 40, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.7);
+  --glass-blur: blur(20px) saturate(1.5);
+  --glass-shadow: 0 10px 30px rgba(30, 60, 40, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8);
 
   --radius: 10px;
   --radius-lg: 16px;
@@ -32,7 +32,7 @@
 
   --font: "Plus Jakarta Sans", system-ui, sans-serif;
   --display: "Fraunces", Georgia, serif;
-  --mono: ui-monospace, "JetBrains Mono", "DejaVu Sans Mono", monospace;
+  --mono: "Geist Mono", ui-monospace, "DejaVu Sans Mono", monospace;
 
   color-scheme: light;
 }

@@ -130,7 +130,7 @@ public final class TuffTitleScreen extends Screen {
 		float lift = (1 - a) * 8;
 
 		// the frosted card
-		Ui.frost(g, cx - CARD_W / 2, CARD_Y + lift, CARD_W, CARD_H, 28, 0x9EFFFFFF, 0.18f, a);
+		Ui.frost(g, cx - CARD_W / 2, CARD_Y + lift, CARD_W, CARD_H, 28, 0x80FFFFFF, 0.18f, a);
 		Ui.image(g, EMBLEM, cx - 28, LEAF_Y + lift, 56, 56, 512, 512, Theme.alpha(0xFFFFFFFF, a));
 		// 96px Fraunces italic in a line-height 1 box: the baseline sits 0.86 of the size down
 		Ui.centeredAt(g, "Glade", cx, WORD_TOP + 96 * 0.8615f + lift, Theme.alpha(Theme.TEXT, a), Ui.Font.HEAD_96);
