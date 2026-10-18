@@ -111,11 +111,11 @@ public final class TuffTitleScreen extends Screen {
 		float firstButton = boxes.getFirst().y();
 		float emblem = Math.max(34, Math.min(64, (firstButton - 52) * 0.55f));
 		float wordH = 34;
-		float blockH = emblem + 8 + wordH;
+		float blockH = emblem + 12 + wordH;
 		float top = Math.max(26, (firstButton - blockH) / 2 + 4) + (1 - a) * 8 + (float) Math.sin(now / 1e9 * 0.8) * 1.2f;
 		Ui.shadow(g, width / 2f - emblem / 2 + 4, top + 4, emblem - 8, emblem - 8, 14, 0.35f * a);
 		Ui.image(g, EMBLEM, width / 2f - emblem / 2, top, emblem, emblem, 512, 512, Theme.alpha(0xFFFFFFFF, a));
-		float wy = top + emblem + 6;
+		float wy = top + emblem + 10;
 		float ww = Ui.spacedWidth("GLADE", Ui.Font.HERO, 5);
 		Ui.spaced(g, "GLADE", width / 2f - ww / 2 + 1, wy + 1, Theme.alpha(0x99000000, a), Ui.Font.HERO, 5);
 		Ui.spaced(g, "GLADE", width / 2f - ww / 2, wy, Theme.alpha(0xFFF4EFE6, a), Ui.Font.HERO, 5);
