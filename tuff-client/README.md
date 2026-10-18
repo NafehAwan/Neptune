@@ -29,8 +29,23 @@ game look alike.
 - **Profiles**: any release or snapshot, vanilla or Fabric. Each profile has its
   own folder, memory, JVM arguments, Java, resolution and icon. Libraries,
   assets and Java runtimes are shared and checked with SHA-1.
-- **One-click Glade profile**: Fabric 26.3 with the Glade mod plus Fabric API,
-  Sodium, Lithium, FerriteCore, Entity Culling, ImmediatelyFast and ModernFix.
+- **Glade presets**: ready-made Fabric 26.3 profiles with the Glade mod, each
+  in its own folder so worlds, mods and settings never mix (create a preset
+  twice and you get a second folder):
+  - *Performance*: Sodium, Lithium, FerriteCore, ModernFix, ImmediatelyFast,
+    Entity Culling, More Culling, Dynamic FPS and BadOptimizations. The game
+    looks exactly the same.
+  - *Performance+*: adds C2ME, ScalableLux, Krypton, Sodium Extra, Reese's
+    Sodium Options, Enhanced Block Entities and Clumps, with fast graphics
+    and an 8 chunk view.
+  - *Performance++*: adds Noisium, VMP and Ksyxis, with the leanest settings
+    and a 6 chunk view, for low-end PCs and laptops.
+  - *Scenic*: the core optimisations plus Iris with Complementary Reimagined,
+    Continuity, LambDynamicLights, Entity Model and Texture Features with
+    Fresh Animations, Falling Leaves and Visuality.
+  Mods without a build for the profile's version are skipped and listed.
+  Custom profiles take any version, vanilla or Fabric. The list lives in
+  `launcher/src-tauri/src/presets.rs`.
 - **Mods**: Modrinth search for mods, resource packs, shaders and modpacks,
   filtered to the profile. Installs required dependencies (and Iris for
   shaders), checks for updates in one request, lets you toggle or remove
