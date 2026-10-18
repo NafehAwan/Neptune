@@ -101,7 +101,12 @@ public final class TuffTitleScreen extends Screen {
 
 	@Override
 	public void extractBackground(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
-		background.render(g, width, height, animate());
+		// the glass blurs what's behind it, like the mockup's backdrop-filter
+		float z = zoom(), lift = (1 - stage(0)) * 8;
+		List<float[]> glass = new ArrayList<>();
+		glass.add(new float[] {(vw() / 2 - CARD_W / 2) * z, (CARD_Y + lift) * z, CARD_W * z, CARD_H * z, 28 * z});
+		accounts.glass(glass, z);
+		background.renderWithGlass(g, width, height, animate(), () -> extractBlurredBackground(g), glass);
 	}
 
 	private float stage(float delay) {
@@ -130,7 +135,7 @@ public final class TuffTitleScreen extends Screen {
 		float lift = (1 - a) * 8;
 
 		// the frosted card
-		Ui.frost(g, cx - CARD_W / 2, CARD_Y + lift, CARD_W, CARD_H, 28, 0x80FFFFFF, 0.18f, a);
+		Ui.frost(g, cx - CARD_W / 2, CARD_Y + lift, CARD_W, CARD_H, 28, 0x61FFFFFF, 0.18f, a);
 		Ui.image(g, EMBLEM, cx - 28, LEAF_Y + lift, 56, 56, 512, 512, Theme.alpha(0xFFFFFFFF, a));
 		// 96px Fraunces italic in a line-height 1 box: the baseline sits 0.86 of the size down
 		Ui.centeredAt(g, "Glade", cx, WORD_TOP + 96 * 0.8615f + lift, Theme.alpha(Theme.TEXT, a), Ui.Font.HEAD_96);
@@ -156,8 +161,8 @@ public final class TuffTitleScreen extends Screen {
 					label(g, b, y, btn, Theme.alpha(Theme.TEXT, appear), big ? Ui.Font.UI_15_SB : Ui.Font.UI_13_5_SB, big ? 15 : 13.5f);
 				}
 				default -> {
-					Ui.shadow(g, b.x(), y, b.w(), b.h(), 14, 0.12f * appear);
-					Ui.round(g, b.x(), y, b.w(), b.h(), b.h() / 2, Theme.alpha(Theme.mix(0x8CFFFFFF, 0xE6FFFFFF, hv), appear), Theme.alpha(0xB3FFFFFF, appear), 1);
+					Ui.shadowOutside(g, b.x(), y, b.w(), b.h(), 14, 0.12f * appear);
+					Ui.round(g, b.x(), y, b.w(), b.h(), b.h() / 2, Theme.alpha(Theme.mix(0x61FFFFFF, 0xD9FFFFFF, hv), appear), Theme.alpha(0xB3FFFFFF, appear), 1);
 					int color = btn.id().equals("quit") ? Theme.mix(Theme.TEXT, Theme.DANGER, hv) : Theme.TEXT;
 					Ui.lucide(g, btn.icon(), b.x() + 10.5f, y + 10.5f, 15, Theme.alpha(color, appear));
 					if (over) tooltip(g, btn.label(), b);

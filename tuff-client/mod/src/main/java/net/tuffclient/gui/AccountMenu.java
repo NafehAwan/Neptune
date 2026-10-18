@@ -47,6 +47,12 @@ public final class AccountMenu {
 		this.parent = parent;
 	}
 
+	/** The chip and, while open, the menu: glass shapes {x, y, w, h, radius} in GUI units. */
+	public void glass(List<float[]> out, float zoom) {
+		if (chipX2 > chipX1) out.add(new float[] {chipX1 * zoom, chipY1 * zoom, (chipX2 - chipX1) * zoom, (chipY2 - chipY1) * zoom, (chipY2 - chipY1) / 2 * zoom});
+		if (openAnim > 0.05f && menuY2 > menuY1) out.add(new float[] {menuX1 * zoom, menuY1 * zoom, (menuX2 - menuX1) * zoom, (menuY2 - menuY1) * zoom, 20 * zoom});
+	}
+
 	public boolean isOpen() {
 		return open;
 	}
@@ -83,8 +89,8 @@ public final class AccountMenu {
 		chipY1 = y;
 		chipX2 = x + w;
 		chipY2 = y + h;
-		Ui.shadow(g, x, y, w, h, 16, 0.12f * alpha);
-		Ui.round(g, x, y, w, h, h / 2, Theme.alpha(Theme.mix(0x8CFFFFFF, 0xE6FFFFFF, chipHover), alpha), Theme.alpha(0xB3FFFFFF, alpha), 1);
+		Ui.shadowOutside(g, x, y, w, h, 16, 0.12f * alpha);
+		Ui.round(g, x, y, w, h, h / 2, Theme.alpha(Theme.mix(0x61FFFFFF, 0xB3FFFFFF, chipHover), alpha), Theme.alpha(0xB3FFFFFF, alpha), 1);
 		SkinHead.draw(g, SkinTextures.of(current), x + 5 + 13, y + h / 2, 26, -32, -20, alpha);
 		float tx = x + 5 + 26 + 10;
 		Ui.textAt(g, label, tx, Ui.mid(y + h / 2, 13), Theme.alpha(Theme.TEXT, alpha), Ui.Font.UI_13_SB);
@@ -105,7 +111,7 @@ public final class AccountMenu {
 		menuY1 = y;
 		menuX2 = x + W;
 		menuY2 = y + h;
-		Ui.frost(g, x, y, W, h, 20, 0xE0FBFBF8, 0.22f, a);
+		Ui.frost(g, x, y, W, h, 20, 0x61FFFFFF, 0.18f, a);
 		// clicks inside the panel never fall through to the screen
 		hit(x, y, x + W, y + h, () -> { });
 		float ix = x + 8, iw = W - 16;

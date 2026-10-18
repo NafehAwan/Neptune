@@ -54,6 +54,7 @@ public final class Ui {
 	private static final int[] RADII = {4, 8, 16, 32};
 	private static final Identifier[] ROUND = new Identifier[RADII.length];
 	private static final Identifier SHADOW = id("shadow");
+	private static final Identifier SHADOW_RING = id("shadow_ring");
 
 	static {
 		for (int i = 0; i < RADII.length; i++) ROUND[i] = id("round_" + RADII[i]);
@@ -121,7 +122,7 @@ public final class Ui {
 
 	/** Frosted glass, as in the mockups: soft green shadow, translucent white, bright rim and top highlight. */
 	public static void frost(GuiGraphicsExtractor g, float x, float y, float w, float h, float r, int fill, float shadow, float alpha) {
-		if (shadow > 0) shadow(g, x, y, w, h, 26, shadow * alpha);
+		if (shadow > 0) shadowOutside(g, x, y, w, h, 26, shadow * alpha);
 		round(g, x, y, w, h, r, Theme.alpha(fill, alpha), Theme.alpha(0xB3FFFFFF, alpha), 1);
 		round(g, x + r * 0.7f, y + 1, w - r * 1.4f, 1, 0.5f, Theme.alpha(0xCCFFFFFF, alpha));
 	}
@@ -197,6 +198,16 @@ public final class Ui {
 		g.pose().translate(x - spread, y - spread + spread * 0.35f);
 		g.pose().scale(s, s);
 		g.blitSprite(RenderPipelines.GUI_TEXTURED, SHADOW, 0, 0, Math.round((w + 2 * spread) / s), Math.round((h + 2 * spread) / s), Theme.alpha(0xFF1E3C28, alpha));
+		g.pose().popMatrix();
+	}
+
+	/** Soft shadow drawn only outside the rectangle, for see-through panels (like a CSS box-shadow). */
+	public static void shadowOutside(GuiGraphicsExtractor g, float x, float y, float w, float h, float spread, float alpha) {
+		float s = spread / 16f;
+		g.pose().pushMatrix();
+		g.pose().translate(x - spread, y - spread + spread * 0.35f);
+		g.pose().scale(s, s);
+		g.blitSprite(RenderPipelines.GUI_TEXTURED, SHADOW_RING, 0, 0, Math.round((w + 2 * spread) / s), Math.round((h + 2 * spread) / s), Theme.alpha(0xFF1E3C28, alpha));
 		g.pose().popMatrix();
 	}
 

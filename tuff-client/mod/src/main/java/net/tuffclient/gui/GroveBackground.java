@@ -1,5 +1,12 @@
 package net.tuffclient.gui;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeSet;
+
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.resources.Identifier;
 import net.tuffclient.TuffClient;
@@ -34,15 +41,124 @@ public final class GroveBackground {
 
 	/** w/h in GUI units. */
 	public void render(GuiGraphicsExtractor g, int w, int h, boolean animate) {
+		step(animate);
+		drawAt(g, w, h, null);
+	}
+
+	/**
+	 * Frosted glass over the scene, like CSS backdrop-filter: the scene is drawn,
+	 * blurred with the game's own blur, then drawn sharp again everywhere except
+	 * behind the glass. Glass shapes are rounded rectangles {x, y, w, h, radius}
+	 * in GUI units; the blurred area follows their rounded corners row by row.
+	 */
+	public void renderWithGlass(GuiGraphicsExtractor g, int w, int h, boolean animate, Runnable blur, List<float[]> glass) {
+		step(animate);
+		drawAt(g, w, h, null);
+		if (glass.isEmpty()) return;
+		// own layers either side of the blur, so only the first pass is blurred
+		g.nextStratum();
+		blur.run();
+		g.nextStratum();
+		for (int[] r : sharpRegions(w, h, glass)) {
+			g.enableScissor(r[0], r[1], r[2], r[3]);
+			drawAt(g, w, h, r);
+			g.disableScissor();
+		}
+	}
+
+	private void step(boolean animate) {
 		long now = System.nanoTime();
 		float dt = Math.min(0.1f, (now - last) / 1e9f);
 		last = now;
 		if (animate) time += dt;
+	}
+
+	private void drawAt(GuiGraphicsExtractor g, int w, int h, int[] region) {
 		int gs = Ui.guiScale();
+		if (region == null) {
+			clipOn = false;
+		} else {
+			clipOn = true;
+			clipX1 = region[0] * gs;
+			clipY1 = region[1] * gs;
+			clipX2 = region[2] * gs;
+			clipY2 = region[3] * gs;
+		}
 		g.pose().pushMatrix();
 		g.pose().scale(1f / gs, 1f / gs);
 		draw(g, w * gs, h * gs, time);
 		g.pose().popMatrix();
+		clipOn = false;
+	}
+
+	/**
+	 * The screen minus the glass, as whole-GUI-unit rectangles that never overlap
+	 * (overlaps would draw the translucent rays twice). Rows inside a corner are
+	 * trimmed to stay inside the curve, so blur never shows outside the glass.
+	 */
+	static List<int[]> sharpRegions(int w, int h, List<float[]> glass) {
+		List<int[]> covered = new ArrayList<>();
+		for (float[] s : glass) {
+			float x = s[0], y = s[1], sw = s[2], sh = s[3], r = Math.min(s[4], Math.min(sw, sh) / 2);
+			int top = (int) Math.ceil(y), bottom = (int) Math.floor(y + sh);
+			for (int row = top; row < bottom; row++) {
+				// distance into the curve from the nearer edge, using the row edge nearest that edge
+				float dy = Math.min(row - y, y + sh - (row + 1));
+				float inset = dy >= r ? 0 : r - (float) Math.sqrt(Math.max(0, r * r - (r - dy) * (r - dy)));
+				int x1 = (int) Math.ceil(x + inset), x2 = (int) Math.floor(x + sw - inset);
+				if (x2 > x1) covered.add(new int[] {x1, row, x2, row + 1});
+			}
+		}
+		// sweep rows: every row is cut into the gaps between covered spans
+		TreeSet<Integer> ys = new TreeSet<>();
+		ys.add(0);
+		ys.add(h);
+		for (int[] c : covered) {
+			ys.add(Math.max(0, Math.min(h, c[1])));
+			ys.add(Math.max(0, Math.min(h, c[3])));
+		}
+		List<int[]> out = new ArrayList<>();
+		Map<Long, int[]> open = new HashMap<>();
+		Integer prev = null;
+		for (int y : ys) {
+			if (prev != null && y > prev) {
+				int ya = prev, yb = y;
+				List<int[]> spans = new ArrayList<>();
+				for (int[] c : covered) if (c[1] <= ya && c[3] >= yb) spans.add(new int[] {c[0], c[2]});
+				spans.sort(Comparator.comparingInt(sp -> sp[0]));
+				List<int[]> gaps = new ArrayList<>();
+				int cx = 0;
+				for (int[] sp : spans) {
+					if (sp[0] > cx) gaps.add(new int[] {cx, Math.min(w, sp[0])});
+					cx = Math.max(cx, sp[1]);
+				}
+				if (cx < w) gaps.add(new int[] {cx, w});
+				// grow regions down while a gap repeats, so a plain band stays one region
+				Map<Long, int[]> next = new HashMap<>();
+				for (int[] gap : gaps) {
+					if (gap[1] <= gap[0]) continue;
+					long key = ((long) gap[0] << 32) | (gap[1] & 0xFFFFFFFFL);
+					int[] region = open.remove(key);
+					if (region != null && region[3] == ya) region[3] = yb;
+					else {
+						region = new int[] {gap[0], ya, gap[1], yb};
+						out.add(region);
+					}
+					next.put(key, region);
+				}
+				open = next;
+			}
+			prev = y;
+		}
+		return out;
+	}
+
+	private static boolean clipOn;
+	private static float clipX1, clipY1, clipX2, clipY2;
+
+	/** Skips shapes outside the region being redrawn, so the sharp pass costs little. */
+	private static boolean outside(float x1, float y1, float x2, float y2) {
+		return clipOn && (x2 <= clipX1 || x1 >= clipX2 || y2 <= clipY1 || y1 >= clipY2);
 	}
 
 	/** A tiny LCG, the same one the launcher uses, so both scenes plant the same trees. */
@@ -68,6 +184,7 @@ public final class GroveBackground {
 	}
 
 	private static void rect(GuiGraphicsExtractor g, float x, float y, float w, float h, int argb) {
+		if (outside(x, y, x + w, y + h)) return;
 		int x1 = Math.round(x), y1 = Math.round(y);
 		int x2 = Math.round(x + w), y2 = Math.round(y + h);
 		if (x2 > x1 && y2 > y1) g.fill(x1, y1, x2, y2, argb);
@@ -142,7 +259,8 @@ public final class GroveBackground {
 		for (int hi = 0; hi < HILLS.length; hi++) {
 			float[] hill = HILLS[hi];
 			int col = HILL_COLORS[hi];
-			for (float x = 0; x < w; x += px) {
+			float hx1 = clipOn ? Math.max(0, (float) Math.floor(clipX1 / px) * px) : 0, hx2 = clipOn ? Math.min(w, clipX2) : w;
+			for (float x = hx1; x < hx2; x += px) {
 				float u = (x + t * 6 * hill[1] * 10) / w;
 				float y = (float) snapOp.applyAsDouble(h * hill[0] - (Math.sin(u * 5.3) * 0.5 + Math.sin(u * 11.7) * 0.25 + 0.75) * px * hill[2] * 4);
 				rect(g, x, y, px, h - y, col);

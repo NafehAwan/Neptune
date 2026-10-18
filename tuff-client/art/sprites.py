@@ -91,6 +91,30 @@ def rounded(path, size=64, radius=16, blur=0, pad=0):
     img.save(path)
 
 
+def shadow_ring(path, size=96, radius=20, blur=7, pad=16, lift=5.6):
+    """The soft shadow with the panel's own area cut out, so a see-through panel
+    shows the scene behind it instead of its shadow (like a CSS box-shadow).
+    The panel sits `lift` px above the shadow's centre (Ui draws shadows lower)."""
+    scale = 4
+    shadow = Image.new("L", (size * scale, size * scale), 0)
+    ImageDraw.Draw(shadow).rounded_rectangle(
+        (pad * scale, pad * scale, (size - pad) * scale - 1, (size - pad) * scale - 1), radius * scale, fill=255)
+    shadow = shadow.resize((size, size), Image.LANCZOS).filter(ImageFilter.GaussianBlur(blur))
+    hole = Image.new("L", (size * scale, size * scale), 0)
+    ImageDraw.Draw(hole).rounded_rectangle(
+        (pad * scale, (pad - lift) * scale, (size - pad) * scale - 1, (size - pad - lift) * scale - 1), (radius - 2) * scale, fill=255)
+    hole = hole.resize((size, size), Image.LANCZOS)
+    px_s, px_h = shadow.load(), hole.load()
+    out = Image.new("L", (size, size), 0)
+    po = out.load()
+    for y in range(size):
+        for x in range(size):
+            po[x, y] = round(px_s[x, y] * (255 - px_h[x, y]) / 255)
+    img = Image.new("RGBA", (size, size), (255, 255, 255, 0))
+    img.putalpha(out)
+    img.save(path)
+
+
 def nine_slice(path, size, border):
     meta = {"gui": {"scaling": {"type": "nine_slice", "width": size, "height": size, "border": border, "stretch_inner": True}}}
     Path(str(path) + ".mcmeta").write_text(json.dumps(meta, indent=2) + "\n")
@@ -107,4 +131,6 @@ if __name__ == "__main__":
         nine_slice(SPRITES / f"round_{r}.png", 4 * r, r)
     rounded(SPRITES / "shadow.png", size=96, radius=20, blur=7, pad=16)
     nine_slice(SPRITES / "shadow.png", 96, 32)
+    shadow_ring(SPRITES / "shadow_ring.png", size=96, radius=20, blur=7, pad=16)
+    nine_slice(SPRITES / "shadow_ring.png", 96, 32)
     print(f"{len(icons)} icons, shapes written to {SPRITES}")
