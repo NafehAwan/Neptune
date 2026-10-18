@@ -31,21 +31,33 @@ jobs:
         run: |
           set -o pipefail
           ./gradlew build 2>&1 | tee build.log || { echo "=== COMPILE ERRORS"; grep -E "error:" -A3 build.log | head -120; exit 1; }
-      - name: Print skin and account APIs
+      - name: Print Minecraft APIs used by Glade
         if: always()
         run: |
           JAR=""
           for j in $(find ~/.gradle/caches/fabric-loom .gradle/loom-cache -name '*.jar' 2>/dev/null); do
             if unzip -l "$j" 2>/dev/null | grep -q 'net/minecraft/client/Minecraft.class'; then JAR="$j"; break; fi
           done
-          AUTHLIB=$(find ~/.gradle/caches -name 'authlib-*.jar' 2>/dev/null | head -1)
-          dump() { echo "=== $1"; javap -p -cp "$JAR:$AUTHLIB" "$1" 2>&1 | grep -vE "lambda\$|hashCode|equals|toString|Compiled from" | head -${2:-60}; }
-          dump net.minecraft.world.entity.player.PlayerSkin
-          dump net.minecraft.client.resources.SkinManager
-          dump net.minecraft.client.resources.DefaultPlayerSkin
-          dump 'net.minecraft.core.ClientAsset$Texture'
-          dump com.mojang.authlib.GameProfile
-          javap -p -cp "$JAR" net.minecraft.client.Minecraft | grep -iE "user|profile|skin" | head -30
+          echo "API-CLASSES $(unzip -l "$JAR" | grep -oE 'net/minecraft/client/[A-Za-z0-9/]*(Outline|NameTag|Nametag|Fog|Sky|Debug|Screenshot|ChatComponent|GuiMessage|Disconnected|ConnectScreen|ParticleEngine|OverlayTexture|LightTexture|Camera|MouseHandler|SubmitNodeCollector|EntityRenderer|LivingEntityRenderer|AvatarRenderer|PlayerRenderer|RenderTarget|PostChain|DeathScreen)[A-Za-z0-9$]*\.class' | sort -u | tr '\n' ' ')"
+          dump() { echo "=== $1"; javap -p -cp "$JAR" "$1" 2>&1 | grep -vE 'lambda\$|Compiled from|access\$' | head -${2:-90}; }
+          for c in net.minecraft.client.gui.GuiGraphicsExtractor net.minecraft.client.gui.components.ChatComponent net.minecraft.client.GuiMessage \
+            net.minecraft.client.Camera net.minecraft.client.MouseHandler net.minecraft.world.entity.Entity net.minecraft.client.renderer.LevelRenderer \
+            net.minecraft.client.renderer.entity.EntityRenderer net.minecraft.client.renderer.entity.LivingEntityRenderer net.minecraft.client.renderer.texture.OverlayTexture \
+            net.minecraft.client.multiplayer.ClientLevel net.minecraft.world.level.Level net.minecraft.client.particle.ParticleEngine \
+            net.minecraft.client.gui.components.DebugScreenOverlay net.minecraft.client.gui.components.debug.DebugScreenEntryList net.minecraft.client.Screenshot \
+            net.minecraft.client.gui.screens.ConnectScreen net.minecraft.client.gui.screens.DisconnectedScreen net.minecraft.client.multiplayer.ServerData \
+            net.minecraft.client.multiplayer.MultiPlayerGameMode net.minecraft.world.entity.player.Inventory net.minecraft.client.renderer.GameRenderer \
+            net.minecraft.client.renderer.entity.state.EntityRenderState net.minecraft.client.renderer.SubmitNodeCollector net.minecraft.client.Options \
+            net.minecraft.client.renderer.fog.FogRenderer net.minecraft.client.renderer.SkyRenderer net.minecraft.client.player.AbstractClientPlayer \
+            net.minecraft.world.entity.player.PlayerSkin net.minecraft.core.ClientAsset\$Texture net.minecraft.client.multiplayer.ClientPacketListener \
+            net.minecraft.network.chat.ClickEvent net.minecraft.client.gui.Gui net.minecraft.client.gui.screens.DeathScreen net.minecraft.client.renderer.texture.DynamicTexture \
+            com.mojang.blaze3d.platform.NativeImage net.minecraft.client.renderer.texture.TextureManager net.minecraft.client.KeyboardHandler \
+            net.minecraft.client.renderer.feature.NameTagFeatureRenderer net.minecraft.client.renderer.state.LevelRenderState net.minecraft.client.renderer.state.SkyRenderState \
+            net.minecraft.client.renderer.state.CameraRenderState net.minecraft.client.multiplayer.resolver.ServerAddress net.minecraft.client.gui.screens.TitleScreen; do
+            dump "$c" 140
+          done
+          echo "=== OverlayTexture bytecode"; javap -c -p -cp "$JAR" net.minecraft.client.renderer.texture.OverlayTexture 2>&1 | head -80
+          echo "=== LevelRenderer outline bytecode"; javap -c -p -cp "$JAR" net.minecraft.client.renderer.LevelRenderer 2>&1 | grep -iE "outline|Outline|ARGB|ldc|sipush|bipush" | head -60
       - uses: actions/upload-artifact@v4
         with:
           name: tuff-mod
