@@ -27,7 +27,7 @@ public abstract class TextHudModule extends HudModule {
 		int labelWidth = label.isEmpty() ? 0 : font.width(label) + 4;
 		int w = labelWidth + font.width(value) + 8;
 		box(g, w, 15);
-		if (!label.isEmpty()) g.text(font, label, 4, 4, Theme.HUD_MUTED);
+		if (!label.isEmpty()) g.text(font, label, 4, 4, Theme.MUTED);
 		g.text(font, value, 4 + labelWidth, 4, textColor());
 	}
 }

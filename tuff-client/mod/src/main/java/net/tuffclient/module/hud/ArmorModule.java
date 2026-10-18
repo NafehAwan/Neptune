@@ -52,7 +52,7 @@ public final class ArmorModule extends HudModule {
 		}
 		if (!any) {
 			String hint = preview ? "Armor" : "";
-			g.text(font, hint, 4, 4, Theme.HUD_MUTED);
+			g.text(font, hint, 4, 4, Theme.MUTED);
 			w = Math.max(w, font.width(hint) + 8);
 			y = 15;
 		}

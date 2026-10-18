@@ -28,6 +28,6 @@ public final class CoordinatesModule extends HudModule {
 		int h = facing.isEmpty() ? 15 : 25;
 		box(g, w, h);
 		g.text(font, xyz, 4, 4, textColor());
-		if (!facing.isEmpty()) g.text(font, facing, 4, 14, Theme.HUD_MUTED);
+		if (!facing.isEmpty()) g.text(font, facing, 4, 14, Theme.MUTED);
 	}
 }

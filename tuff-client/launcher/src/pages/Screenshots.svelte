@@ -84,7 +84,7 @@
   .shot { position: relative; padding: 0; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; background: var(--surface); cursor: zoom-in; aspect-ratio: 16 / 9; }
   .shot img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform var(--med) var(--ease); }
   .shot:hover img { transform: scale(1.04); }
-  .cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 10px 7px; font-size: 13px; text-align: left; color: #fff; background: linear-gradient(transparent, rgba(20, 34, 26, 0.7)); opacity: 0; transition: opacity var(--fast); }
+  .cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 10px 7px; font-size: 13px; text-align: left; color: var(--text); background: linear-gradient(transparent, rgba(0, 0, 0, 0.75)); opacity: 0; transition: opacity var(--fast); }
   .shot:hover .cap { opacity: 1; }
   .lightbox { position: fixed; inset: 0; z-index: 60; background: rgba(6, 7, 6, 0.9); display: grid; place-items: center; padding: 40px 40px 90px; }
   .lightbox img { max-width: 100%; max-height: 100%; border-radius: 6px; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6); }

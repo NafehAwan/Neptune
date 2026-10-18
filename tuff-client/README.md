@@ -1,31 +1,26 @@
 # Glade
 
-A calm, minimal Minecraft launcher with its own in-game mod. Its look is
-**Grove Glass**: soft paper, forest green and frosted see-through panels over
-an animated pixel forest.
+A fast, minimal Minecraft launcher with its own in-game mod. Its look comes from
+the 1.21 Trial Chambers: tuff stone and copper.
 
 ```
 tuff-client/
   launcher/   Tauri 2 app (Rust backend + Svelte 5 UI), ships as a .deb
   mod/        Glade Fabric mod for Minecraft 26.3 (bundled into the launcher)
-  art/        logo, fonts and icon sources
-  design/     the design concepts and mockups the look was picked from
+  art/        source for the painted Trial Chamber layers, emblem and icons
 ```
 
-Both use Plus Jakarta Sans for text and Fraunces italic for the wordmark (SIL
-Open Font License), and draw the same animated grove, so the launcher and the
-game look alike.
+Both use the Poppins typeface (SIL Open Font License) and the same painted
+chamber art, so the launcher and the game look alike.
 
 ## Launcher
 
 - **Accounts**: Microsoft sign-in (device code, several accounts, silent token
   refresh) and offline accounts for singleplayer and offline-mode servers. The
-  account chip shows a 3D skin head; its menu switches accounts and adds new
-  ones. Premium accounts show their real skin from Mojang; offline accounts get
-  the default skin, read from your installed Minecraft so Glade never ships
-  Mojang's art.
-- **3D heads**: every head is a real 3D model, and the skin's outer layer stands
-  off the head as individual blocks.
+  account chip shows a 3D skin head (the skin's outer layer stands off the head
+  as real blocks); its menu switches accounts and adds Microsoft or offline
+  ones. Premium accounts show their real skin from Mojang; accounts without one
+  get Steve, read from your installed Minecraft so no Mojang art is shipped.
 - **Profiles**: any release or snapshot, vanilla or Fabric. Each profile has its
   own folder, memory, JVM arguments, Java, resolution and icon. Libraries,
   assets and Java runtimes are shared and checked with SHA-1.
@@ -43,9 +38,8 @@ game look alike.
 - **Console**: live game log with level filters and search, plus a plain-language
   explanation when the game crashes.
 - **Performance**: Java is downloaded automatically for each version, with
-  tuned G1 flags. The home scene pauses when the window is unfocused or hidden
-  (and stays still with Reduce motion), and the window can minimize or hide
-  while you play.
+  tuned G1 flags. The UI pauses its animation when unfocused, and the window
+  can minimize or hide while you play.
 - **Extras**: Discord Rich Presence and keyboard shortcuts (`Ctrl+1`–`8` to
   switch pages, `Ctrl+Enter` to play).
 
@@ -93,24 +87,22 @@ named `tuff`, and paste the application ID in Settings → Discord (or build wit
 Fabric mod for Minecraft 26.3 (Java 25). The launcher installs it into Glade
 profiles automatically.
 
-- **Title screen**: the animated grove (a sun on a slow arc with turning rays,
-  blocky clouds at three depths, birds, rolling hills, three layers of trees
-  swaying in the wind and falling leaves) drawn at full screen resolution, with
-  a frosted glass card holding the leaf, the wordmark and the main buttons.
-- **Account menu**: the chip top left shows a 3D head of the current account.
-  Its menu lists every account with its own 3D head (outer layer as real
-  blocks), adds offline accounts and switches to them on the spot. Microsoft
-  accounts need their sign-in, so switching to another one happens in the
-  launcher; switching back to the account the game started with always works.
-  The launcher shares only account names and kinds with the game, never tokens.
-- **Mod menu** (Right Shift): a sidebar (Mods, Theme, Packs, Settings, HUD)
-  beside a light glass panel, at a steady size at any GUI scale.
+- **Title screen**: the painted Trial Chamber with parallax, flickering copper
+  bulbs, a glowing spawner and drifting embers, drawn at full screen
+  resolution. Rounded buttons, a toolbar that opens the menu on any page, and
+  an account chip with a 3D skin head. Its menu lists every account with its
+  own 3D head, adds offline accounts and switches to them on the spot
+  (switching to another Microsoft account happens in the launcher; the
+  launcher shares only names and kinds with the game, never tokens).
+- **Mod menu** (Right Shift): a left sidebar (Mods, Theme, Packs, Settings,
+  HUD) beside a dark panel with a red "Mod Menu" tab, and a steady size at any
+  GUI scale.
   - *Mods*: filter chips (All, New, Favorites, HUD, Utility, Visual), search,
-    and a grid of cards with a big icon or a live HUD preview, a heart to
-    favorite, and a switch. Grid or list view; right-click or the gear opens a
-    settings drawer (switches, choices and sliders).
-  - *Theme*: accent color (Forest by default, Copper, Amethyst, Mint, Sky,
-    Rose, Gold, Red), background blur and animations.
+    and a 3-column grid of cards with a big icon or a live HUD preview, a heart
+    to favorite, and a switch. Grid or list view; right-click or the gear opens
+    a settings drawer (switches, choices and sliders).
+  - *Theme*: accent color (Red by default, Copper, Amethyst, Mint, Sky, Rose, Gold), background
+    blur and animations.
   - *Packs*: enable, disable and reorder resource packs.
   - *Settings*: title screen and background toggles, keybinds, HUD reset.
 - **HUD editor**: drag modules anywhere, with snapping to screen edges, the
@@ -122,19 +114,23 @@ profiles automatically.
 
 Settings are saved to `config/tuff/config.json`.
 
+### Art
+
+`art/logo.mjs` draws the Glade leaf logo (app icons, favicon, mod icon and
+title emblem); `art/chamber.html` paints the chamber layers on a canvas;
+`art/render.mjs` renders them with Playwright into the mod and the launcher,
+`art/sprites.py` builds the mod's pixel icons and rounded-corner sprites, and
+`art/icons.mjs` renders the menu's Lucide line icons (ISC license).
+
+```sh
+PLAYWRIGHT_PATH=$(npm root -g)/playwright node tuff-client/art/render.mjs
+python3 tuff-client/art/sprites.py
+```
+
 ```sh
 cd tuff-client/mod
 ./gradlew build      # build/libs/tuff-client-1.0.0.jar
 ```
-
-### Art
-
-- `art/logo.mjs` draws the leaf logo and writes the app icons, favicon, mod
-  icon and title emblem.
-- `art/fonts.py` cuts static Plus Jakarta Sans and Fraunces files from the
-  Google Fonts variable fonts and writes the mod's font definitions.
-- `art/sprites.py` builds the mod's pixel icons and rounded-corner sprites.
-- `art/icons.mjs` renders the menu's Lucide line icons (ISC license).
 
 ## CI
 
@@ -143,11 +139,9 @@ cd tuff-client/mod
 - builds the mod and uploads the jar;
 - boots real Minecraft with the mod (Fabric client game test on Mesa's software
   Vulkan driver). The test checks that the Glade title screen replaces the
-  vanilla one and its fonts load, opens the account menu, adds an offline
-  account, switches to it and back, opens every mod menu page, the settings
-  drawer and the HUD editor in a world, checks that zoom magnifies the rendered
-  image and that fullbright toggles cleanly, and saves screenshots of each step
-  (`./gradlew runClientGameTest` locally);
+  vanilla one, switches to an offline account and back, opens every mod menu page, the settings drawer and the HUD editor in a world, checks that zoom
+  magnifies the rendered image and that fullbright toggles cleanly, and saves
+  screenshots of each step (`./gradlew runClientGameTest` locally);
 - bundles the mod into the launcher, runs the Rust tests and Svelte type
   checks, and uploads the `.deb`.
 

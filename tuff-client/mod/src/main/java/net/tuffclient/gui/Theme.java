@@ -1,20 +1,18 @@
 package net.tuffclient.gui;
 
 /**
- * Glade palette (ARGB), Grove Glass: soft paper, forest green and frosted
- * white panels. The accent follows the accent picked on the Theme page.
- * The HUD draws over the world, so it keeps its own light text colours.
+ * Tuff palette (ARGB). The accent colours follow the accent picked on the
+ * Theme page; everything else is the fixed tuff-stone base.
  */
 public final class Theme {
 	public enum Accent {
-		COPPER("Copper", 0xFFC9733E, 0xFFDB8A57, 0xFF9C5530),
-		AMETHYST("Amethyst", 0xFF8A62D6, 0xFFA07FE2, 0xFF6E4AB0),
-		MINT("Mint", 0xFF3BA57E, 0xFF4FC79A, 0xFF2E8B67),
-		SKY("Sky", 0xFF3D8BD6, 0xFF5AA9F0, 0xFF2F6FAE),
-		ROSE("Rose", 0xFFD25A75, 0xFFE8708A, 0xFFA8435A),
-		GOLD("Gold", 0xFFC9971F, 0xFFE3B23C, 0xFF9C7A22),
-		RED("Red", 0xFFD0413D, 0xFFE55A55, 0xFFA82020),
-		FOREST("Forest", 0xFF2F6B4F, 0xFF3A7D5E, 0xFF24543E);
+		COPPER("Copper", 0xFFD9824B, 0xFFF0A877, 0xFF9C5530),
+		AMETHYST("Amethyst", 0xFFA67CF0, 0xFFC4A6F7, 0xFF6E4AB0),
+		MINT("Mint", 0xFF4FC79A, 0xFF8FE3B0, 0xFF2E8B67),
+		SKY("Sky", 0xFF5AA9F0, 0xFF8EC9FF, 0xFF2F6FAE),
+		ROSE("Rose", 0xFFE8708A, 0xFFF4A3B5, 0xFFA8435A),
+		GOLD("Gold", 0xFFE3B23C, 0xFFF2D06B, 0xFF9C7A22),
+		RED("Red", 0xFFE53935, 0xFFFF5A5A, 0xFFA82020);
 
 		public final String label;
 		public final int base;
@@ -29,43 +27,36 @@ public final class Theme {
 		}
 	}
 
-	public static final int BG = 0xFFF6F4EE;
-	public static final int TEXT = 0xFF1F2A22;
-	public static final int MUTED = 0xFF5B675E;
-	public static final int FAINT = 0xFF879189;
-	/** Text and icons drawn on the accent colour. */
-	public static final int INK = 0xFFFFFFFF;
-	public static final int ONLINE = 0xFF3FA35B;
-	public static final int OFFLINE = 0xFFC9A66B;
-	public static final int DANGER = 0xFFC2463B;
-
-	/** Frosted glass: translucent white with a brighter rim. */
-	public static final int GLASS = 0x8CFFFFFF;
-	public static final int GLASS_STRONG = 0xC8FFFFFF;
-	public static final int GLASS_RIM = 0xC0FFFFFF;
-	/** Hairlines and outlines on light surfaces. */
-	public static final int LINE = 0x1A1F2A22;
+	public static final int BG = 0xFF141614;
+	public static final int SURFACE = 0xFF1E211F;
+	public static final int SURFACE_2 = 0xFF262A27;
+	public static final int SURFACE_3 = 0xFF2F3430;
+	public static final int BORDER = 0xFF2C302D;
+	public static final int BORDER_STRONG = 0xFF3A3F3B;
+	public static final int TEXT = 0xFFE8E6E1;
+	public static final int MUTED = 0xFF8B8F88;
+	public static final int FAINT = 0xFF5F645D;
+	public static final int INK = 0xFF1A0F08;
+	public static final int ONLINE = 0xFF6FBF73;
+	public static final int DANGER = 0xFFD9584B;
+	/** Status bars on mod cards. */
+	public static final int ENABLED = 0xFF2E9A55;
+	public static final int ENABLED_HI = 0xFF39B565;
+	public static final int DISABLED = 0xFFA8373A;
+	public static final int DISABLED_HI = 0xFFC44448;
 
 	/** Mod menu surfaces. */
-	public static final int PANEL = 0xD8F6F4EE;
-	public static final int SIDEBAR = 0xC8FFFFFF;
-	public static final int CARD = 0xA6FFFFFF;
-	public static final int CARD_HOVER = 0xF0FFFFFF;
-	/** Selected chip background. */
-	public static final int CHIP = 0x242F6B4F;
-	public static final int BADGE_NEW = 0xFF3FA35B;
-	/** Switch track and icons when off. */
-	public static final int OFF = 0xFFC9D0C8;
-	public static final int ICON_OFF = 0xFFA3ADA5;
+	public static final int PANEL = 0xDC0F0F11;
+	public static final int SIDEBAR = 0xE80B0B0D;
+	public static final int CARD = 0xC01C1C20;
+	public static final int CARD_HOVER = 0xD826262B;
+	public static final int CHIP = 0xFF2A2A30;
+	public static final int BADGE_NEW = 0xFF2FB34A;
 
-	/** HUD text over the world. */
-	public static final int HUD_TEXT = 0xFFF2F1EC;
-	public static final int HUD_MUTED = 0xFFB4BBB3;
-
-	/** Accent colours; reassigned by {@link #apply}. Forest is the default. */
-	public static int COPPER = Accent.FOREST.base;
-	public static int COPPER_HI = Accent.FOREST.hi;
-	public static int COPPER_LO = Accent.FOREST.lo;
+	/** Accent colours; reassigned by {@link #apply}. Red is the default. */
+	public static int COPPER = Accent.RED.base;
+	public static int COPPER_HI = Accent.RED.hi;
+	public static int COPPER_LO = Accent.RED.lo;
 
 	private Theme() {
 	}

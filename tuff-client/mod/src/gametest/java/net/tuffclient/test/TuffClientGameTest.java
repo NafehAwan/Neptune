@@ -50,11 +50,10 @@ public class TuffClientGameTest implements FabricClientGameTest {
 		context.waitTicks(40);
 		context.takeScreenshot("tuff-title");
 
-		// The UI fonts must actually be loaded (their widths differ from the game font).
+		// The Poppins UI font must actually be loaded (its widths differ from the game font).
 		boolean customFont = context.computeOnClient(client ->
-				Ui.width("Glade menu", Ui.Font.BODY) != client.font.width("Glade menu")
-						&& Ui.width("Glade", Ui.Font.DISPLAY) != client.font.width("Glade"));
-		if (!customFont) throw new AssertionError("Glade UI fonts did not load");
+				Ui.width("Glade menu", Ui.Font.BODY) != client.font.width("Glade menu"));
+		if (!customFont) throw new AssertionError("Glade UI font did not load");
 
 		// The account menu: 3D heads, and offline accounts switch on the spot and back again.
 		context.getInput().setCursorPos(4, 400);

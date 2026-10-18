@@ -16,7 +16,7 @@ public final class InterfaceModule extends Module {
 		super("interface", "Interface", "Theme and menu preferences.", Category.VISUAL, true);
 		String[] names = new String[Theme.Accent.values().length];
 		for (Theme.Accent a : Theme.Accent.values()) names[a.ordinal()] = a.label;
-		accent = add(new ChoiceSetting("accent", "Accent", Theme.Accent.FOREST.ordinal(), names));
+		accent = add(new ChoiceSetting("accent", "Accent", Theme.Accent.RED.ordinal(), names));
 	}
 
 	@Override

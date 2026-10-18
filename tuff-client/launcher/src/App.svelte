@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { fade } from "svelte/transition";
-  import GroveScene from "./components/GroveScene.svelte";
   import Sidebar from "./components/Sidebar.svelte";
   import TitleBar from "./components/TitleBar.svelte";
   import Toasts from "./components/Toasts.svelte";
@@ -38,10 +37,8 @@
 <svelte:window onkeydown={keys} />
 
 <div class="shell" class:low-motion={app.settings?.lowMotion}>
-  <!-- the forest lives behind everything; it animates on Home and rests elsewhere -->
-  <GroveScene active={app.route === "home"} still={!!app.settings?.lowMotion} />
   <Sidebar />
-  <main class:frost={app.route !== "home"}>
+  <main>
     <TitleBar transparent={app.route === "home"} />
     {#if app.ready}
       {#key app.route}
@@ -64,14 +61,8 @@
 </div>
 
 <style>
-  .shell { position: relative; display: flex; height: 100%; background: var(--bg); }
+  .shell { display: flex; height: 100%; }
   main { position: relative; flex: 1; min-width: 0; height: 100%; overflow: hidden; }
-  /* on every page but Home the forest sits behind a sheet of frosted glass */
-  main.frost::before {
-    content: ""; position: absolute; inset: 0;
-    background: rgba(246, 244, 238, 0.62);
-    backdrop-filter: blur(26px) saturate(1.3); -webkit-backdrop-filter: blur(26px) saturate(1.3);
-  }
   .view { position: absolute; inset: 0; }
   .view :global(.page) { padding-top: 64px; }
   .boot { height: 100%; display: grid; place-items: center; color: var(--accent); }

@@ -103,5 +103,5 @@
   .big { height: 42px; }
   form { display: grid; gap: 12px; }
   .small { font-size: 14px; }
-  .error { color: var(--danger); font-size: 14.5px; background: rgba(194, 70, 59, 0.1); border: 1px solid rgba(194, 70, 59, 0.35); padding: 9px 11px; border-radius: 6px; }
+  .error { color: #f0a49b; font-size: 14.5px; background: rgba(217, 88, 75, 0.1); border: 1px solid rgba(217, 88, 75, 0.35); padding: 9px 11px; border-radius: 6px; }
 </style>

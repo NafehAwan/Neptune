@@ -15,7 +15,7 @@ import net.tuffclient.setting.NumberSetting;
  * layouts survive window and GUI-scale changes.
  */
 public abstract class HudModule extends Module {
-	private static final int[] COLORS = {Theme.HUD_TEXT, Theme.COPPER_HI, 0xFF8FE3B0, 0xFF8EC9FF, 0xFFF2D06B};
+	private static final int[] COLORS = {Theme.TEXT, Theme.COPPER_HI, 0xFF8FE3B0, 0xFF8EC9FF, 0xFFF2D06B};
 
 	public double x;
 	public double y;

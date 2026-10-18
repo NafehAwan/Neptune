@@ -27,7 +27,7 @@ public final class HudEditorScreen extends Screen {
 
 	@Override
 	public void extractBackground(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
-		g.fill(0, 0, width, height, minecraft.player == null ? 0xFF2A3A30 : 0x50000000);
+		g.fill(0, 0, width, height, minecraft.player == null ? Theme.BG : 0x50000000);
 		g.fill(width / 2, 0, width / 2 + 1, height, 0x18FFFFFF);
 		g.fill(0, height / 2, width, height / 2 + 1, 0x18FFFFFF);
 	}
@@ -56,8 +56,8 @@ public final class HudEditorScreen extends Screen {
 		String help = "Drag to move  ·  Scroll to resize  ·  Right-click to reset  ·  Esc when done";
 		float hw = Ui.width(help, Ui.Font.MEDIUM) + 20;
 		float hy = height - 54;
-		Ui.round(g, width / 2f - hw / 2, hy, hw, 18, 9, 0xE6FFFFFF, Theme.GLASS_RIM, 1);
-		Ui.centered(g, help, width / 2f, hy + 5.5f, Theme.TEXT, Ui.Font.MEDIUM);
+		Ui.round(g, width / 2f - hw / 2, hy, hw, 18, 9, 0xE6161816, 0x26FFFFFF, 1);
+		Ui.centered(g, help, width / 2f, hy + 5.5f, Theme.MUTED, Ui.Font.MEDIUM);
 
 		int bw = 104, bx = width / 2 - bw / 2, by = height - 30;
 		boolean over = Theme.inside(mouseX, mouseY, bx, by, bx + bw, by + 20);

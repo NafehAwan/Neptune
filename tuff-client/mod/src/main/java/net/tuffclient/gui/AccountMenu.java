@@ -69,12 +69,12 @@ public final class AccountMenu {
 		chipY1 = y;
 		chipX2 = x + w;
 		chipY2 = y + h;
-		Ui.shadow(g, x, y, w, h, 10, 0.12f * alpha);
-		Ui.round(g, x, y, w, h, h / 2, Theme.alpha(Theme.mix(0x9CFFFFFF, 0xE6FFFFFF, chipHover), alpha), Theme.alpha(Theme.GLASS_RIM, alpha), 1);
+		Ui.shadow(g, x, y, w, h, 10, 0.3f * alpha);
+		Ui.round(g, x, y, w, h, h / 2, Theme.alpha(Theme.mix(0xC81B1D1B, 0xE62A2E2B, chipHover), alpha), Theme.alpha(Theme.mix(0x26FFFFFF, Theme.COPPER, chipHover * 0.6f), alpha), 1);
 		SkinHead.draw(g, SkinTextures.of(current), x + 12, y + h / 2, 21, -32, -20, alpha);
 		Ui.text(g, label, x + 23, y + 7, Theme.alpha(Theme.TEXT, alpha), Ui.Font.SEMIBOLD);
 		float dotX = x + 23 + Ui.width(label, Ui.Font.SEMIBOLD) + 6;
-		Ui.circle(g, dotX, y + h / 2, 2, Theme.alpha(current.microsoft() ? Theme.ONLINE : Theme.OFFLINE, alpha));
+		Ui.circle(g, dotX, y + h / 2, 2, Theme.alpha(current.microsoft() ? Theme.ONLINE : 0xFFE2B34A, alpha));
 		Ui.lucide(g, "chevron", dotX + 5, y + h / 2 - 3.5f, 7, Theme.alpha(Theme.MUTED, alpha));
 		hit(x, y, x + w, y + h, () -> {
 			click();
@@ -92,18 +92,18 @@ public final class AccountMenu {
 		menuY1 = y;
 		menuX2 = x + W;
 		menuY2 = y + h;
-		Ui.shadow(g, x, y, W, h, 22, 0.22f * a);
-		Ui.round(g, x, y, W, h, 12, Theme.alpha(0xF0FAFBF7, a), Theme.alpha(Theme.GLASS_RIM, a), 1);
+		Ui.shadow(g, x, y, W, h, 18, 0.5f * a);
+		Ui.round(g, x, y, W, h, 8, Theme.alpha(0xF51B1D1B, a), Theme.alpha(0x26FFFFFF, a), 1);
 		// clicks inside the panel never fall through to the screen
 		hit(x, y, x + W, y + h, () -> { });
 
 		// hero: the current account's head, turning slowly
 		SkinHead.draw(g, SkinTextures.of(current), x + 34, y + 36, 58, -30 + (float) Math.sin(Math.toRadians(spin)) * 40, -16, a);
-		Ui.text(g, Ui.ellipsize(current.name(), Ui.Font.DISPLAY_SM, (int) (W - 80)), x + 70, y + 22, Theme.alpha(Theme.TEXT, a), Ui.Font.DISPLAY_SM);
+		Ui.text(g, Ui.ellipsize(current.name(), Ui.Font.BOLD, (int) (W - 80)), x + 70, y + 24, Theme.alpha(Theme.TEXT, a), Ui.Font.BOLD);
 		Ui.text(g, current.microsoft() ? "Microsoft account · skin from Minecraft" : "Offline account · default skin",
 				x + 70, y + 39, Theme.alpha(Theme.MUTED, a), Ui.Font.SMALL);
 		float cy = y + 70;
-		g.fill(Math.round(x + 8), Math.round(cy), Math.round(x + W - 8), Math.round(cy + 1), Theme.alpha(Theme.LINE, a));
+		g.fill(Math.round(x + 8), Math.round(cy), Math.round(x + W - 8), Math.round(cy + 1), Theme.alpha(0x1AFFFFFF, a));
 		cy += 6;
 		Ui.text(g, "ACCOUNTS", x + 10, cy, Theme.alpha(Theme.FAINT, a), Ui.Font.TINY);
 		cy += 9;
@@ -111,7 +111,7 @@ public final class AccountMenu {
 		for (Accounts.Account account : accounts) {
 			boolean active = Accounts.isCurrent(account);
 			boolean over = Theme.inside(mouseX, mouseY, x + 4, cy, x + W - 4, cy + rowH - 2);
-			if (active || over) Ui.round(g, x + 4, cy, W - 8, rowH - 2, 7, Theme.alpha(over && !active ? 0x14000000 | (Theme.COPPER & 0xFFFFFF) : 0x1A000000 | (Theme.COPPER & 0xFFFFFF), a));
+			if (active || over) Ui.round(g, x + 4, cy, W - 8, rowH - 2, 7, Theme.alpha(over && !active ? 0x12FFFFFF : 0x24000000 | (Theme.COPPER & 0xFFFFFF), a));
 			SkinHead.draw(g, SkinTextures.of(account), x + 16, cy + rowH / 2 - 1, 20, -32, -20, a);
 			Ui.text(g, Ui.ellipsize(account.name(), Ui.Font.SEMIBOLD, (int) (W - 70)), x + 31, cy + 4, Theme.alpha(Theme.TEXT, a), Ui.Font.SEMIBOLD);
 			String kind = account.microsoft() ? "Microsoft" : "Offline · singleplayer and offline servers";
@@ -136,7 +136,7 @@ public final class AccountMenu {
 		}
 
 		cy += 2;
-		g.fill(Math.round(x + 8), Math.round(cy), Math.round(x + W - 8), Math.round(cy + 1), Theme.alpha(Theme.LINE, a));
+		g.fill(Math.round(x + 8), Math.round(cy), Math.round(x + W - 8), Math.round(cy + 1), Theme.alpha(0x1AFFFFFF, a));
 		cy += 5;
 		cy = action(g, mouseX, mouseY, x, cy, "plus", "Add Microsoft account", false, a, () -> say("Add Microsoft accounts in the Glade launcher"));
 		cy = action(g, mouseX, mouseY, x, cy, "user_plus", "Add offline account", adding, a, () -> {
@@ -146,7 +146,7 @@ public final class AccountMenu {
 		if (adding) {
 			float fx = x + 8, fw = W - 16 - 40;
 			boolean valid = Accounts.validName(name);
-			Ui.round(g, fx, cy + 2, fw, 18, 6, Theme.alpha(0xFFFFFFFF, a), Theme.alpha(Theme.alpha(Theme.COPPER, 0.6f), a), 1);
+			Ui.round(g, fx, cy + 2, fw, 18, 5, Theme.alpha(0xFF141614, a), Theme.alpha(Theme.alpha(Theme.COPPER, 0.7f), a), 1);
 			boolean blink = (System.nanoTime() / 530_000_000L) % 2 == 0;
 			String shown = name.isEmpty() ? "Username" : name + (blink ? "|" : "");
 			Ui.text(g, shown, fx + 6, cy + 7.5f, Theme.alpha(name.isEmpty() ? Theme.FAINT : Theme.TEXT, a), Ui.Font.MEDIUM);
@@ -162,7 +162,7 @@ public final class AccountMenu {
 
 	private float action(GuiGraphicsExtractor g, int mouseX, int mouseY, float x, float y, String icon, String label, boolean on, float a, Runnable run) {
 		boolean over = Theme.inside(mouseX, mouseY, x + 4, y, x + W - 4, y + 22);
-		if (over || on) Ui.round(g, x + 4, y, W - 8, 22, 7, Theme.alpha(0x12000000 | (Theme.COPPER & 0xFFFFFF), a));
+		if (over || on) Ui.round(g, x + 4, y, W - 8, 22, 6, Theme.alpha(0x12FFFFFF, a));
 		Ui.round(g, x + 9, y + 3, 16, 16, 5, Theme.alpha(0x1F000000 | (Theme.COPPER & 0xFFFFFF), a));
 		Ui.lucide(g, icon, x + 12.5f, y + 6.5f, 9, Theme.alpha(Theme.COPPER, a));
 		Ui.text(g, label, x + 31, y + 7, Theme.alpha(Theme.TEXT, a), Ui.Font.SEMIBOLD);
