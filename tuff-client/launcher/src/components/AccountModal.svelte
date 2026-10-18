@@ -70,7 +70,7 @@
       <p class="muted">Microsoft sign-in needs an Azure app client ID. Add yours in Settings → Accounts, or use an offline account for singleplayer.</p>
       <button class="btn" onclick={() => { onclose(); go("settings"); }}>Open settings</button>
     {:else}
-      <p class="muted">You'll sign in on Microsoft's own page. Tuff Client never sees your password.</p>
+      <p class="muted">You'll sign in on Microsoft's own page. Glade never sees your password.</p>
       <button class="btn primary big" onclick={microsoft} disabled={busy}>
         {#if busy}<span class="spinner"></span>{/if} Sign in with Microsoft
       </button>
@@ -103,5 +103,5 @@
   .big { height: 42px; }
   form { display: grid; gap: 12px; }
   .small { font-size: 14px; }
-  .error { color: #f0a49b; font-size: 14.5px; background: rgba(217, 88, 75, 0.1); border: 1px solid rgba(217, 88, 75, 0.35); padding: 9px 11px; border-radius: 6px; }
+  .error { color: var(--danger); font-size: 14.5px; background: rgba(194, 70, 59, 0.1); border: 1px solid rgba(194, 70, 59, 0.35); padding: 9px 11px; border-radius: 6px; }
 </style>

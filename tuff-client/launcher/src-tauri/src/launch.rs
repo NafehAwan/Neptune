@@ -4,7 +4,7 @@ use crate::meta::{rules_allow, Argument, Features, VersionJson};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-pub const LAUNCHER_NAME: &str = "tuff-client";
+pub const LAUNCHER_NAME: &str = "glade";
 
 /// Low-pause G1 settings tuned for a game client.
 pub const TUNED_JVM_FLAGS: &[&str] = &[

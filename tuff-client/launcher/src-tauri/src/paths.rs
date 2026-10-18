@@ -9,12 +9,18 @@ pub struct Paths {
 
 impl Paths {
     pub fn new() -> Self {
-        let root = std::env::var_os("TUFF_HOME")
+        let root = std::env::var_os("GLADE_HOME")
+            .or_else(|| std::env::var_os("TUFF_HOME"))
             .map(PathBuf::from)
             .unwrap_or_else(|| {
-                dirs::data_dir()
-                    .unwrap_or_else(|| PathBuf::from("."))
-                    .join("tuff-client")
+                let data = dirs::data_dir().unwrap_or_else(|| PathBuf::from("."));
+                let root = data.join("glade");
+                // The launcher used to be called Tuff Client; carry its data over once.
+                let old = data.join("tuff-client");
+                if !root.exists() && old.is_dir() {
+                    let _ = std::fs::rename(&old, &root);
+                }
+                root
             });
         Self { root }
     }

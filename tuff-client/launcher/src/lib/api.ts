@@ -65,6 +65,8 @@ export const api = {
 
   listAccounts: () => call<T.AccountList>("list_accounts"),
   addOfflineAccount: (name: string) => call<T.Account>("add_offline_account", { name }),
+  accountSkin: (id: string) => call<string | null>("account_skin", { id }),
+  defaultSkin: () => call<string | null>("default_skin"),
   msLoginStart: () => call<T.DeviceCode>("ms_login_start"),
   msLoginFinish: (code: T.DeviceCode) => call<T.Account>("ms_login_finish", { code }),
   removeAccount: (id: string) => call<void>("remove_account", { id }),

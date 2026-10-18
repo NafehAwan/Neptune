@@ -64,10 +64,10 @@
       <div class="setting col">
         <div class="row"><p class="label grow">Default memory for new profiles</p><span class="mono val">{(s.defaultMemoryMb / 1024).toFixed(1)} GB</span></div>
         <input type="range" min="1024" max={maxMemory} step="512" value={s.defaultMemoryMb} onchange={(e) => updateSettings({ defaultMemoryMb: Number(e.currentTarget.value) })} />
-        <p class="hint">Your system has {((app.info?.totalMemoryMb ?? 0) / 1024).toFixed(1)} GB. Tuff suggests {((app.info?.suggestedMemoryMb ?? 0) / 1024).toFixed(1)} GB.</p>
+        <p class="hint">Your system has {((app.info?.totalMemoryMb ?? 0) / 1024).toFixed(1)} GB. Glade suggests {((app.info?.suggestedMemoryMb ?? 0) / 1024).toFixed(1)} GB.</p>
       </div>
       <div class="setting">
-        <div class="grow"><p class="label">Java</p><p class="hint">{s.javaPath ?? "Automatic: Tuff downloads the exact Java each version needs."}</p></div>
+        <div class="grow"><p class="label">Java</p><p class="hint">{s.javaPath ?? "Automatic: Glade downloads the exact Java each version needs."}</p></div>
         <div class="row">
           <button class="btn small" onclick={chooseJava}>Browse</button>
           {#if s.javaPath}<button class="btn small ghost" onclick={() => updateSettings({ javaPath: null })}>Use automatic</button>{/if}
@@ -122,7 +122,7 @@
 
     <section class="card about">
       <h3>About</h3>
-      <p><span class="pixel brand">Tuff Client</span> <span class="faint">v{app.info?.version}</span></p>
+      <p><span class="pixel brand">Glade</span> <span class="faint">v{app.info?.version}</span></p>
       <p class="hint">Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.</p>
       <p class="hint keys">Shortcuts: <kbd>Ctrl</kbd>+<kbd>1</kbd>–<kbd>8</kbd> switch pages · <kbd>Ctrl</kbd>+<kbd>Enter</kbd> play</p>
     </section>

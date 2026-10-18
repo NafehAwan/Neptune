@@ -39,7 +39,7 @@ impl Discord {
                                     .details(details)
                                     .state(state)
                                     .timestamps(activity::Timestamps::new().start(*started))
-                                    .assets(activity::Assets::new().large_image("tuff").large_text("Tuff Client")),
+                                    .assets(activity::Assets::new().large_image("tuff").large_text("Glade")),
                             )
                             .is_ok(),
                         Presence::Clear => c.clear_activity().is_ok(),

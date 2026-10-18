@@ -70,3 +70,64 @@ pub async fn set_cape(http: &reqwest::Client, token: &str, cape_id: Option<&str>
     request.bearer_auth(token).send().await?.error_for_status()?;
     Ok(())
 }
+
+/// Looks up a premium player's current skin through Mojang's public session
+/// server (no sign-in needed) and downloads it. `Ok(None)` means the player
+/// has no custom skin and uses the default one.
+pub async fn session_skin(http: &reqwest::Client, uuid: &str) -> Result<Option<Vec<u8>>> {
+    let uuid = uuid.replace('-', "");
+    let profile: Value = http
+        .get(format!("https://sessionserver.mojang.com/session/minecraft/profile/{uuid}"))
+        .send()
+        .await?
+        .error_for_status()?
+        .json()
+        .await?;
+    let encoded = profile["properties"]
+        .as_array()
+        .and_then(|props| props.iter().find(|p| p["name"] == "textures"))
+        .and_then(|p| p["value"].as_str())
+        .unwrap_or_default();
+    if encoded.is_empty() {
+        return Ok(None);
+    }
+    let textures: Value = serde_json::from_slice(&base64::engine::general_purpose::STANDARD.decode(encoded)?)?;
+    let Some(url) = textures["textures"]["SKIN"]["url"].as_str() else {
+        return Ok(None);
+    };
+    if !url.starts_with("https://textures.minecraft.net/") && !url.starts_with("http://textures.minecraft.net/") {
+        bail!("unexpected skin URL");
+    }
+    let bytes = http.get(url.replacen("http://", "https://", 1)).send().await?.error_for_status()?.bytes().await?;
+    Ok(Some(bytes.to_vec()))
+}
+
+/// Reads the game's own default skin (Steve) out of any installed client jar,
+/// so offline accounts show the real default head without the launcher
+/// shipping Mojang's texture itself.
+pub fn default_skin_from_jars(versions: &std::path::Path) -> Option<Vec<u8>> {
+    const ENTRIES: [&str; 2] = [
+        "assets/minecraft/textures/entity/player/wide/steve.png",
+        "assets/minecraft/textures/entity/steve.png",
+    ];
+    let dirs = std::fs::read_dir(versions).ok()?;
+    for dir in dirs.flatten() {
+        let id = dir.file_name().to_string_lossy().to_string();
+        let jar = dir.path().join(format!("{id}.jar"));
+        let Ok(file) = std::fs::File::open(&jar) else { continue };
+        let Ok(mut zip) = zip::ZipArchive::new(file) else { continue };
+        for entry in ENTRIES {
+            if let Ok(mut f) = zip.by_name(entry) {
+                let mut bytes = Vec::new();
+                if std::io::Read::read_to_end(&mut f, &mut bytes).is_ok() {
+                    return Some(bytes);
+                }
+            }
+        }
+    }
+    None
+}
+
+pub fn png_data_url(bytes: &[u8]) -> String {
+    format!("data:image/png;base64,{}", base64::engine::general_purpose::STANDARD.encode(bytes))
+}

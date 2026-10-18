@@ -153,7 +153,7 @@ pub async fn install(
     kind: &str,
 ) -> Result<Vec<String>> {
     if kind == "mod" && profile.loader == Loader::Vanilla {
-        bail!("Mods need a Fabric profile. Switch this profile to Fabric or create a Tuff profile.");
+        bail!("Mods need a Fabric profile. Switch this profile to Fabric or create a Glade profile.");
     }
     if kind == "modpack" {
         bail!("Modpacks are installed as new profiles");

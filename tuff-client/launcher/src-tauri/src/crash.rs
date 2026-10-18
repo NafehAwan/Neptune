@@ -22,7 +22,7 @@ const PATTERNS: &[(&str, &str, &str)] = &[
     (
         "UnsupportedClassVersionError",
         "Wrong Java version",
-        "A mod or the game needs a newer Java. Clear the custom Java path so Tuff picks the right one.",
+        "A mod or the game needs a newer Java. Clear the custom Java path so Glade picks the right one.",
     ),
     (
         "Incompatible mods found",

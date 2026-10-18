@@ -165,8 +165,9 @@ const profileArt: Record<string, { palette: Record<string, string>; grid: string
     grid: [".oooooo.", "oCccccCo", "ocHHHHco", "ocHyyHco", "ocHyyHco", "ocHHHHco", "oCccccCo", ".oooooo."],
   },
   tuff: {
-    palette: { a: "#7a7d72", b: "#64675d", c: "#50534a", T: "#d9824b", H: "#f0a877", S: "#9c5530" },
-    grid: ["abbabacb", "bHHHHHHc", "bSSTTSSb", "acbTTcbc", "bacTTbab", "cbaTSacb", "bcbSScba", "cbcbacbc"],
+    // the Glade leaf
+    palette: { L: "#2F6B4F", l: "#4E8F6A", v: "#E8EFE6" },
+    grid: ["....lll.", "..llllLL", ".lllLLvL", ".llLLvLL", "lLLvLLL.", "LLvLLL..", ".vLLL...", "v......."],
   },
 };
 

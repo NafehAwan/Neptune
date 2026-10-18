@@ -99,7 +99,7 @@
       const r = await api.createTuffProfile();
       await refreshProfiles();
       selectedId = r.profile.id;
-      toast(`Tuff profile created with ${r.installed.length} mods`, "success");
+      toast(`Glade profile created with ${r.installed.length} mods`, "success");
     } catch (e) {
       toast(e, "error");
     } finally {
@@ -156,7 +156,7 @@
     <div class="row">
       <button class="btn ghost" onclick={importPack} disabled={busy}><Icon name="download" size={12} /> Import .mrpack</button>
       {#if !app.profiles.some((p) => p.isTuff)}
-        <button class="btn" onclick={createTuff} disabled={busy}><Icon name="spark" size={12} /> Tuff profile</button>
+        <button class="btn" onclick={createTuff} disabled={busy}><Icon name="spark" size={12} /> Glade profile</button>
       {/if}
       <button class="btn primary" onclick={() => (creating = true)}><Icon name="plus" size={12} /> New profile</button>
     </div>
@@ -165,8 +165,8 @@
   {#if !app.profiles.length}
     <div class="empty">
       <p class="pixel">No profiles yet</p>
-      <p>Create the Tuff profile for a ready-to-play Fabric setup, or build your own.</p>
-      <div class="row"><button class="btn" onclick={createTuff} disabled={busy}>Create Tuff profile</button><button class="btn ghost" onclick={() => (creating = true)}>Custom profile</button></div>
+      <p>Create the Glade profile for a ready-to-play Fabric setup, or build your own.</p>
+      <div class="row"><button class="btn" onclick={createTuff} disabled={busy}>Create Glade profile</button><button class="btn ghost" onclick={() => (creating = true)}>Custom profile</button></div>
     </div>
   {:else}
     <div class="split">
@@ -195,7 +195,7 @@
                 <span class="chip">{selected.loader === "fabric" ? `Fabric ${selected.loaderVersion ?? "latest"}` : "Vanilla"}</span>
                 <span class="chip">{selected.gameVersion}</span>
                 <span class="chip">{(selected.memoryMb / 1024).toFixed(1)} GB</span>
-                {#if selected.isTuff}<span class="chip copper">Tuff</span>{/if}
+                {#if selected.isTuff}<span class="chip copper">Glade</span>{/if}
               </div>
               <p class="faint stat">{playTime(selected.playTimeSecs)} · {ago(selected.lastPlayed)}</p>
             </div>
@@ -296,7 +296,7 @@
 
   .toolbar { display: flex; align-items: center; gap: 10px; margin: 16px 0 12px; flex-wrap: wrap; }
   .search { width: 160px; height: 32px; }
-  .updates { display: flex; align-items: center; gap: 12px; justify-content: space-between; padding: 10px 12px; margin-bottom: 10px; border-radius: 8px; background: rgba(217, 130, 75, 0.08); border: 1px solid rgba(217, 130, 75, 0.3); font-size: 14.5px; }
+  .updates { display: flex; align-items: center; gap: 12px; justify-content: space-between; padding: 10px 12px; margin-bottom: 10px; border-radius: 8px; background: rgba(47, 107, 79, 0.08); border: 1px solid rgba(47, 107, 79, 0.3); font-size: 14.5px; }
   .content { display: grid; gap: 6px; }
   .citem { display: flex; align-items: center; gap: 12px; padding: 7px 8px 7px 7px; border-radius: 8px; background: var(--bg); border: 1px solid var(--border); transition: opacity var(--fast); }
   .citem.off { opacity: 0.5; }

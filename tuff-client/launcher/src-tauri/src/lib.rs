@@ -31,7 +31,7 @@ use tauri_plugin_opener::OpenerExt;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::Command;
 
-/// Minecraft version the bundled Tuff mod is built for.
+/// Minecraft version the bundled Glade mod is built for.
 pub const TUFF_MC_VERSION: &str = "26.3";
 const PERFORMANCE_PACK: &[&str] = &[
     "fabric-api",
@@ -317,7 +317,7 @@ async fn create_tuff_profile(state: State<'_, AppState>) -> CmdResult<TuffProfil
     let profile = save_profile(
         state.clone(),
         Profile {
-            name: "Tuff".into(),
+            name: "Glade".into(),
             icon: "tuff".into(),
             game_version: TUFF_MC_VERSION.into(),
             loader: Loader::Fabric,
@@ -337,6 +337,55 @@ async fn create_tuff_profile(state: State<'_, AppState>) -> CmdResult<TuffProfil
 }
 
 // ---------------------------------------------------------------- accounts
+
+/// The account's skin as a data URL: premium accounts get their real skin from
+/// Mojang (cached for a few hours, and kept for offline use), offline accounts
+/// get `None` and use the default skin.
+#[tauri::command]
+async fn account_skin(state: State<'_, AppState>, id: String) -> CmdResult<Option<String>> {
+    let Some(account) = state.accounts().into_iter().find(|a| a.id == id) else { return Ok(None) };
+    if !matches!(account.kind, AccountKind::Msa) {
+        return Ok(None);
+    }
+    let dir = state.paths.root.join("skins");
+    let cache = dir.join(format!("{}.png", account.id.replace(['/', '\\', '.'], "")));
+    let fresh = std::fs::metadata(&cache)
+        .and_then(|m| m.modified())
+        .map(|t| t.elapsed().unwrap_or_default() < Duration::from_secs(6 * 3600))
+        .unwrap_or(false);
+    if fresh {
+        if let Ok(bytes) = std::fs::read(&cache) {
+            return Ok(Some(skins::png_data_url(&bytes)));
+        }
+    }
+    match skins::session_skin(&state.http, &account.id).await {
+        Ok(Some(bytes)) => {
+            let _ = std::fs::create_dir_all(&dir);
+            let _ = std::fs::write(&cache, &bytes);
+            Ok(Some(skins::png_data_url(&bytes)))
+        }
+        Ok(None) => {
+            let _ = std::fs::remove_file(&cache);
+            Ok(None)
+        }
+        // offline or rate-limited: fall back to the last skin we saw
+        Err(_) => Ok(std::fs::read(&cache).ok().map(|b| skins::png_data_url(&b))),
+    }
+}
+
+/// The game's default skin, read from an installed Minecraft jar (None until
+/// a version has been installed; the UI then uses its own stand-in).
+#[tauri::command]
+fn default_skin(state: State<'_, AppState>) -> Option<String> {
+    let cache = state.paths.root.join("skins").join("default.png");
+    if let Ok(bytes) = std::fs::read(&cache) {
+        return Some(skins::png_data_url(&bytes));
+    }
+    let bytes = skins::default_skin_from_jars(&state.paths.versions())?;
+    let _ = std::fs::create_dir_all(state.paths.root.join("skins"));
+    let _ = std::fs::write(&cache, &bytes);
+    Some(skins::png_data_url(&bytes))
+}
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -929,7 +978,7 @@ pub fn run() {
     let paths = Paths::new();
     let _ = std::fs::create_dir_all(paths.instances());
     let http = reqwest::Client::builder()
-        .user_agent(concat!("TuffClient/", env!("CARGO_PKG_VERSION"), " (github.com/nafehawan/neptune)"))
+        .user_agent(concat!("Glade/", env!("CARGO_PKG_VERSION"), " (github.com/nafehawan/neptune)"))
         .connect_timeout(Duration::from_secs(15))
         .build()
         .expect("http client");
@@ -958,6 +1007,8 @@ pub fn run() {
             duplicate_profile,
             create_tuff_profile,
             list_accounts,
+            account_skin,
+            default_skin,
             add_offline_account,
             ms_login_start,
             ms_login_finish,
@@ -988,5 +1039,5 @@ pub fn run() {
             open_screenshot,
         ])
         .run(tauri::generate_context!())
-        .expect("error while running Tuff Client");
+        .expect("error while running Glade");
 }
