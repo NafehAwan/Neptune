@@ -105,10 +105,15 @@ function board() {
 // ---------------------------------------------------------------- title screen
 
 function titleScreen() {
-  root.innerHTML = `<canvas class="bg" id="bgc"></canvas><div class="title-ui" id="ui"></div>`;
+  root.innerHTML = `<canvas class="bg" id="bgc"></canvas><div class="title-ui" id="ui"></div><div id="over" style="position:absolute;inset:0;pointer-events:none"></div>`;
+  if (q.get("demo") === "1") {
+    document.getElementById("over").innerHTML = accountMenu(time) + (q.get("cursor") === "0" ? "" : cursorSvg(time));
+  }
   drawBg(document.getElementById("bgc"), 1280, 720, time);
   const ui = document.getElementById("ui");
-  const top = `<div class="topbar"><div class="acct"><div class="avatar">N</div>NafehAwan<span class="dot"></span></div>
+  const demo = q.get("demo") === "1";
+  const acc = accountState(demo ? time : -1);
+  const top = `<div class="topbar"><div class="acct" style="padding-left:5px">${HEAD(acc.active.skin, 26)}${acc.active.name}<span class="dot" style="${acc.active.offline ? "background:#C9A66B" : ""}"></span>${ic("chevron-down", "muted")}</div>
     <div class="iconbtns"><div class="iconbtn">${ic("bell")}</div><div class="iconbtn">${ic("settings")}</div><div class="iconbtn">${ic("log-out")}</div></div></div>`;
   const foot = `<div class="foot"><span class="mono">Tuff Client 1.0 · Minecraft 26.3</span><span>Not an official Minecraft product</span></div>`;
   const key = Object.keys(THEMES).find((k) => THEMES[k] === T);
@@ -184,6 +189,79 @@ function titleScreen() {
         </div>
       </div>` + foot.replace('class="foot"', 'class="foot" style="color:rgba(255,255,255,0.85)"');
   }
+}
+
+// ---------------------------------------------------------------- account menu (title screen)
+
+const ease = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
+const span = (t, a, b) => ease((t - a) / (b - a));
+
+// Scripted demo: open the menu, add an offline account, switch to it. t < 0 means "closed, at rest".
+function accountState(t) {
+  const main = { name: "NafehAwan", skin: "sample", type: "Microsoft", offline: false };
+  const typed = "Builder".slice(0, Math.max(0, Math.floor((t - 6.9) / 0.17)));
+  const added = t >= 8.9;
+  const builder = { name: "Builder", skin: "default", type: "Offline", offline: true };
+  return {
+    open: t < 0 ? 0 : span(t, 3.65, 3.95),
+    addOpen: t < 0 ? 0 : span(t, 6.45, 6.75) * (1 - span(t, 8.9, 9.15)),
+    typed, added, addedIn: span(t, 8.9, 9.2),
+    accounts: added ? [main, builder] : [main],
+    active: t >= 9.25 ? builder : main,
+    yaw: -28 + Math.max(0, t - 3.65) * 42,
+  };
+}
+
+function cursorAt(t) {
+  const pts = [[0, 820, 430], [3.4, 92, 36], [3.7, 92, 36], [5.4, 170, 150], [6.3, 128, 314], [6.5, 128, 314], [8.2, 128, 314], [8.7, 286, 358], [8.95, 286, 358], [10, 260, 248], [12, 640, 420]];
+  for (let i = 1; i < pts.length; i++) {
+    const [t1, x1, y1] = pts[i], [t0, x0, y0] = pts[i - 1];
+    if (t <= t1) {
+      const k = ease((t - t0) / (t1 - t0 || 1));
+      return [x0 + (x1 - x0) * k, y0 + (y1 - y0) * k];
+    }
+  }
+  return [640, 420];
+}
+
+function accountMenu(t) {
+  const st = accountState(t);
+  if (st.open <= 0.01) return "";
+  const row = (a, active, fade = 1) => `<div style="display:flex;align-items:center;gap:12px;height:46px;padding:0 10px;border-radius:12px;opacity:${fade};${active ? "background:rgba(255,255,255,0.5)" : ""}">
+      ${HEAD(a.skin, 28)}<div style="flex:1"><div style="font-weight:600;font-size:13.5px">${a.name}</div><div class="muted" style="font-size:11.5px">${a.type}${a.offline ? " · singleplayer and offline servers" : ""}</div></div>
+      ${active ? `<span class="ic" style="width:16px;height:16px;color:var(--accent)">${ICONS.check || ICONS.plus}</span>` : ""}</div>`;
+  const action = (icon, label, hot) => `<div style="display:flex;align-items:center;gap:12px;height:40px;padding:0 10px;border-radius:10px;font-weight:600;font-size:13px;color:var(--text);${hot ? "background:rgba(255,255,255,0.45)" : ""}">
+      <span style="width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:rgba(47,107,79,0.12);color:var(--accent)">${ic(icon)}</span>${label}</div>`;
+  const caret = Math.floor(t * 2.2) % 2 === 0 ? `<span style="display:inline-block;width:1.5px;height:15px;background:var(--text);vertical-align:-2px;margin-left:1px"></span>` : "";
+  const hoverAdd = t > 6.2 && t < 6.6;
+  return `<div style="position:absolute;left:20px;top:64px;width:320px;padding:8px;border-radius:20px;${FROST};
+      opacity:${st.open};transform:translateY(${(1 - st.open) * -8}px) scale(${0.97 + 0.03 * st.open});transform-origin:top left">
+    <div style="display:flex;align-items:center;gap:16px;height:112px;padding:0 14px">
+      <div style="width:84px;height:84px;display:grid;place-items:center;flex:none;filter:drop-shadow(0 10px 14px rgba(30,60,40,0.25))">${HEAD3D(st.active.skin, 56, st.yaw)}</div>
+      <div><div class="head" style="font-size:22px;font-style:italic">${st.active.name}</div>
+        <div class="muted" style="font-size:12px;margin-top:2px">${st.active.offline ? "Offline account" : "Microsoft account · signed in"}</div>
+        <div style="display:flex;gap:6px;margin-top:8px"><span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,0.6)">Change skin</span><span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,0.6)">Profile</span></div></div>
+    </div>
+    <div style="height:1px;background:rgba(255,255,255,0.7);margin:0 6px 6px"></div>
+    <div class="mono muted" style="font-size:10.5px;letter-spacing:0.12em;padding:4px 10px 6px">ACCOUNTS</div>
+    ${st.accounts.map((a, i) => row(a, a === st.active, i === 1 ? st.addedIn : 1)).join("")}
+    <div style="height:1px;background:rgba(255,255,255,0.7);margin:6px 6px"></div>
+    ${action("plus", "Add Microsoft account", false)}
+    ${action("user-plus", "Add offline account", hoverAdd)}
+    <div style="overflow:hidden;height:${st.addOpen * 52}px;opacity:${st.addOpen}">
+      <div style="display:flex;gap:8px;padding:6px 6px 0">
+        <div class="input" style="flex:1;height:36px;background:rgba(255,255,255,0.65);border-color:rgba(47,107,79,0.45);color:var(--text)">${st.typed || `<span class="muted">Username</span>`}${t > 6.8 ? caret : ""}</div>
+        <span class="btn primary" style="height:36px;padding:0 16px;border-radius:10px">Add</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+function cursorSvg(t) {
+  const [x, y] = cursorAt(t);
+  const clicks = [3.6, 6.4, 8.8];
+  const ripple = clicks.map((c) => { const k = (t - c) / 0.45; return k > 0 && k < 1 ? `<div style="position:absolute;left:${x - 18 * k}px;top:${y - 18 * k}px;width:${36 * k}px;height:${36 * k}px;border-radius:50%;border:2px solid rgba(47,107,79,${1 - k})"></div>` : ""; }).join("");
+  return ripple + `<svg style="position:absolute;left:${x}px;top:${y}px;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.35))" width="22" height="22" viewBox="0 0 24 24"><path d="M4 2l16 10-7 1.5L9.5 21z" fill="#fff" stroke="#1F2A22" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
 }
 
 // ---------------------------------------------------------------- mod menu

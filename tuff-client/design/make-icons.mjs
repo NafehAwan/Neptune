@@ -1,6 +1,6 @@
 // Copies the Lucide icons the mockups use into icons.js (inline SVG strings).
 import fs from "fs";
-const names = ["gauge","mouse-pointer-click","keyboard","shirt","map-pin","wifi","flask-conical","clock","globe","zap","cpu","zoom-in","sun","footprints","crosshair","list-x","image","heart","move","layout-grid","list","search","settings","palette","package","sliders-horizontal","x","play","house","library","box","server","user","download","bell","chevron-down","shirt","camera","terminal","sparkles","plus","users","newspaper","log-out","layers","monitor"];
+const names = ["gauge","mouse-pointer-click","keyboard","shirt","map-pin","wifi","flask-conical","clock","globe","zap","cpu","zoom-in","sun","footprints","crosshair","list-x","image","heart","move","layout-grid","list","search","settings","palette","package","sliders-horizontal","x","play","house","library","box","server","user","download","bell","chevron-down","shirt","camera","terminal","sparkles","plus","users","newspaper","log-out","layers","monitor","check","user-plus"];
 const out = {};
 for (const n of new Set(names)) {
   const svg = fs.readFileSync(new URL(`./node_modules/lucide-static/icons/${n}.svg`, import.meta.url), "utf8");

@@ -17,6 +17,12 @@ Pictures are in `out/`: `00-overview.png`, then per design `NN-name-board`,
 `-title`, `-menu`, `-launcher` and `-motion` (three moments of the
 background), plus `logos.png` (two marks per design).
 
+Grove Glass also has an animated demo, `out/groveglass-demo.mp4`: the scene
+moving (sun arc, rays, clouds at three depths, swaying trees, birds, falling
+leaves), then the account menu opening with a spinning 3D skin head, adding an
+offline account (it gets the default head because it has no skin) and switching
+to it. Stills: `06-groveglass-account*.png`.
+
 ## Rebuild
 
 ```sh
@@ -24,6 +30,7 @@ cd tuff-client/design
 npm install
 node make-icons.mjs                                   # Lucide icons -> icons.js
 PLAYWRIGHT_PATH=$(npm root -g)/playwright node render.mjs
+PLAYWRIGHT_PATH=$(npm root -g)/playwright node video.mjs   # needs ffmpeg
 ```
 
 Open `page.html?t=groveglass&s=title&time=3` in a browser to see a screen
