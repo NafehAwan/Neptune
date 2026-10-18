@@ -55,10 +55,10 @@ def explorer():
     paint(img, 16, 8, ["hhhhhhhh", "hhhhhhhh", "sshhhhhh", "ssshhhhh", "sssshhhh", "ssssshhh", "scssshhh", "ccsshhhh"], pal)
     paint(img, 24, 8, ["hhhhhhhh", "hhHhhhhh", "hhhhhHhh", "hhhhhhhh", "hHhhhhhh", "hhhhhhHh", "hhhhhhhh", "hhhhhhhh"], pal)
     # hat layer: a hood framing the face
-    paint(img, 40, 0, ["gggggggg", "gGgggglg", "gggggggg", "gglggggg", "gggggGgg", "gggggggg", "gGgggggg", "gggggggg"], pal)
-    paint(img, 32, 8, ["gggggggg", "gggggglg", "gggggggg", "gggggggg", "gggggggg", "Gggggggg", "GGgggggg", "GGGGGGGG"], pal)
-    paint(img, 40, 8, ["gggggggg", "gl....lg", "g......g", "g......g", "G......G", "G......G", "G......G", "GG....GG"], pal)
-    paint(img, 48, 8, ["gggggggg", "glgggggg", "gggggggg", "gggggggg", "gggggggg", "gggggggG", "ggggggGG", "GGGGGGGG"], pal)
+    paint(img, 40, 0, ["gGgglggg", "gggggGgg", "glgggggg", "ggggGggl", "gGgggggg", "ggglgggG", "gggggggg", "Gggggglg"], pal)
+    paint(img, 32, 8, ["gglggggg", "gggggglg", "gGgggggg", "ggggglgg", "gggGgggg", "Ggggggg.", "GGgggg..", "GGGGGG.."], pal)
+    paint(img, 40, 8, ["glgggggg", "gHhhHhhg", "g.h..h.g", "g......g", "G......G", "G......G", "G......G", "GG....GG"], pal)
+    paint(img, 48, 8, ["gggglggg", "glgggggg", "ggggggGg", "gglggggg", "ggggGggg", ".gggggGG", "..ggggGG", "..GGGGGG"], pal)
     paint(img, 56, 8, ["gggggggg", "gggglggg", "gggggggg", "gggggggg", "ggGggggg", "gggggggg", "GGgggggG", "GGGGGGGG"], pal)
     body(img, "#2F6B4F", "#24543E", "#3B3F4A", "#2A2522", "#D9A27E")
     return img

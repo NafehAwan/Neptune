@@ -39,7 +39,7 @@
         base[k] = cut(img, x, y, k === "bottom");
         hat[k] = cut(img, x + 32, y, k === "bottom");
       }
-      faces[name] = { base, hat, flat: flat(img) };
+      faces[name] = { base, hat, flat: flat(img), img };
       resolve();
     };
     img.src = src;
@@ -50,26 +50,8 @@
   // flat head for chips and lists
   window.HEAD = (kind, size) => `<img src="${skinOf(kind).flat}" width="${size}" height="${size}" style="image-rendering:pixelated;border-radius:${Math.max(2, Math.round(size * 0.12))}px;display:block;flex:none">`;
 
-  function cube(set, size, shade) {
-    const h = size / 2;
-    const side = (img, tf, dark) => img ? `<div style="position:absolute;left:0;top:0;width:${size}px;height:${size}px;transform:${tf};backface-visibility:hidden">
-        <img src="${img}" style="width:100%;height:100%;image-rendering:pixelated;display:block">
-        ${shade && dark ? `<div style="position:absolute;inset:0;background:rgba(0,0,0,${dark});-webkit-mask:url(${img}) center/100% 100%;mask:url(${img}) center/100% 100%"></div>` : ""}</div>` : "";
-    return side(set.front, `translateZ(${h}px)`, 0)
-      + side(set.back, `rotateY(180deg) translateZ(${h}px)`, 0.28)
-      + side(set.right, `rotateY(-90deg) translateZ(${h}px)`, 0.16)
-      + side(set.left, `rotateY(90deg) translateZ(${h}px)`, 0.16)
-      + side(set.top, `rotateX(90deg) translateZ(${h}px)`, 0)
-      + side(set.bottom, `rotateX(-90deg) translateZ(${h}px)`, 0.35);
-  }
-
-  // 3D head: base cube plus the hat cube around it
-  window.HEAD3D = (kind, size, yaw, pitch = -18) => {
-    const f = skinOf(kind), hat = size * 1.125, off = (size - hat) / 2;
-    return `<div style="width:${size}px;height:${size}px;perspective:${size * 14}px">
-      <div style="position:relative;width:${size}px;height:${size}px;transform-style:preserve-3d;transform:rotateX(${pitch}deg) rotateY(${yaw}deg)">
-        ${cube(f.base, size, true)}
-        <div style="position:absolute;left:${off}px;top:${off}px;width:${hat}px;height:${hat}px;transform-style:preserve-3d">${cube(f.hat, hat, true)}</div>
-      </div></div>`;
-  };
+  // 3D head: a canvas that head3d.js renders with three.js (base head plus voxel hat layer)
+  window.HEAD3D = (kind, size, yaw, pitch = -18) =>
+    `<canvas data-head3d="${kind === "sample" ? "explorer" : kind}" data-yaw="${yaw}" data-pitch="${pitch}" width="${size * 3}" height="${size * 3}" style="width:${size * 1.5}px;height:${size * 1.5}px;display:block;margin:${-size * 0.25}px"></canvas>`;
+  window.SKIN_IMAGE = (kind) => skinOf(kind).img;
 })();

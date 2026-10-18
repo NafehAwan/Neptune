@@ -239,7 +239,7 @@ function accountMenu(t) {
     <div style="display:flex;align-items:center;gap:16px;height:112px;padding:0 14px">
       <div style="width:84px;height:84px;display:grid;place-items:center;flex:none;filter:drop-shadow(0 10px 14px rgba(30,60,40,0.25))">${HEAD3D(st.active.skin, 56, st.yaw)}</div>
       <div><div class="head" style="font-size:22px;font-style:italic">${st.active.name}</div>
-        <div class="muted" style="font-size:12px;margin-top:2px">${st.active.offline ? "Offline account" : "Microsoft account · signed in"}</div>
+        <div class="muted" style="font-size:12px;margin-top:2px">${st.active.offline ? "Offline account · default skin" : "Microsoft account · skin from Minecraft"}</div>
         <div style="display:flex;gap:6px;margin-top:8px"><span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,0.6)">Change skin</span><span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,0.6)">Profile</span></div></div>
     </div>
     <div style="height:1px;background:rgba(255,255,255,0.7);margin:0 6px 6px"></div>
@@ -417,7 +417,7 @@ function heads() {
     </div>`;
   root.innerHTML = `<div style="position:absolute;inset:0;padding:20px;font-family:'Plus Jakarta Sans';color:#1F2A22">
     <div style="font-size:22px;font-weight:700;padding:0 40px">Skin heads</div>
-    <div class="muted" style="font-size:13px;padding:4px 40px 0">Cut from 64x64 skin files: flat head (face + hat layer), then the 3D head turning, with the hat layer as a second, larger cube.</div>
+    <div class="muted" style="font-size:13px;padding:4px 40px 0">Cut from 64x64 skin files: the flat head (face + outer layer), then the 3D head turning. The outer layer is real 3D: every pixel is its own block standing off the head.</div>
     ${row("sample", "NafehAwan")}${row("default", "Builder (offline)")}</div>`;
 }
 
@@ -449,5 +449,6 @@ function motion() {
 applyTheme();
 SKINS_READY.then(() => {
   ({ board, title: titleScreen, menu: modsMenu, launcher, logos, overview, motion, heads })[screen]();
+  HEADS3D_MOUNT();
   return document.fonts.ready;
 }).then(() => { document.body.dataset.ready = "1"; });
