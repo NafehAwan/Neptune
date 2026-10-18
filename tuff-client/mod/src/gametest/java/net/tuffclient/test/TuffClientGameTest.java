@@ -80,6 +80,18 @@ public class TuffClientGameTest implements FabricClientGameTest {
 		}
 		context.waitTicks(8);
 
+		// Right Shift opens Glade's settings from the title screen.
+		context.getInput().pressKey(TuffClient.menuKey());
+		context.waitForScreen(TuffMenuScreen.class);
+		context.runOnClient(client -> client.gui.screen().onClose());
+		context.waitForScreen(TuffTitleScreen.class);
+		// Without Mod Menu installed, Mods opens Glade's own mods page.
+		context.runOnClient(client -> ((TuffTitleScreen) client.gui.screen()).openMods());
+		context.waitForScreen(TuffMenuScreen.class);
+		context.runOnClient(client -> client.gui.screen().onClose());
+		context.waitForScreen(TuffTitleScreen.class);
+		context.waitTicks(10);
+
 		Screen title = context.computeOnClient(client -> client.gui.screen());
 		TuffMenuScreen menu = context.computeOnClient(client -> new TuffMenuScreen(title));
 		context.setScreen(() -> menu);

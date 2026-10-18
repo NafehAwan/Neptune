@@ -1,6 +1,5 @@
 mod auth;
 mod crash;
-mod curseforge;
 mod discord;
 mod download;
 mod fabric;
@@ -120,7 +119,6 @@ struct AppInfo {
     total_memory_mb: u32,
     suggested_memory_mb: u32,
     ms_login_configured: bool,
-    curseforge_configured: bool,
     discord_configured: bool,
     tuff_mod_bundled: bool,
     tuff_mc_version: String,
@@ -135,7 +133,6 @@ fn app_info(app: AppHandle, state: State<'_, AppState>) -> AppInfo {
         total_memory_mb: system::total_memory_mb(),
         suggested_memory_mb: system::suggested_memory_mb(),
         ms_login_configured: auth::client_id(settings.ms_client_id.as_deref()).is_ok(),
-        curseforge_configured: curseforge::api_key(settings.curseforge_api_key.as_deref()).is_ok(),
         discord_configured: settings.discord_app_id.is_some() || discord::BUILD_APP_ID.is_some(),
         tuff_mod_bundled: bundled_mod(&app).is_some(),
         tuff_mc_version: TUFF_MC_VERSION.into(),
@@ -814,30 +811,6 @@ async fn modrinth_install(state: State<'_, AppState>, profile_id: String, projec
 }
 
 #[tauri::command]
-#[allow(clippy::too_many_arguments)]
-async fn curseforge_search(
-    state: State<'_, AppState>,
-    query: String,
-    kind: String,
-    game_version: Option<String>,
-    loader: Option<String>,
-    sort: String,
-    offset: u32,
-) -> CmdResult<Value> {
-    let key = curseforge::api_key(state.settings().curseforge_api_key.as_deref()).map_err(err)?;
-    curseforge::search(&state.http, &key, &query, &kind, game_version.as_deref(), loader.as_deref(), &sort, offset)
-        .await
-        .map_err(err)
-}
-
-#[tauri::command]
-async fn curseforge_install(state: State<'_, AppState>, profile_id: String, project_id: String, kind: String) -> CmdResult<Vec<String>> {
-    let key = curseforge::api_key(state.settings().curseforge_api_key.as_deref()).map_err(err)?;
-    let profile = state.profile(&profile_id).map_err(err)?;
-    curseforge::install(&state.http, &key, &state.paths, &profile, &project_id, &kind).await.map_err(err)
-}
-
-#[tauri::command]
 fn content_list(state: State<'_, AppState>, profile_id: String, kind: String) -> CmdResult<Vec<modrinth::ContentItem>> {
     modrinth::list(&state.paths, &profile_id, &kind).map_err(err)
 }
@@ -1090,8 +1063,6 @@ pub fn run() {
             running_game,
             modrinth_search,
             modrinth_install,
-            curseforge_search,
-            curseforge_install,
             content_list,
             content_toggle,
             content_remove,

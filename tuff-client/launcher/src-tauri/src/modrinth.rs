@@ -56,7 +56,7 @@ pub fn load_index(paths: &Paths, profile_id: &str) -> ContentIndex {
     store::load(&index_path(paths, profile_id))
 }
 
-pub fn save_index(paths: &Paths, profile_id: &str, index: &ContentIndex) -> Result<()> {
+fn save_index(paths: &Paths, profile_id: &str, index: &ContentIndex) -> Result<()> {
     store::save(&index_path(paths, profile_id), index)
 }
 

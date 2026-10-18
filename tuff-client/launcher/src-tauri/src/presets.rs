@@ -26,6 +26,7 @@ pub struct Preset {
 /// Rendering, memory and loading fixes that change nothing about how the game looks.
 const CORE: &[&str] = &[
     "fabric-api",
+    "modmenu",         // the mod list (and each mod's settings), opened from Mods on the title screen
     "sodium",          // modern renderer, the biggest FPS gain
     "lithium",         // game logic: ticking, AI, physics
     "ferrite-core",    // memory use
@@ -40,7 +41,7 @@ const CORE: &[&str] = &[
 const PERFORMANCE: &[&str] = CORE;
 
 const PERFORMANCE_PLUS: &[&str] = &[
-    "fabric-api", "sodium", "lithium", "ferrite-core", "modernfix", "immediatelyfast", "entityculling",
+    "fabric-api", "modmenu", "sodium", "lithium", "ferrite-core", "modernfix", "immediatelyfast", "entityculling",
     "moreculling", "dynamic-fps", "badoptimizations",
     "c2me-fabric",           // multithreaded chunk loading and generation
     "scalablelux",           // faster lighting engine
@@ -52,7 +53,7 @@ const PERFORMANCE_PLUS: &[&str] = &[
 ];
 
 const PERFORMANCE_PLUS_PLUS: &[&str] = &[
-    "fabric-api", "sodium", "lithium", "ferrite-core", "modernfix", "immediatelyfast", "entityculling",
+    "fabric-api", "modmenu", "sodium", "lithium", "ferrite-core", "modernfix", "immediatelyfast", "entityculling",
     "moreculling", "dynamic-fps", "badoptimizations", "c2me-fabric", "scalablelux", "krypton",
     "sodium-extra", "reeses-sodium-options", "ebe", "clumps",
     "noisium",   // faster world generation
@@ -61,7 +62,7 @@ const PERFORMANCE_PLUS_PLUS: &[&str] = &[
 ];
 
 const SCENIC: &[&str] = &[
-    "fabric-api", "sodium", "lithium", "ferrite-core", "modernfix", "immediatelyfast", "entityculling",
+    "fabric-api", "modmenu", "sodium", "lithium", "ferrite-core", "modernfix", "immediatelyfast", "entityculling",
     "dynamic-fps",
     "iris",                   // shader support
     "continuity",             // connected textures (glass, bookshelves)
@@ -180,6 +181,13 @@ mod tests {
             let before = mods.len();
             mods.dedup();
             assert_eq!(before, mods.len(), "{} lists a mod twice", p.id);
+        }
+    }
+
+    #[test]
+    fn every_preset_has_mod_menu() {
+        for p in ALL {
+            assert!(p.mods.contains(&"modmenu"), "{} has no Mod Menu", p.id);
         }
     }
 

@@ -59,8 +59,6 @@ pub struct Settings {
     pub java_path: Option<String>,
     pub concurrent_downloads: u32,
     pub ms_client_id: Option<String>,
-    /// CurseForge API key for the CurseForge mod source.
-    pub curseforge_api_key: Option<String>,
     pub discord_app_id: Option<String>,
     pub active_account: Option<String>,
     pub selected_profile: Option<String>,
@@ -77,7 +75,6 @@ impl Default for Settings {
             java_path: None,
             concurrent_downloads: 16,
             ms_client_id: None,
-            curseforge_api_key: None,
             discord_app_id: None,
             active_account: None,
             selected_profile: None,

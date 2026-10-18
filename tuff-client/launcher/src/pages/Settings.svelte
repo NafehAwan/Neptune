@@ -9,13 +9,6 @@
   const maxMemory = $derived(Math.max(2048, Math.floor(((app.info?.totalMemoryMb ?? 8192) - 1024) / 512) * 512));
   let clientId = $state(app.settings?.msClientId ?? "");
   let discordId = $state(app.settings?.discordAppId ?? "");
-  let cfKey = $state(app.settings?.curseforgeApiKey ?? "");
-
-  async function saveCfKey() {
-    await updateSettings({ curseforgeApiKey: cfKey.trim() || null });
-    app.info = await api.appInfo();
-    toast(cfKey.trim() ? "CurseForge API key saved" : "CurseForge key removed", "success");
-  }
 
   async function saveClientId() {
     await updateSettings({ msClientId: clientId.trim() || null });
@@ -107,24 +100,6 @@
     </section>
 
     <section class="card rise" style="--i: 3">
-      <h3>Mod sources</h3>
-      <div class="setting col">
-        <p class="label">CurseForge API key</p>
-        <p class="hint">
-          Modrinth works out of the box. CurseForge asks third-party launchers for a free API key from the CurseForge for Studios console.
-          {app.info?.curseforgeConfigured ? "CurseForge is ready." : "Paste your key to search and install from CurseForge."}
-        </p>
-        <div class="row">
-          <input class="input mono grow" type="password" bind:value={cfKey} placeholder="$2a$10$…" autocomplete="off" />
-          <button class="btn small" onclick={saveCfKey}>Save</button>
-        </div>
-        <button class="btn ghost small linkbtn" onclick={() => api.openUrl("https://console.curseforge.com/")}>
-          <Icon name="link" size={10} /> Get a CurseForge API key
-        </button>
-      </div>
-    </section>
-
-    <section class="card rise" style="--i: 4">
       <h3>Discord</h3>
       {@render toggle("Rich Presence", "Show what you're playing on your Discord profile.", s.discordRpc, (v) => updateSettings({ discordRpc: v }))}
       <div class="setting col">
@@ -137,7 +112,7 @@
       </div>
     </section>
 
-    <section class="card rise" style="--i: 5">
+    <section class="card rise" style="--i: 4">
       <h3>Storage</h3>
       <div class="setting">
         <div class="grow"><p class="label">Data folder</p><p class="hint mono selectable">{app.info?.dataDir}</p></div>
@@ -145,7 +120,7 @@
       </div>
     </section>
 
-    <section class="card about rise" style="--i: 6">
+    <section class="card about rise" style="--i: 5">
       <h3>About</h3>
       <p><span class="pixel brand">Glade</span> <span class="faint">v{app.info?.version}</span></p>
       <p class="hint">Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.</p>

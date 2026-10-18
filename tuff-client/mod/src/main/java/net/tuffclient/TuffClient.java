@@ -26,6 +26,11 @@ public final class TuffClient implements ClientModInitializer {
 		return modules;
 	}
 
+	/** Right Shift by default: opens Glade's settings. */
+	public static KeyMapping menuKey() {
+		return menuKey;
+	}
+
 	public static KeyMapping zoomKey() {
 		return zoomKey;
 	}

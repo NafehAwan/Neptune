@@ -47,6 +47,11 @@ public final class TuffTitleScreen extends Screen {
 	private final String version;
 	private float intro;
 	private long last = System.nanoTime();
+	/** The screen a click asked for: the card fades out first, then it opens. */
+	private Screen pending;
+	/** 0 shown, 1 faded out; fades back in when we return to this screen. */
+	private float leave;
+	private boolean switching;
 
 	public TuffTitleScreen() {
 		super(Component.literal("Glade"));
@@ -61,7 +66,36 @@ public final class TuffTitleScreen extends Screen {
 	}
 
 	private void open(Screen screen) {
-		minecraft.gui.setScreen(screen);
+		if (pending != null) return;
+		if (!animate()) {
+			minecraft.gui.setScreen(screen);
+			return;
+		}
+		pending = screen;
+	}
+
+	/**
+	 * Mods opens Mod Menu's mod list when it's installed (every Glade preset has
+	 * it), otherwise Glade's own mods page. Glade's settings are on Right Shift.
+	 */
+	public void openMods() {
+		if (FabricLoader.getInstance().isModLoaded("modmenu")) {
+			try {
+				// Mod Menu is optional, so it's looked up by name rather than linked against
+				Screen mods = (Screen) Class.forName("com.terraformersmc.modmenu.gui.ModsScreen").getConstructor(Screen.class).newInstance(this);
+				open(mods);
+				return;
+			} catch (ReflectiveOperationException | LinkageError | ClassCastException e) {
+				TuffClient.LOGGER.warn("Couldn't open Mod Menu, showing Glade's mods instead", e);
+			}
+		}
+		open(new TuffMenuScreen(this, TuffMenuScreen.Page.MODS));
+	}
+
+	/** How much of the card is showing while it fades out to another screen or back in. */
+	private float shown() {
+		float t = Math.max(0, Math.min(1, leave));
+		return 1 - t * t * (3 - 2 * t);
 	}
 
 	private float zoom() {
@@ -85,7 +119,7 @@ public final class TuffTitleScreen extends Screen {
 		float cx = vw() / 2, bx = cx - 150;
 		boxes.add(new Box(new Button("single", "Singleplayer", "play", Button.PRIMARY, () -> open(new SelectWorldScreen(this))), bx, BTN_Y, 300, 46));
 		boxes.add(new Box(new Button("multi", "Multiplayer", "globe", Button.FROST, () -> open(new JoinMultiplayerScreen(this))), bx, BTN_Y + 56, 300, 46));
-		boxes.add(new Box(new Button("mods", "Mods", "grid", Button.FROST, () -> open(new TuffMenuScreen(this))), bx, BTN_Y + 112, 145, 42));
+		boxes.add(new Box(new Button("mods", "Mods", "grid", Button.FROST, this::openMods), bx, BTN_Y + 112, 145, 42));
 		boxes.add(new Box(new Button("options", "Options", "settings", Button.FROST, () -> open(new OptionsScreen(this, minecraft.options))), bx + 155, BTN_Y + 112, 145, 42));
 
 		float right = vw() - 20;
@@ -98,6 +132,12 @@ public final class TuffTitleScreen extends Screen {
 	protected void init() {
 		Ui.clearTextCache();
 		layout();
+		// back from another screen: fade the card in again
+		if (switching) {
+			switching = false;
+			leave = 1;
+		}
+		pending = null;
 	}
 
 	@Override
@@ -112,7 +152,7 @@ public final class TuffTitleScreen extends Screen {
 
 	private float stage(float delay) {
 		float t = Math.max(0, Math.min(1, (intro - delay) / 0.5f));
-		return 1 - (1 - t) * (1 - t) * (1 - t);
+		return (1 - (1 - t) * (1 - t) * (1 - t)) * shown();
 	}
 
 	@Override
@@ -121,10 +161,15 @@ public final class TuffTitleScreen extends Screen {
 		float dt = Math.min(0.1f, (now - last) / 1e9f);
 		last = now;
 		intro = animate() ? intro + dt : 5;
+		if (pending != null) {
+			leave = Math.min(1, leave + dt / 0.16f);
+		} else {
+			leave = Math.max(0, leave - dt / 0.22f);
+		}
 		float z = zoom();
 		if (boxes.isEmpty() || Math.abs(boxes.getLast().x() + 36 - (vw() - 20)) > 0.5f) layout();
 		float mouseX = guiMouseX / z, mouseY = guiMouseY / z;
-		boolean menuOpen = accounts.isOpen();
+		boolean menuOpen = accounts.isOpen() || pending != null;
 		float mx = menuOpen ? -1000 : mouseX, my = menuOpen ? -1000 : mouseY;
 
 		Ui.zoom = z;
@@ -208,6 +253,7 @@ public final class TuffTitleScreen extends Screen {
 
 	@Override
 	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+		if (pending != null) return true;
 		if (event.button() == 0) {
 			float z = zoom();
 			double x = event.x() / z, y = event.y() / z;
@@ -225,7 +271,12 @@ public final class TuffTitleScreen extends Screen {
 
 	@Override
 	public boolean keyPressed(KeyEvent event) {
+		if (pending != null) return true;
 		if (accounts.keyPressed(event)) return true;
+		if (!accounts.isOpen() && TuffClient.menuKey().matches(event)) {
+			open(new TuffMenuScreen(this));
+			return true;
+		}
 		return super.keyPressed(event);
 	}
 
@@ -233,6 +284,16 @@ public final class TuffTitleScreen extends Screen {
 	public boolean charTyped(CharacterEvent event) {
 		if (accounts.charTyped(event)) return true;
 		return super.charTyped(event);
+	}
+
+	@Override
+	public void tick() {
+		super.tick();
+		// the card has faded out: open the screen that was asked for (between frames, not mid-draw)
+		if (pending != null && leave >= 1 && !switching) {
+			switching = true;
+			minecraft.gui.setScreen(pending);
+		}
 	}
 
 	@Override

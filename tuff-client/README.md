@@ -43,16 +43,15 @@ game look alike.
   - *Scenic*: the core optimisations plus Iris with Complementary Reimagined,
     Continuity, LambDynamicLights, Entity Model and Texture Features with
     Fresh Animations, Falling Leaves and Visuality.
+  Every preset also installs Mod Menu, so Mods on the title screen lists all
+  installed mods.
   Mods without a build for the profile's version are skipped and listed.
   Custom profiles take any version, vanilla or Fabric. The list lives in
   `launcher/src-tauri/src/presets.rs`.
-- **Mods**: search Modrinth or CurseForge for mods, resource packs and
-  shaders (and Modrinth modpacks), filtered to the chosen profile, and install
-  straight into that profile's folder. Installs required dependencies (and Iris
-  for shaders), checks for updates in one request, lets you toggle or remove
-  content, and imports `.mrpack` files. CurseForge needs a free API key from
-  console.curseforge.com, set in Settings → Mod sources or baked in at build
-  time with `GLADE_CF_API_KEY`.
+- **Mods**: Modrinth search for mods, resource packs, shaders and modpacks,
+  filtered to the profile. Installs required dependencies (and Iris for
+  shaders), checks for updates in one request, lets you toggle or remove
+  content, and imports `.mrpack` files.
 - **Servers**: live player counts, MOTD, favicon and ping (Server List Ping
   with SRV lookup). Join goes straight into the server.
 - **Wardrobe**: 3D skin preview with animations; upload or reset skins, pick
@@ -115,6 +114,10 @@ profiles automatically.
   blocky clouds at three depths, birds, rolling hills, three layers of trees
   swaying in the wind and falling leaves) drawn at full screen resolution, with
   a frosted glass card holding the leaf, the wordmark and the main buttons.
+  *Mods* opens Mod Menu's mod list (every Glade preset installs Mod Menu), or
+  Glade's own mods page when Mod Menu isn't installed. Glade's settings open
+  with Right Shift. The card fades out before the next screen and back in on
+  return.
 - **Account menu**: the chip top left shows a 3D head of the current account.
   Its menu lists every account with its own 3D head (outer layer as real
   blocks), adds offline accounts and switches to them on the spot. Microsoft

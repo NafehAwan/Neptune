@@ -28,7 +28,6 @@ export interface Settings {
   javaPath: string | null;
   concurrentDownloads: number;
   msClientId: string | null;
-  curseforgeApiKey?: string | null;
   discordAppId: string | null;
   activeAccount: string | null;
   selectedProfile: string | null;
@@ -40,7 +39,6 @@ export interface AppInfo {
   totalMemoryMb: number;
   suggestedMemoryMb: number;
   msLoginConfigured: boolean;
-  curseforgeConfigured?: boolean;
   discordConfigured: boolean;
   tuffModBundled: boolean;
   tuffMcVersion: string;
