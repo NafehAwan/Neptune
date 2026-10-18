@@ -240,7 +240,10 @@ public final class TuffMenuScreen extends Screen {
 	public void extractBackground(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
 		if (minecraft.level == null) background.render(g, width, height, modules().titleScreen.animate.get());
 		if (modules().ui.blur.get()) {
+			// the forest has to sit in its own layer for the blur to reach it
+			g.nextStratum();
 			extractBlurredBackground(g);
+			g.nextStratum();
 			g.fill(0, 0, width, height, 0x0FFFFFFF);
 		} else {
 			g.fill(0, 0, width, height, 0x59EEF1EB);
