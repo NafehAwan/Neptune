@@ -96,7 +96,7 @@
             <span class="pi"><Icon name="cube" size={20} /></span>
             <span class="meta">
               <span class="pname ellipsis">{profile.name} · {profile.loader === "fabric" ? "Fabric" : "Vanilla"} {profile.gameVersion}</span>
-              <span class="pinfo">{playTime(profile.playTimeSecs)} played</span>
+              <span class="pinfo">{playTime(profile.playTimeSecs)}</span>
             </span>
             <span class="caret" class:up={picker}><Icon name="chevron" size={16} /></span>
           </button>
