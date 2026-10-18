@@ -53,11 +53,15 @@ public final class Ui {
 
 	private static final int[] RADII = {4, 8, 16, 32};
 	private static final Identifier[] ROUND = new Identifier[RADII.length];
+	private static final Identifier[] RING = new Identifier[RADII.length];
 	private static final Identifier SHADOW = id("shadow");
 	private static final Identifier SHADOW_RING = id("shadow_ring");
 
 	static {
-		for (int i = 0; i < RADII.length; i++) ROUND[i] = id("round_" + RADII[i]);
+		for (int i = 0; i < RADII.length; i++) {
+			ROUND[i] = id("round_" + RADII[i]);
+			RING[i] = id("ring_" + RADII[i]);
+		}
 	}
 
 	private Ui() {
@@ -163,6 +167,15 @@ public final class Ui {
 
 	/** Filled rounded rectangle. Picks the sprite whose corner is closest to 1:1 on screen. */
 	public static void round(GuiGraphicsExtractor g, float x, float y, float w, float h, float r, int argb) {
+		roundSprite(g, ROUND, x, y, w, h, r, argb);
+	}
+
+	/** Rounded outline only, about one screen pixel wide, like a CSS border. */
+	public static void outline(GuiGraphicsExtractor g, float x, float y, float w, float h, float r, int argb) {
+		roundSprite(g, RING, x, y, w, h, r, argb);
+	}
+
+	private static void roundSprite(GuiGraphicsExtractor g, Identifier[] set, float x, float y, float w, float h, float r, int argb) {
 		if ((argb >>> 24) == 0 || w <= 0 || h <= 0) return;
 		r = Math.max(0.5f, Math.min(r, Math.min(w, h) / 2));
 		float physical = r * scale();
@@ -177,14 +190,15 @@ public final class Ui {
 		g.pose().pushMatrix();
 		g.pose().translate(x, y);
 		g.pose().scale(s, s);
-		g.blitSprite(RenderPipelines.GUI_TEXTURED, ROUND[pick], 0, 0, Math.max(2 * RADII[pick], Math.round(w / s)), Math.max(2 * RADII[pick], Math.round(h / s)), argb);
+		g.blitSprite(RenderPipelines.GUI_TEXTURED, set[pick], 0, 0, Math.max(2 * RADII[pick], Math.round(w / s)), Math.max(2 * RADII[pick], Math.round(h / s)), argb);
 		g.pose().popMatrix();
 	}
 
 	/** Rounded rectangle with a border of the given width. */
 	public static void round(GuiGraphicsExtractor g, float x, float y, float w, float h, float r, int fill, int border, float bw) {
-		round(g, x, y, w, h, r, border);
-		round(g, x + bw, y + bw, w - 2 * bw, h - 2 * bw, Math.max(0.5f, r - bw), fill);
+		// the fill shows through see-through borders, so the border is only an outline on top
+		round(g, x, y, w, h, r, fill);
+		outline(g, x, y, w, h, r, border);
 	}
 
 	public static void circle(GuiGraphicsExtractor g, float cx, float cy, float radius, int argb) {

@@ -91,6 +91,20 @@ def rounded(path, size=64, radius=16, blur=0, pad=0):
     img.save(path)
 
 
+def ring(path, size=64, radius=16, stroke=1.5):
+    """A rounded outline only (like a CSS border), so borders don't stack under see-through fills."""
+    scale = 8
+    big = Image.new("L", (size * scale, size * scale), 0)
+    d = ImageDraw.Draw(big)
+    d.rounded_rectangle((0, 0, size * scale - 1, size * scale - 1), radius * scale, fill=255)
+    inner = stroke * scale
+    d.rounded_rectangle((inner, inner, size * scale - 1 - inner, size * scale - 1 - inner), max(0, (radius - stroke)) * scale, fill=0)
+    mask = big.resize((size, size), Image.LANCZOS)
+    img = Image.new("RGBA", (size, size), (255, 255, 255, 0))
+    img.putalpha(mask)
+    img.save(path)
+
+
 def shadow_ring(path, size=96, radius=20, blur=7, pad=16, lift=5.6):
     """The soft shadow with the panel's own area cut out, so a see-through panel
     shows the scene behind it instead of its shadow (like a CSS box-shadow).
@@ -129,6 +143,8 @@ if __name__ == "__main__":
     for r in (4, 8, 16, 32):
         rounded(SPRITES / f"round_{r}.png", size=4 * r, radius=r)
         nine_slice(SPRITES / f"round_{r}.png", 4 * r, r)
+        ring(SPRITES / f"ring_{r}.png", size=4 * r, radius=r)
+        nine_slice(SPRITES / f"ring_{r}.png", 4 * r, r)
     rounded(SPRITES / "shadow.png", size=96, radius=20, blur=7, pad=16)
     nine_slice(SPRITES / "shadow.png", 96, 32)
     shadow_ring(SPRITES / "shadow_ring.png", size=96, radius=20, blur=7, pad=16)
