@@ -96,6 +96,7 @@ public final class TuffTitleScreen extends Screen {
 
 	@Override
 	protected void init() {
+		Ui.clearTextCache();
 		layout();
 	}
 
@@ -149,10 +150,13 @@ public final class TuffTitleScreen extends Screen {
 			float hv = Theme.approach(hover.getOrDefault(btn.id(), 0f), over ? 1 : 0, dt, 14);
 			hover.put(btn.id(), hv);
 			float appear = stage(btn.kind() == Button.ROUND ? 0.1f : 0.12f + i * 0.04f);
-			float y = b.y() + (btn.kind() == Button.ROUND ? 0 : lift);
+			// buttons lift a little under the pointer
+			float y = b.y() + (btn.kind() == Button.ROUND ? 0 : lift) - hv * 1.5f;
 			switch (btn.kind()) {
 				case Button.PRIMARY -> {
+					Ui.shadowOutside(g, b.x(), y, b.w(), b.h(), 16, (0.12f + 0.2f * hv) * appear);
 					Ui.round(g, b.x(), y, b.w(), b.h(), 12, Theme.alpha(Theme.mix(Theme.COPPER, Theme.COPPER_HI, hv), appear));
+					Ui.round(g, b.x() + 6, y + 1, b.w() - 12, 1, 0.5f, Theme.alpha(0x40FFFFFF, appear));
 					label(g, b, y, btn, Theme.alpha(Theme.INK, appear), Ui.Font.UI_15_SB, 15);
 				}
 				case Button.FROST -> {

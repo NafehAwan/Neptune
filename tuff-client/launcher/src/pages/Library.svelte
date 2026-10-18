@@ -2,6 +2,7 @@
   import Icon from "../components/Icon.svelte";
   import Modal from "../components/Modal.svelte";
   import ProfileIcon from "../components/ProfileIcon.svelte";
+  import NewProfile from "../components/NewProfile.svelte";
   import ProfileModal from "../components/ProfileModal.svelte";
   import { api, pickFile } from "../lib/api";
   import { ago, bytes, playTime } from "../lib/format";
@@ -21,6 +22,7 @@
   let filter = $state("");
   let editing = $state<Profile | null>(null);
   let creating = $state(false);
+  let picking = $state(false);
   let deleting = $state<Profile | null>(null);
   let deleteFiles = $state(true);
   let busy = $state(false);
@@ -93,20 +95,6 @@
     load();
   }
 
-  async function createTuff() {
-    busy = true;
-    try {
-      const r = await api.createTuffProfile();
-      await refreshProfiles();
-      selectedId = r.profile.id;
-      toast(`Glade profile created with ${r.installed.length} mods`, "success");
-    } catch (e) {
-      toast(e, "error");
-    } finally {
-      busy = false;
-    }
-  }
-
   async function importPack() {
     const path = await pickFile("Modrinth modpack", ["mrpack"]);
     if (!path) return;
@@ -155,24 +143,21 @@
     </div>
     <div class="row">
       <button class="btn ghost" onclick={importPack} disabled={busy}><Icon name="download" size={12} /> Import .mrpack</button>
-      {#if !app.profiles.some((p) => p.isTuff)}
-        <button class="btn" onclick={createTuff} disabled={busy}><Icon name="spark" size={12} /> Glade profile</button>
-      {/if}
-      <button class="btn primary" onclick={() => (creating = true)}><Icon name="plus" size={12} /> New profile</button>
+      <button class="btn primary" onclick={() => (picking = true)}><Icon name="plus" size={12} /> New profile</button>
     </div>
   </div>
 
   {#if !app.profiles.length}
     <div class="empty">
       <p class="pixel">No profiles yet</p>
-      <p>Create the Glade profile for a ready-to-play Fabric setup, or build your own.</p>
-      <div class="row"><button class="btn" onclick={createTuff} disabled={busy}>Create Glade profile</button><button class="btn ghost" onclick={() => (creating = true)}>Custom profile</button></div>
+      <p>Start from a Glade preset (Performance, Performance+, Performance++ or Scenic), or build your own.</p>
+      <div class="row"><button class="btn primary" onclick={() => (picking = true)}>Choose a preset</button><button class="btn ghost" onclick={() => (creating = true)}>Custom profile</button></div>
     </div>
   {:else}
     <div class="split">
       <ul class="list">
-        {#each app.profiles as p (p.id)}
-          <li>
+        {#each app.profiles as p, i (p.id)}
+          <li class="rise" style:--i={i}>
             <button class="item" class:on={selected?.id === p.id} onclick={() => (selectedId = p.id)}>
               <ProfileIcon name={p.icon} size={38} />
               <span class="grow">
@@ -195,7 +180,7 @@
                 <span class="chip">{selected.loader === "fabric" ? `Fabric ${selected.loaderVersion ?? "latest"}` : "Vanilla"}</span>
                 <span class="chip">{selected.gameVersion}</span>
                 <span class="chip">{(selected.memoryMb / 1024).toFixed(1)} GB</span>
-                {#if selected.isTuff}<span class="chip copper">Glade</span>{/if}
+                {#if selected.isTuff}<span class="chip copper">{selected.preset ? `Glade ${({ performance: "Performance", "performance-plus": "Performance+", "performance-plus-plus": "Performance++", scenic: "Scenic" } as Record<string, string>)[selected.preset] ?? ""}` : "Glade"}</span>{/if}
               </div>
               <p class="faint stat">{playTime(selected.playTimeSecs)} · {ago(selected.lastPlayed)}</p>
             </div>
@@ -240,8 +225,8 @@
                 {#if !filter}<button class="btn small" onclick={() => browseFor(tab)}>Browse Modrinth</button>{/if}
               </div>
             {:else}
-              {#each visible as item (item.file)}
-                <div class="citem" class:off={!item.enabled}>
+              {#each visible as item, i (item.file)}
+                <div class="citem rise" class:off={!item.enabled} style:--i={i}>
                   {#if item.meta?.iconUrl}<img src={item.meta.iconUrl} alt="" width="34" height="34" loading="lazy" />{:else}<span class="ph"><Icon name="cube" size={14} /></span>{/if}
                   <div class="grow">
                     <p class="ctitle ellipsis">{item.meta?.title ?? item.file}</p>
@@ -264,6 +249,7 @@
 </div>
 
 {#if creating}<ProfileModal onclose={() => (creating = false)} onsaved={(p) => (selectedId = p.id)} />{/if}
+{#if picking}<NewProfile onclose={() => (picking = false)} oncustom={() => (creating = true)} oncreated={(p) => (selectedId = p.id)} />{/if}
 {#if editing}<ProfileModal profile={editing} onclose={() => (editing = null)} />{/if}
 {#if deleting}
   <Modal title="Delete profile?" onclose={() => (deleting = null)} width={420}>

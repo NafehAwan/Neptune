@@ -62,6 +62,8 @@ export const api = {
   deleteProfile: (id: string, deleteFiles: boolean) => call<void>("delete_profile", { id, deleteFiles }),
   duplicateProfile: (id: string) => call<T.Profile>("duplicate_profile", { id }),
   createTuffProfile: () => call<T.TuffProfileResult>("create_tuff_profile"),
+  listPresets: () => call<T.Preset[]>("list_presets"),
+  createPresetProfile: (preset: string) => call<T.TuffProfileResult>("create_preset_profile", { preset }),
 
   listAccounts: () => call<T.AccountList>("list_accounts"),
   addOfflineAccount: (name: string) => call<T.Account>("add_offline_account", { name }),

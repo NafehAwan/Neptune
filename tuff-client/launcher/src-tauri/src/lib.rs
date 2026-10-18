@@ -10,6 +10,7 @@ mod meta;
 mod modrinth;
 mod models;
 mod paths;
+mod presets;
 mod servers;
 mod skins;
 mod store;
@@ -22,7 +23,7 @@ use models::*;
 use paths::Paths;
 use serde::Serialize;
 use serde_json::{json, Value};
-use std::collections::VecDeque;
+use std::collections::{HashSet, VecDeque};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -33,16 +34,6 @@ use tokio::process::Command;
 
 /// Minecraft version the bundled Glade mod is built for.
 pub const TUFF_MC_VERSION: &str = "26.3";
-const PERFORMANCE_PACK: &[&str] = &[
-    "fabric-api",
-    "sodium",
-    "lithium",
-    "ferrite-core",
-    "entityculling",
-    "immediatelyfast",
-    "modernfix",
-];
-
 type CmdResult<T> = Result<T, String>;
 
 fn err(e: anyhow::Error) -> String {
@@ -312,28 +303,65 @@ struct TuffProfileResult {
 }
 
 #[tauri::command]
-async fn create_tuff_profile(state: State<'_, AppState>) -> CmdResult<TuffProfileResult> {
+fn list_presets() -> Vec<presets::Preset> {
+    presets::ALL.to_vec()
+}
+
+/// A folder name nobody uses yet: glade-performance, glade-performance-2, ...
+fn free_profile_id(state: &AppState, base: &str) -> String {
+    let taken: HashSet<String> = state.profiles().iter().map(|p| p.id.clone()).collect();
+    (1..)
+        .map(|n| if n == 1 { base.to_string() } else { format!("{base}-{n}") })
+        .find(|id| !taken.contains(id) && !state.paths.instance(id).exists())
+        .unwrap()
+}
+
+/// Creates a Glade profile from a preset in its own folder: the Glade mod, the
+/// preset's mods, shader and resource packs, and its video settings.
+#[tauri::command]
+async fn create_preset_profile(state: State<'_, AppState>, preset: String) -> CmdResult<TuffProfileResult> {
+    let preset = presets::find(&preset).ok_or_else(|| format!("Unknown preset '{preset}'"))?;
     let loader = fabric::latest_stable(&state.http, TUFF_MC_VERSION).await.map_err(err)?;
+    let id = free_profile_id(&state, &format!("glade-{}", preset.id));
     let profile = save_profile(
         state.clone(),
         Profile {
-            name: "Glade".into(),
-            icon: "tuff".into(),
+            id: id.clone(),
+            name: format!("Glade {}", preset.name),
+            icon: preset.icon.into(),
             game_version: TUFF_MC_VERSION.into(),
             loader: Loader::Fabric,
             loader_version: Some(loader),
             is_tuff: true,
+            preset: Some(preset.id.into()),
+            created: now(),
             ..Default::default()
         },
     )?;
     let (mut installed, mut skipped) = (Vec::new(), Vec::new());
-    for slug in PERFORMANCE_PACK {
-        match modrinth::install(&state.http, &state.paths, &profile, slug, "mod").await {
-            Ok(titles) => installed.extend(titles),
-            Err(_) => skipped.push(slug.to_string()),
+    let groups: [(&[&str], &str); 3] = [(preset.mods, "mod"), (preset.shaders, "shader"), (preset.resourcepacks, "resourcepack")];
+    for (slugs, kind) in groups {
+        for slug in slugs {
+            match modrinth::install(&state.http, &state.paths, &profile, slug, kind).await {
+                Ok(titles) => installed.extend(titles),
+                Err(_) => skipped.push(slug.to_string()),
+            }
         }
     }
+    let instance = state.paths.instance(&profile.id);
+    let files = |kind: &str| -> Vec<String> {
+        modrinth::list(&state.paths, &profile.id, kind).map(|l| l.into_iter().map(|i| i.file).collect()).unwrap_or_default()
+    };
+    let _ = presets::write_options(&instance, preset, &files("resourcepack"));
+    if let Some(shader) = files("shader").first() {
+        let _ = presets::enable_shader(&instance, shader);
+    }
     Ok(TuffProfileResult { profile, installed, skipped })
+}
+
+#[tauri::command]
+async fn create_tuff_profile(state: State<'_, AppState>) -> CmdResult<TuffProfileResult> {
+    create_preset_profile(state, "performance".into()).await
 }
 
 // ---------------------------------------------------------------- accounts
@@ -1020,6 +1048,8 @@ pub fn run() {
             delete_profile,
             duplicate_profile,
             create_tuff_profile,
+            create_preset_profile,
+            list_presets,
             list_accounts,
             account_skin,
             default_skin,

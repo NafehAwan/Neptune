@@ -27,6 +27,8 @@ pub struct Profile {
     pub last_played: Option<i64>,
     pub play_time_secs: u64,
     pub is_tuff: bool,
+    /// The Glade preset this profile was made from, if any.
+    pub preset: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]

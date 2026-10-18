@@ -125,9 +125,9 @@
     <div class="empty"><p class="pixel">Couldn't reach Modrinth</p><p class="selectable">{error}</p><button class="btn" onclick={() => search()}>Retry</button></div>
   {:else}
     <div class="results">
-      {#each hits as hit (hit.project_id)}
+      {#each hits as hit, i (hit.project_id)}
         {@const state = installed.has(hit.project_id) ? "done" : installing[hit.project_id]}
-        <article class="hit">
+        <article class="hit rise lift" style:--i={i}>
           {#if hit.icon_url}<img src={hit.icon_url} alt="" width="56" height="56" loading="lazy" />{:else}<span class="ph"><Icon name="cube" size={20} /></span>{/if}
           <div class="grow">
             <div class="row t"><h4 class="ellipsis">{hit.title}</h4><span class="by">by {hit.author}</span></div>

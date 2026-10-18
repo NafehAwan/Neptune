@@ -3,13 +3,29 @@ import sampleSkin from "../assets/skins/sample.png";
 // Rust backend isn't available. Never loaded inside the desktop app.
 import type * as T from "./types";
 
+// mirrors src-tauri/src/presets.rs
+const PRESETS: T.Preset[] = [
+  { id: "performance", name: "Performance", icon: "tuff", tagline: "Smooth everyday play. The essential optimisation mods, and the game looks exactly the same.",
+    highlights: ["Sodium renderer", "Faster ticking and loading", "Less memory", "Vanilla look"],
+    mods: ["fabric-api", "sodium", "lithium", "ferrite-core", "modernfix", "immediatelyfast", "entityculling", "moreculling", "dynamic-fps", "badoptimizations"], shaders: [], resourcepacks: [] },
+  { id: "performance-plus", name: "Performance+", icon: "bulb", tagline: "More FPS on average PCs: multithreaded chunks, a faster lighting engine and lighter video settings.",
+    highlights: ["Everything in Performance", "Faster chunks and lighting", "Fast graphics", "8 chunk view"],
+    mods: ["fabric-api", "sodium", "lithium", "ferrite-core", "modernfix", "immediatelyfast", "entityculling", "moreculling", "dynamic-fps", "badoptimizations", "c2me-fabric", "scalablelux", "krypton", "sodium-extra", "reeses-sodium-options", "ebe", "clumps"], shaders: [], resourcepacks: [] },
+  { id: "performance-plus-plus", name: "Performance++", icon: "diamond", tagline: "Maximum FPS for low-end PCs and laptops: every optimisation and the leanest settings.",
+    highlights: ["Everything in Performance+", "Faster world generation", "Minimal effects", "6 chunk view"],
+    mods: ["fabric-api", "sodium", "lithium", "ferrite-core", "modernfix", "immediatelyfast", "entityculling", "moreculling", "dynamic-fps", "badoptimizations", "c2me-fabric", "scalablelux", "krypton", "sodium-extra", "reeses-sodium-options", "ebe", "clumps", "noisium", "vmp-fabric", "ksyxis"], shaders: [], resourcepacks: [] },
+  { id: "scenic", name: "Scenic", icon: "grass", tagline: "Clean, good-looking graphics that still run well: soft shaders, connected textures and lively mobs.",
+    highlights: ["Complementary shaders", "Connected textures", "Dynamic lights", "Fresh Animations"],
+    mods: ["fabric-api", "sodium", "lithium", "ferrite-core", "modernfix", "immediatelyfast", "entityculling", "dynamic-fps", "iris", "continuity", "lambdynamiclights", "entity-model-features", "entitytexturefeatures", "fallingleaves", "visuality"], shaders: ["complementary-reimagined"], resourcepacks: ["fresh-animations"] },
+];
+
 const now = Math.floor(Date.now() / 1000);
 let settings: T.Settings = {
   defaultMemoryMb: 4096, onLaunch: "minimize", lowMotion: false, discordRpc: true, showSnapshots: false,
   javaPath: null, concurrentDownloads: 16, msClientId: null, discordAppId: null, activeAccount: "a1", selectedProfile: "p1",
 };
 let profiles: T.Profile[] = [
-  { id: "p1", name: "Glade", icon: "tuff", gameVersion: "26.3", loader: "fabric", loaderVersion: "0.19.5", memoryMb: 4096, jvmArgs: "", javaPath: null, resolution: null, created: now - 86400 * 9, lastPlayed: now - 3600 * 3, playTimeSecs: 3600 * 14 + 1260, isTuff: true },
+  { id: "glade-performance", preset: "performance", name: "Glade Performance", icon: "tuff", gameVersion: "26.3", loader: "fabric", loaderVersion: "0.19.5", memoryMb: 4096, jvmArgs: "", javaPath: null, resolution: null, created: now - 86400 * 9, lastPlayed: now - 3600 * 3, playTimeSecs: 3600 * 14 + 1260, isTuff: true },
   { id: "p2", name: "Survival", icon: "grass", gameVersion: "26.3", loader: "vanilla", loaderVersion: null, memoryMb: 3072, jvmArgs: "", javaPath: null, resolution: null, created: now - 86400 * 30, lastPlayed: now - 86400, playTimeSecs: 3600 * 52, isTuff: false },
   { id: "p3", name: "PvP 1.8.9", icon: "sword", gameVersion: "1.8.9", loader: "vanilla", loaderVersion: null, memoryMb: 2048, jvmArgs: "", javaPath: null, resolution: null, created: now - 86400 * 60, lastPlayed: now - 86400 * 4, playTimeSecs: 3600 * 8, isTuff: false },
   { id: "p4", name: "Create & Build", icon: "pickaxe", gameVersion: "1.21.11", loader: "fabric", loaderVersion: "0.19.5", memoryMb: 6144, jvmArgs: "", javaPath: null, resolution: null, created: now - 86400 * 90, lastPlayed: null, playTimeSecs: 0, isTuff: false },
@@ -86,6 +102,16 @@ export async function mockCall(cmd: string, args: Record<string, any> = {}): Pro
     }
     case "list_screenshots": return [];
     case "skin_profile": throw "Skins and capes need a Microsoft account.";
+    case "list_presets": return PRESETS;
+    case "create_preset_profile": {
+      const preset = PRESETS.find((p) => p.id === args.preset)!;
+      await new Promise((r) => setTimeout(r, 1200));
+      let id = `glade-${preset.id}`, n = 2;
+      while (profiles.some((p) => p.id === id)) id = `glade-${preset.id}-${n++}`;
+      const profile: T.Profile = { id, name: `Glade ${preset.name}`, icon: preset.icon, gameVersion: "26.3", loader: "fabric", loaderVersion: "0.19.5", memoryMb: 4096, jvmArgs: "", javaPath: null, resolution: null, created: now, lastPlayed: null, playTimeSecs: 0, isTuff: true, preset: preset.id };
+      profiles = [...profiles, profile];
+      return { profile, installed: preset.mods, skipped: [] };
+    }
     default: return null;
   }
 }

@@ -96,6 +96,21 @@ public final class Theme {
 		return mx >= x1 && mx < x2 && my >= y1 && my < y2;
 	}
 
+	/**
+	 * A small spring: state is {value, velocity}. Slightly underdamped, so it
+	 * overshoots a touch and settles, which reads as lively rather than mechanical.
+	 */
+	public static float spring(float[] state, float target, float dt) {
+		float step = 1 / 240f;
+		for (float left = Math.min(dt, 0.1f); left > 0; left -= step) {
+			float h = Math.min(step, left);
+			float force = (target - state[0]) * 320 - state[1] * 22;
+			state[1] += force * h;
+			state[0] += state[1] * h;
+		}
+		return state[0];
+	}
+
 	/** Frame-rate independent easing towards a target. */
 	public static float approach(float current, float target, float dt, float speed) {
 		return current + (target - current) * (1 - (float) Math.exp(-speed * dt));

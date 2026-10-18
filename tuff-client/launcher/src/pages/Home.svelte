@@ -1,8 +1,10 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { fly } from "svelte/transition";
+  import { backOut } from "svelte/easing";
+  import { fly, scale } from "svelte/transition";
   import Icon from "../components/Icon.svelte";
   import ProfileIcon from "../components/ProfileIcon.svelte";
+  import NewProfile from "../components/NewProfile.svelte";
   import ProfileModal from "../components/ProfileModal.svelte";
   import { api } from "../lib/api";
   import { ago, compact, greeting, playTime } from "../lib/format";
@@ -18,7 +20,7 @@
 
   let picker = $state(false);
   let creating = $state(false);
-  let tuffBusy = $state(false);
+  let picking = $state(false);
   let servers = $state<Server[]>([]);
   let pings = $state<Record<string, PingResult | "offline" | undefined>>({});
 
@@ -28,20 +30,6 @@
       api.pingServer(s.address).then((r) => (pings[s.id] = r)).catch(() => (pings[s.id] = "offline"));
     }
   });
-
-  async function createTuff() {
-    tuffBusy = true;
-    try {
-      const result = await api.createTuffProfile();
-      await refreshProfiles();
-      await selectProfile(result.profile.id);
-      toast(`Glade profile ready with ${result.installed.length} mods${result.skipped.length ? ` (${result.skipped.length} not available for ${result.profile.gameVersion} yet)` : ""}.`, "success", 6000);
-    } catch (e) {
-      toast(e, "error");
-    } finally {
-      tuffBusy = false;
-    }
-  }
 
   function join(s: Server) {
     const target = (s.profileId && app.profiles.find((p) => p.id === s.profileId)) || profile;
@@ -62,13 +50,13 @@
   </div>
 
   <div class="news" in:fly={{ x: 16, duration: 400, delay: 120 }}>
-    <div class="newscard">
+    <div class="newscard lift">
       <div class="k">What's new</div>
       <div class="tt">Glade 1.0: new mod menu</div>
       <div class="ss">Favorites, live HUD previews and a faster title screen.</div>
     </div>
     {#if servers.length}
-      <div class="newscard">
+      <div class="newscard lift">
         <div class="k">Quick join</div>
         {#each servers as s (s.id)}
           {@const ping = pings[s.id]}
@@ -101,7 +89,7 @@
             <span class="caret" class:up={picker}><Icon name="chevron" size={16} /></span>
           </button>
           {#if picker}
-            <div class="picker" role="listbox" transition:fly={{ y: 8, duration: 160 }}>
+            <div class="picker" role="listbox" in:scale={{ start: 0.92, duration: 320, easing: backOut }} out:scale={{ start: 0.96, duration: 120 }}>
               {#each app.profiles as p (p.id)}
                 <button class="opt" class:on={p.id === profile.id} role="option" aria-selected={p.id === profile.id}
                   onclick={() => { selectProfile(p.id); picker = false; }}>
@@ -114,7 +102,7 @@
                 </button>
               {/each}
               <div class="picker-foot">
-                <button class="btn ghost small" onclick={() => { picker = false; creating = true; }}><Icon name="plus" size={12} /> New profile</button>
+                <button class="btn ghost small" onclick={() => { picker = false; picking = true; }}><Icon name="plus" size={12} /> New profile</button>
                 <button class="btn ghost small" onclick={() => go("library")}>Manage</button>
               </div>
             </div>
@@ -135,11 +123,11 @@
       {:else}
         <div class="first">
           <div>
-            <p class="pname">Start with the Glade profile</p>
-            <p class="pinfo">Fabric {app.info?.tuffMcVersion}, the Glade mod and a tuned performance pack, set up in one click.</p>
+            <p class="pname">Pick a Glade preset</p>
+            <p class="pinfo">Performance, Performance+, Performance++ or Scenic: Fabric {app.info?.tuffMcVersion} with hand-picked mods, ready in one click.</p>
           </div>
-          <button class="play" onclick={createTuff} disabled={tuffBusy}>
-            <span class="label">{#if tuffBusy}<span class="spinner"></span> Setting up{:else}<Icon name="spark" size={15} /> Create{/if}</span>
+          <button class="play" onclick={() => (picking = true)}>
+            <span class="label"><Icon name="spark" size={15} /> Choose</span>
           </button>
           <button class="btn ghost" onclick={() => (creating = true)}>Custom profile</button>
         </div>
@@ -150,6 +138,9 @@
 
 {#if creating}
   <ProfileModal onclose={() => (creating = false)} onsaved={(p) => selectProfile(p.id)} />
+{/if}
+{#if picking}
+  <NewProfile onclose={() => (picking = false)} oncustom={() => (creating = true)} />
 {/if}
 
 <style>
@@ -205,7 +196,7 @@
   .caret.up { transform: rotate(180deg); }
 
   .picker {
-    position: absolute; bottom: calc(100% + 18px); left: -14px; width: 320px; max-height: 360px; overflow-y: auto; padding: 8px; z-index: 10;
+    position: absolute; bottom: calc(100% + 18px); left: -14px; width: 320px; max-height: 360px; overflow-y: auto; padding: 8px; z-index: 10; transform-origin: bottom left;
     border-radius: 18px; background: rgba(251, 251, 248, 0.92); border: 1px solid rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(20px) saturate(1.5); box-shadow: 0 20px 60px rgba(30, 60, 40, 0.18);
   }

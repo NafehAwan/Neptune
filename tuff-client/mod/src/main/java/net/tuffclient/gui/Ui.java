@@ -77,12 +77,35 @@ public final class Ui {
 
 	// ------------------------------------------------------------------ text
 
+	/** Built text and measured widths, per font size variant: labels are drawn every frame. */
+	private static final java.util.Map<String, Component> TEXTS = new java.util.HashMap<>();
+	private static final java.util.Map<String, Integer> WIDTHS = new java.util.HashMap<>();
+
+	private static String key(String s, Font font) {
+		FontDescription d = font.description();
+		return System.identityHashCode(d) + "|" + s;
+	}
+
 	public static Component text(String s, Font font) {
-		return Component.literal(s).withStyle(style -> style.withFont(font.description()));
+		if (TEXTS.size() > 4096) TEXTS.clear();
+		return TEXTS.computeIfAbsent(key(s, font), k -> Component.literal(s).withStyle(style -> style.withFont(font.description())));
 	}
 
 	public static int width(String s, Font font) {
-		return mc().font.width(text(s, font));
+		if (WIDTHS.size() > 4096) WIDTHS.clear();
+		String k = key(s, font);
+		Integer w = WIDTHS.get(k);
+		if (w == null) {
+			w = mc().font.width(text(s, font));
+			WIDTHS.put(k, w);
+		}
+		return w;
+	}
+
+	/** Fonts can change on a resource reload; measured widths are thrown away then. */
+	public static void clearTextCache() {
+		TEXTS.clear();
+		WIDTHS.clear();
 	}
 
 	public static void text(GuiGraphicsExtractor g, String s, float x, float y, int color, Font font) {

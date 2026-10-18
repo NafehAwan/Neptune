@@ -16,6 +16,7 @@ export interface Profile {
   lastPlayed: number | null;
   playTimeSecs: number;
   isTuff: boolean;
+  preset?: string | null;
 }
 
 export interface Settings {
@@ -91,4 +92,14 @@ export interface Screenshot { path: string; profileId: string; profileName: stri
 export interface SkinEntry { id: string; state: string; url: string; variant?: string; alias?: string; dataUrl: string | null }
 export interface SkinProfile { id: string; name: string; skins: SkinEntry[]; capes: SkinEntry[] }
 
+export interface Preset {
+  id: string;
+  name: string;
+  tagline: string;
+  highlights: string[];
+  icon: string;
+  mods: string[];
+  shaders: string[];
+  resourcepacks: string[];
+}
 export interface TuffProfileResult { profile: Profile; installed: string[]; skipped: string[] }

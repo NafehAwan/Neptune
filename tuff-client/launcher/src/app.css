@@ -27,6 +27,7 @@
   --radius: 10px;
   --radius-lg: 16px;
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --fast: 150ms;
   --med: 220ms;
 
@@ -91,11 +92,11 @@ a { color: var(--accent); }
   color: var(--text);
   font: 600 15px var(--font);
   cursor: pointer;
-  transition: background var(--fast) var(--ease), border-color var(--fast) var(--ease), transform var(--fast) var(--ease), color var(--fast);
+  transition: background var(--fast) var(--ease), border-color var(--fast) var(--ease), transform var(--med) var(--spring), color var(--fast), box-shadow var(--med) var(--ease);
   white-space: nowrap;
 }
 .btn:hover:not(:disabled) { background: #FFFFFF; border-color: var(--border-strong); }
-.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn:active:not(:disabled) { transform: scale(0.965); transition-duration: 60ms; }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .btn.ghost { background: transparent; border-color: transparent; color: var(--muted); }
 .btn.ghost:hover:not(:disabled) { background: var(--surface-2); color: var(--text); border-color: transparent; }
@@ -116,7 +117,7 @@ a { color: var(--accent); }
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 6px 18px rgba(47, 107, 79, 0.22);
 }
 .btn.primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.26), 0 10px 26px rgba(47, 107, 79, 0.32); filter: brightness(1.05); }
-.btn.primary:active:not(:disabled) { transform: translateY(0); filter: brightness(0.96); }
+.btn.primary:active:not(:disabled) { transform: scale(0.965); filter: brightness(0.96); }
 
 /* Inputs */
 .input, select.input, textarea.input {
@@ -148,14 +149,17 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 .switch { position: relative; width: 36px; height: 20px; flex: none; }
 .switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
 .switch span { position: absolute; inset: 0; background: rgba(31, 42, 34, 0.18); border-radius: 20px; transition: background var(--fast); pointer-events: none; }
-.switch span::after { content: ""; position: absolute; left: 3px; top: 3px; width: 14px; height: 14px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); transition: transform var(--med) var(--ease), background var(--fast); }
+.switch span::after { content: ""; position: absolute; left: 3px; top: 3px; width: 14px; height: 14px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); transition: transform 320ms var(--spring), width var(--fast) var(--ease), background var(--fast); }
+.switch input:active + span::after { width: 18px; }
+.switch input:checked:active + span::after { transform: translateX(12px); }
 .switch input:checked + span { background: var(--accent); }
 .switch input:checked + span::after { transform: translateX(16px); background: #FFFFFF; }
 .switch input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* Segmented control */
 .seg { display: inline-flex; background: rgba(255, 255, 255, 0.5); border: 1px solid var(--border); border-radius: var(--radius); padding: 2px; gap: 2px; }
-.seg button { border: 0; background: transparent; color: var(--muted); height: 31px; padding: 0 13px; border-radius: 4px; font: 500 14px var(--font); cursor: pointer; transition: background var(--fast), color var(--fast); }
+.seg button { border: 0; background: transparent; color: var(--muted); height: 31px; padding: 0 13px; border-radius: 6px; font: 500 14px var(--font); cursor: pointer; transition: background var(--med) var(--ease), color var(--fast), box-shadow var(--med) var(--ease), transform var(--med) var(--spring); }
+.seg button:active { transform: scale(0.96); }
 .seg button:hover { color: var(--text); }
 .seg button.on { background: #FFFFFF; color: var(--text); box-shadow: 0 1px 3px rgba(30, 60, 40, 0.12); }
 
@@ -187,3 +191,20 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
   *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
 }
 .low-motion *, .low-motion *::before, .low-motion *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+
+/* Entrances: list items rise in one after another (set --i to the item's index). */
+@keyframes rise { from { opacity: 0; transform: translateY(10px) scale(0.985); } }
+.rise { animation: rise 460ms var(--ease) both; animation-delay: calc(min(var(--i, 0), 14) * 28ms); }
+
+/* A soft light sweep across primary buttons on hover. */
+.btn.primary { position: relative; overflow: hidden; }
+.btn.primary::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.28) 50%, transparent 65%);
+  transform: translateX(-120%);
+}
+.btn.primary:hover:not(:disabled)::after { transform: translateX(120%); transition: transform 700ms var(--ease); }
+
+/* Glass cards lift a little under the pointer. */
+.lift { transition: transform var(--med) var(--spring), box-shadow var(--med) var(--ease), background var(--fast); }
+.lift:hover { transform: translateY(-2px); box-shadow: 0 16px 36px rgba(30, 60, 40, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.85); }

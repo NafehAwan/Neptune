@@ -33,6 +33,18 @@
       if (p) play(p.id);
     }
   }
+
+  // pages glide up and settle, with a touch of overshoot
+  function pageIn(_node: Element) {
+    return {
+      delay: 70,
+      duration: 380,
+      css: (t: number) => {
+        const e = 1 - Math.pow(1 - t, 3);
+        return `opacity: ${Math.min(1, t * 1.6)}; transform: translateY(${(1 - e) * 12}px) scale(${0.992 + 0.008 * e});`;
+      },
+    };
+  }
 </script>
 
 <svelte:window onkeydown={keys} />
@@ -45,7 +57,7 @@
     <TitleBar transparent={app.route === "home"} />
     {#if app.ready}
       {#key app.route}
-        <div class="view" in:fade={{ duration: 180, delay: 60 }} out:fade={{ duration: 80 }}>
+        <div class="view" in:pageIn out:fade={{ duration: 90 }}>
           {#if app.route === "home"}<Home />
           {:else if app.route === "library"}<Library />
           {:else if app.route === "browse"}<Browse />

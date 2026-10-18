@@ -56,7 +56,7 @@
   {:else}
     <div class="grid">
       {#each visible as s, i (s.path)}
-        <button class="shot" onclick={() => (open = i)}>
+        <button class="shot rise" style:--i={i} onclick={() => (open = i)}>
           <img src={s.src} alt="" loading="lazy" />
           <span class="cap">{s.profileName} · {new Date(s.modified * 1000).toLocaleDateString()}</span>
         </button>

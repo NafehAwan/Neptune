@@ -47,7 +47,7 @@
   </div>
 
   <div class="sections">
-    <section class="card">
+    <section class="card rise" style="--i: 0">
       <h3>Launcher</h3>
       <div class="setting">
         <div class="grow"><p class="label">When the game starts</p><p class="hint">What the launcher window does while you play. It comes back when the game closes.</p></div>
@@ -59,7 +59,7 @@
       {@render toggle("Show snapshots", "List snapshot versions when creating profiles.", s.showSnapshots, (v) => updateSettings({ showSnapshots: v }))}
     </section>
 
-    <section class="card">
+    <section class="card rise" style="--i: 1">
       <h3>Game</h3>
       <div class="setting col">
         <div class="row"><p class="label grow">Default memory for new profiles</p><span class="mono val">{(s.defaultMemoryMb / 1024).toFixed(1)} GB</span></div>
@@ -81,7 +81,7 @@
       </div>
     </section>
 
-    <section class="card">
+    <section class="card rise" style="--i: 2">
       <h3>Accounts</h3>
       <div class="setting col">
         <p class="label">Microsoft client ID</p>
@@ -99,7 +99,7 @@
       </div>
     </section>
 
-    <section class="card">
+    <section class="card rise" style="--i: 3">
       <h3>Discord</h3>
       {@render toggle("Rich Presence", "Show what you're playing on your Discord profile.", s.discordRpc, (v) => updateSettings({ discordRpc: v }))}
       <div class="setting col">
@@ -112,7 +112,7 @@
       </div>
     </section>
 
-    <section class="card">
+    <section class="card rise" style="--i: 4">
       <h3>Storage</h3>
       <div class="setting">
         <div class="grow"><p class="label">Data folder</p><p class="hint mono selectable">{app.info?.dataDir}</p></div>
@@ -120,7 +120,7 @@
       </div>
     </section>
 
-    <section class="card about">
+    <section class="card about rise" style="--i: 5">
       <h3>About</h3>
       <p><span class="pixel brand">Glade</span> <span class="faint">v{app.info?.version}</span></p>
       <p class="hint">Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.</p>

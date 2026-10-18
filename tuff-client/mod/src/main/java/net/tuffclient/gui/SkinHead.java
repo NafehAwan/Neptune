@@ -30,8 +30,18 @@ public final class SkinHead {
 	/** Head box width in head units: the view the launcher's camera frames. */
 	private static final float FRAME = 13f;
 
+	/** Reused for every face; the pose copies it. */
+	private static final Matrix3x2f FACE = new Matrix3x2f();
 	private static final int VOXELS = 6 * 64;
 	private static final long[] order = new long[VOXELS];
+	/** Outer-layer block centres never change, so they are worked out once. */
+	private static final float[][] CENTRES = new float[VOXELS][];
+
+	static {
+		for (int f = 0; f < 6; f++)
+			for (int v = 0; v < 8; v++)
+				for (int u = 0; u < 8; u++) CENTRES[f * 64 + v * 8 + u] = blockCentre(f, u, v);
+	}
 
 	private SkinHead() {
 	}
@@ -47,6 +57,8 @@ public final class SkinHead {
 	 */
 	public static void draw(GuiGraphicsExtractor g, Identifier skin, float cx, float cy, float size, float yawDeg, float pitchDeg, float alpha) {
 		if (alpha <= 0.01f) return;
+		// the default skin's outer layer is empty: no blocks to sort or draw
+		boolean voxels = !skin.equals(net.tuffclient.account.SkinTextures.STEVE);
 		float yaw = (float) Math.toRadians(yawDeg), tilt = (float) Math.toRadians(-pitchDeg);
 		float cyw = (float) Math.cos(yaw), syw = (float) Math.sin(yaw);
 		float ct = (float) Math.cos(tilt), st = (float) Math.sin(tilt);
@@ -76,19 +88,17 @@ public final class SkinHead {
 
 		// outer-layer blocks: centre depth for sorting; blocks on faces turned away go behind the head
 		int count = 0;
-		for (int f = 0; f < 6; f++) {
-			for (int v = 0; v < 8; v++) {
-				for (int u = 0; u < 8; u++) {
-					float[] c = blockCentre(f, u, v);
-					float depth = dot(r2, c);
-					// pack depth (sortable) and the block index into one long
-					int key = Float.floatToIntBits(depth);
-					key ^= (key >> 31) & 0x7FFFFFFF;
-					order[count++] = ((long) key << 32) | (f * 64 + v * 8 + u);
-				}
+		if (voxels) {
+			for (int i = 0; i < VOXELS; i++) {
+				float[] c = CENTRES[i];
+				float depth = r2[0] * c[0] + r2[1] * c[1] + r2[2] * c[2];
+				// pack depth (sortable) and the block index into one long
+				int key = Float.floatToIntBits(depth);
+				key ^= (key >> 31) & 0x7FFFFFFF;
+				order[count++] = ((long) key << 32) | i;
 			}
+			Arrays.sort(order, 0, count);
 		}
-		Arrays.sort(order, 0, count);
 
 		for (int pass = 0; pass < 2; pass++) {
 			if (pass == 1) {
@@ -102,17 +112,17 @@ public final class SkinHead {
 				int index = (int) order[i];
 				int f = index / 64, v = (index / 8) % 8, u = index % 8;
 				if (front[f] != (pass == 1)) continue;
-				float[] c = blockCentre(f, u, v);
+				float[] c = CENTRES[index];
 				int tu = REGION[f][0] + 32 + u, tv = REGION[f][1] + v;
 				// each block shows up to three faces; every face uses the block's own texel
 				for (int bf = 0; bf < 6; bf++) {
 					if (!front[bf]) continue;
-					float[] o = {
-							c[0] + 0.5f * (NORMAL[bf][0] - EU[bf][0] - EV[bf][0]),
-							c[1] + 0.5f * (NORMAL[bf][1] - EU[bf][1] - EV[bf][1]),
-							c[2] + 0.5f * (NORMAL[bf][2] - EU[bf][2] - EV[bf][2])};
-					float[] p = project(o, r0, r1, cx, cy, unit);
-					quad(g, skin, p[0], p[1], su[bf], sv[bf], tu, tv, 1, shade[bf]);
+					float ox = c[0] + 0.5f * (NORMAL[bf][0] - EU[bf][0] - EV[bf][0]);
+					float oy = c[1] + 0.5f * (NORMAL[bf][1] - EU[bf][1] - EV[bf][1]);
+					float oz = c[2] + 0.5f * (NORMAL[bf][2] - EU[bf][2] - EV[bf][2]);
+					float px = cx + (r0[0] * ox + r0[1] * oy + r0[2] * oz) * unit;
+					float py = cy - (r1[0] * ox + r1[1] * oy + r1[2] * oz) * unit;
+					quad(g, skin, px, py, su[bf], sv[bf], tu, tv, 1, shade[bf]);
 				}
 			}
 		}
@@ -138,7 +148,7 @@ public final class SkinHead {
 	/** One textured parallelogram: {@code n} texels square from (tu, tv), spanned by the screen vectors u and v per texel. */
 	private static void quad(GuiGraphicsExtractor g, Identifier skin, float ox, float oy, float[] u, float[] v, int tu, int tv, int n, int color) {
 		g.pose().pushMatrix();
-		g.pose().mul(new Matrix3x2f(u[0], u[1], v[0], v[1], ox, oy));
+		g.pose().mul(FACE.set(u[0], u[1], v[0], v[1], ox, oy));
 		g.blit(RenderPipelines.GUI_TEXTURED, skin, 0, 0, tu, tv, n, n, n, n, 64, 64, color);
 		g.pose().popMatrix();
 	}

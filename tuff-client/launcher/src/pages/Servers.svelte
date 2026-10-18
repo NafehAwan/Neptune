@@ -83,7 +83,7 @@
   <div class="list">
     {#each servers as s, i (s.id)}
       {@const p = pings[s.id]}
-      <article class="srv" animate:flip={{ duration: 200 }}>
+      <article class="srv rise lift" style:--i={i} animate:flip={{ duration: 260 }}>
         {#if p && typeof p !== "string" && p.favicon}<img src={p.favicon} alt="" width="48" height="48" />{:else}<span class="fav"><Icon name="globe" size={18} /></span>{/if}
         <div class="grow">
           <div class="row t"><h4 class="ellipsis">{s.name}</h4><span class="addr mono selectable">{s.address}</span></div>

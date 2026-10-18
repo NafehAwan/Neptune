@@ -59,11 +59,27 @@ public final class GroveBackground {
 		g.nextStratum();
 		blur.run();
 		g.nextStratum();
-		for (int[] r : sharpRegions(w, h, glass)) {
+		for (int[] r : regionsFor(w, h, glass)) {
 			g.enableScissor(r[0], r[1], r[2], r[3]);
 			drawAt(g, w, h, r);
 			g.disableScissor();
 		}
+	}
+
+	private float[] cachedKey;
+	private List<int[]> cachedRegions;
+
+	/** The regions only change when the glass moves or the window resizes, so they are kept between frames. */
+	private List<int[]> regionsFor(int w, int h, List<float[]> glass) {
+		float[] key = new float[2 + glass.size() * 5];
+		key[0] = w;
+		key[1] = h;
+		for (int i = 0; i < glass.size(); i++) System.arraycopy(glass.get(i), 0, key, 2 + i * 5, 5);
+		if (cachedRegions == null || !java.util.Arrays.equals(key, cachedKey)) {
+			cachedRegions = sharpRegions(w, h, glass);
+			cachedKey = key;
+		}
+		return cachedRegions;
 	}
 
 	private void step(boolean animate) {

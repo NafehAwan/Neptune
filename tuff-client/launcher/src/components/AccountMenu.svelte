@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { fly } from "svelte/transition";
+  import { backOut } from "svelte/easing";
+  import { fly, scale } from "svelte/transition";
   import { api } from "../lib/api";
   import { skinOf } from "../lib/skins.svelte";
   import { activeAccount, app, go, refreshAccounts } from "../lib/state.svelte";
@@ -75,7 +76,7 @@
   </button>
 
   {#if open}
-    <div class="menu" role="menu" transition:fly={{ y: -6, duration: 160 }}>
+    <div class="menu" role="menu" in:scale={{ start: 0.92, duration: 320, easing: backOut }} out:scale={{ start: 0.96, duration: 120 }}>
       {#if current}
         <div class="hero">
           <div class="big"><Head3D skin={skinOf(current)} size={84} spin yaw={-30} pitch={-16} /></div>
@@ -145,7 +146,7 @@
   .nohead { width: 26px; height: 26px; display: grid; place-items: center; }
 
   .menu {
-    position: absolute; right: 0; top: 46px; width: 320px; padding: 8px; z-index: 30; border-radius: 20px;
+    position: absolute; right: 0; top: 46px; width: 320px; padding: 8px; z-index: 30; border-radius: 20px; transform-origin: top right;
     background: rgba(255, 255, 255, 0.62); border: 1px solid rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(22px) saturate(1.5); -webkit-backdrop-filter: blur(22px) saturate(1.5);
     box-shadow: 0 20px 60px rgba(30, 60, 40, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.8);

@@ -121,6 +121,10 @@ public final class TuffMenuScreen extends Screen {
 	private List<String> availablePacks;
 	private boolean packsDirty;
 	private double clickX;
+	private final Map<String, float[]> springs = new HashMap<>();
+	/** Seconds since the list was last refilled; rows rise in one after another. */
+	private float listAge = 10;
+	private float chipX = -1, chipW, footX = -1, footW;
 
 	public TuffMenuScreen(Screen parent) {
 		this(parent, Page.MODS);
@@ -132,9 +136,16 @@ public final class TuffMenuScreen extends Screen {
 		this.page = page;
 	}
 
+	@Override
+	protected void init() {
+		Ui.clearTextCache();
+		listAge = 0;
+	}
+
 	public void setPage(Page page) {
 		if (this.page == page) return;
 		this.page = page;
+		listAge = 0;
 		drawer = null;
 		scroll = scrollTarget = 0;
 		pageFade = 0;
@@ -179,6 +190,25 @@ public final class TuffMenuScreen extends Screen {
 		v = animations() ? Theme.approach(v, target ? 1 : 0, dt, speed) : (target ? 1 : 0);
 		anim.put(key, v);
 		return v;
+	}
+
+	/** A springy 0..1 value for switches; it overshoots a touch when flipped. */
+	private float spring(String key, boolean on) {
+		float target = on ? 1 : 0;
+		float[] st = springs.computeIfAbsent(key, k -> new float[] {target, 0});
+		if (!animations()) {
+			st[0] = target;
+			st[1] = 0;
+			return target;
+		}
+		return Theme.spring(st, target, dt);
+	}
+
+	/** How far row {@code i} has risen into place (0..1), for the staggered list entrance. */
+	private float rise(int i) {
+		if (!animations()) return 1;
+		float t = Math.max(0, Math.min(1, (listAge - i * 0.03f) / 0.32f));
+		return 1 - (1 - t) * (1 - t) * (1 - t);
 	}
 
 	private void click() {
@@ -228,6 +258,7 @@ public final class TuffMenuScreen extends Screen {
 		pageFade = animations() ? Theme.approach(pageFade, 1, dt, 14) : 1;
 		scroll = animations() ? Theme.approach(scroll, scrollTarget, dt, 18) : scrollTarget;
 		drawerAnim = Theme.approach(drawerAnim, drawer != null ? 1 : 0, dt, animations() ? 16 : 1000);
+		listAge += dt;
 		hits.clear();
 
 		float s = 0.97f + 0.03f * open;
@@ -280,18 +311,38 @@ public final class TuffMenuScreen extends Screen {
 
 		// chips: 28 tall, 12px padding, 4px apart; counts in Geist Mono
 		float cx = after + 14 + 18;
+		// the selected chip's pill slides between chips
+		float targetX = 0, targetW = 0, scanX = cx;
+		for (Tab t : Tab.values()) {
+			String count = t == Tab.FAVORITES ? "" : String.valueOf(filtered(t, "").size());
+			float w = 12 + Ui.width(t.label, Ui.Font.UI_12_5_M) + (count.isEmpty() ? 0 : 6 + Ui.width(count, Ui.Font.MONO_11_M)) + 12;
+			if (t == tab) {
+				targetX = scanX;
+				targetW = w;
+			}
+			scanX += w + 4;
+		}
+		if (chipX < 0 || !animations()) {
+			chipX = targetX;
+			chipW = targetW;
+		}
+		chipX = Theme.approach(chipX, targetX, dt, 16);
+		chipW = Theme.approach(chipW, targetW, dt, 16);
+		Ui.shadowOutside(g, chipX, cy - 14, chipW, 28, 8, 0.08f * a);
+		Ui.round(g, chipX, cy - 14, chipW, 28, 14, Theme.alpha(0xC8FFFFFF, a));
 		for (Tab t : Tab.values()) {
 			String count = t == Tab.FAVORITES ? "" : String.valueOf(filtered(t, "").size());
 			float w = 12 + Ui.width(t.label, Ui.Font.UI_12_5_M) + (count.isEmpty() ? 0 : 6 + Ui.width(count, Ui.Font.MONO_11_M)) + 12;
 			boolean active = tab == t;
 			boolean over = Theme.inside(mouseX, mouseY, cx, cy - 14, cx + w, cy + 14);
 			float act = anim("chip:" + t, active, 14), hv = anim("chipH:" + t, over, 16);
-			if (act > 0.01f || hv > 0.01f) Ui.round(g, cx, cy - 14, w, 28, 14, Theme.alpha(0xB3FFFFFF, Math.max(act, hv * 0.5f) * a));
+			if (hv > 0.01f && !active) Ui.round(g, cx, cy - 14, w, 28, 14, Theme.alpha(0x66FFFFFF, hv * a));
 			int color = Theme.mix(Theme.MUTED, Theme.COPPER, act);
 			Ui.textAt(g, t.label, cx + 12, Ui.mid(cy, 12.5f), Theme.alpha(color, a), Ui.Font.UI_12_5_M);
 			if (!count.isEmpty()) Ui.textAt(g, count, cx + 12 + Ui.width(t.label, Ui.Font.UI_12_5_M) + 6, Ui.mid(cy, 11), Theme.alpha(color, 0.6f * a), Ui.Font.MONO_11_M);
 			hit(cx, cy - 14, cx + w, cy + 14, e -> {
 				click();
+				if (tab != t) listAge = 0;
 				tab = t;
 				scrollTarget = 0;
 			});
@@ -315,13 +366,31 @@ public final class TuffMenuScreen extends Screen {
 		Ui.textAt(g, on + " of " + modules().visible().size() + " on", x, Ui.mid(y + 16, 11.5f), Theme.alpha(Theme.MUTED, a), Ui.Font.MONO_11_5);
 		float bx = x + w;
 		String[][] items = {{"hud", "Edit HUD", "move"}, {"SETTINGS", "Settings", "settings"}, {"PACKS", "Packs", "package"}, {"THEME", "Theme", "palette"}, {"MODS", "Mods", "grid"}};
+		float scan = x + w, tx = 0, tw = 0;
+		for (String[] item : items) {
+			float bw = 12 + 16 + 8 + Ui.width(item[1], Ui.Font.UI_12_5_M) + 12;
+			scan -= bw;
+			if (page.name().equals(item[0])) {
+				tx = scan;
+				tw = bw;
+			}
+			scan -= 4;
+		}
+		if (footX < 0 || !animations()) {
+			footX = tx;
+			footW = tw;
+		}
+		footX = Theme.approach(footX, tx, dt, 16);
+		footW = Theme.approach(footW, tw, dt, 16);
+		Ui.shadowOutside(g, footX, y, footW, 32, 8, 0.08f * a);
+		Ui.round(g, footX, y, footW, 32, 10, Theme.alpha(0xC8FFFFFF, a));
 		for (String[] item : items) {
 			float bw = 12 + 16 + 8 + Ui.width(item[1], Ui.Font.UI_12_5_M) + 12;
 			bx -= bw;
 			boolean active = !item[0].equals("hud") && page.name().equals(item[0]);
 			boolean over = Theme.inside(mouseX, mouseY, bx, y, bx + bw, y + 32);
 			float act = anim("foot:" + item[0], active, 14), hv = anim("footH:" + item[0], over, 16);
-			if (act > 0.01f || hv > 0.01f) Ui.round(g, bx, y, bw, 32, 10, Theme.alpha(0xB3FFFFFF, Math.max(act, hv * 0.5f) * a));
+			if (hv > 0.01f && !active) Ui.round(g, bx, y, bw, 32, 10, Theme.alpha(0x66FFFFFF, hv * a));
 			int color = Theme.mix(Theme.mix(Theme.MUTED, Theme.TEXT, hv), Theme.COPPER, act);
 			Ui.lucide(g, item[2], bx + 12, y + 8, 16, Theme.alpha(color, a));
 			Ui.textAt(g, item[1], bx + 12 + 16 + 8, Ui.mid(y + 16, 12.5f), Theme.alpha(color, a), Ui.Font.UI_12_5_M);
@@ -372,7 +441,8 @@ public final class TuffMenuScreen extends Screen {
 			float rx = x + (i % 2) * (cw + GUTTER);
 			float ry = y + (i / 2) * ROW - scroll;
 			if (ry + ROW < y || ry > y + h) continue;
-			row(g, mouseX, mouseY, list.get(i), rx, ry, cw, a, inList, y, y + h);
+			float in = rise(i);
+			row(g, mouseX, mouseY, list.get(i), rx, ry + (1 - in) * 12, cw, a * in, inList && in > 0.95f, y, y + h);
 		}
 		g.disableScissor();
 		if (list.isEmpty()) {
@@ -409,8 +479,11 @@ public final class TuffMenuScreen extends Screen {
 
 		// switch: 34x20
 		float sx = x + w - 34, sy = y + 23;
+		float knob = spring("sw:" + m.id, m.isEnabled());
 		Ui.round(g, sx, sy, 34, 20, 10, Theme.alpha(Theme.mix(0x99FFFFFF, Theme.COPPER, on), a), Theme.alpha(Theme.mix(0xCCFFFFFF, Theme.COPPER, on), a), 1);
-		Ui.circle(g, sx + 1 + 2 + 7 + 14 * on, sy + 10, 7, Theme.alpha(Theme.mix(Theme.MUTED, 0xFFFFFFFF, on), a));
+		// the knob stretches a little while it travels
+		float stretch = Math.min(4, Math.abs(springs.get("sw:" + m.id)[1]) * 0.02f);
+		Ui.round(g, sx + 3 + 14 * knob - stretch / 2, sy + 3, 14 + stretch, 14, 7, Theme.alpha(Theme.mix(Theme.MUTED, 0xFFFFFFFF, on), a));
 		switches.put(m.id, new float[] {sx + 17, sy + 10});
 
 		// heart (and gear when there are settings), shown on hover or when favorited
