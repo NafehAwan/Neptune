@@ -55,6 +55,7 @@
         <p class="ct">{app.lastExit.crash.title}</p>
         <p class="muted">{app.lastExit.crash.hint}</p>
       </div>
+      <button class="btn small" onclick={() => (app.crashOpen = true)}>Details</button>
       {#if exitProfile}
         <button class="btn small" onclick={() => api.openFolder(exitProfile.id, "crash-reports")}><Icon name="folder" size={12} /> Crash reports</button>
         <button class="btn small" onclick={() => { app.focusProfile = exitProfile.id; go("library"); }}>Open profile</button>

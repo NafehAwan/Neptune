@@ -1,4 +1,4 @@
-export type Loader = "vanilla" | "fabric";
+export type Loader = "vanilla" | "fabric" | "quilt" | "forge" | "neoforge";
 export type OnLaunch = "keep" | "minimize" | "hide";
 
 export interface Profile {
@@ -59,10 +59,19 @@ export interface DeviceCode {
 export interface VersionEntry { id: string; kind: string; releaseTime: string }
 export interface VersionList { latestRelease: string; latestSnapshot: string; versions: VersionEntry[] }
 export interface LoaderVersion { version: string; stable: boolean }
+export interface GameVersion { version: string; stable: boolean }
 
 export interface LaunchProgress { profileId: string; stage: string; done: number; total: number }
 export interface LogLine { line: string; level: "info" | "warn" | "error" }
-export interface CrashReport { title: string; hint: string }
+export interface CrashReport {
+  title: string;
+  hint: string;
+  /** The mod the crash points at. */
+  culprit: string | null;
+  /** That mod's file, so the crash dialog can turn it off. */
+  modFile: string | null;
+  evidence: string[];
+}
 export interface GameExit { profileId: string; code: number; crash: CrashReport | null }
 
 export type ContentKind = "mod" | "resourcepack" | "shader" | "modpack";

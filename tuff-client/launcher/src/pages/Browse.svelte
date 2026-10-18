@@ -1,7 +1,7 @@
 <script lang="ts">
   import Icon from "../components/Icon.svelte";
   import { api } from "../lib/api";
-  import { compact } from "../lib/format";
+  import { compact, loaderName } from "../lib/format";
   import { app, refreshProfiles, selectedProfile } from "../lib/state.svelte";
   import { toast } from "../lib/toast.svelte";
   import type { ContentKind, SearchHit } from "../lib/types";
@@ -43,7 +43,7 @@
     error = "";
     try {
       const filterVersion = kind === "modpack" ? null : profile?.gameVersion ?? null;
-      const loader = profile?.loader === "fabric" ? "fabric" : null;
+      const loader = profile && profile.loader !== "vanilla" ? profile.loader : null;
       const r = await api.search(query, kind, filterVersion, kind === "mod" ? loader ?? "fabric" : loader, sort, append ? hits.length : 0);
       if (gen !== generation) return;
       hits = append ? [...hits, ...r.hits] : r.hits;
@@ -105,7 +105,7 @@
     </div>
     {#if kind !== "modpack"}
       <select class="input target" bind:value={profileId} title="Install into">
-        {#each app.profiles as p (p.id)}<option value={p.id}>{p.name} · {p.loader === "fabric" ? "Fabric" : "Vanilla"} {p.gameVersion}</option>{/each}
+        {#each app.profiles as p (p.id)}<option value={p.id}>{p.name} · {loaderName(p.loader)} {p.gameVersion}</option>{/each}
         {#if !app.profiles.length}<option value={null}>No profiles</option>{/if}
       </select>
     {/if}
@@ -117,11 +117,11 @@
     {#each kinds as k}<button class:on={kind === k.kind} onclick={() => (kind = k.kind)}>{k.label}</button>{/each}
   </div>
   {#if profile && kind !== "modpack"}
-    <p class="target-note">Installing into <strong>{profile.name}</strong> · {profile.loader === "fabric" ? "Fabric" : "Vanilla"} {profile.gameVersion}</p>
+    <p class="target-note">Installing into <strong>{profile.name}</strong> · {loaderName(profile.loader)} {profile.gameVersion}</p>
   {/if}
 
   {#if kind === "mod" && profile?.loader === "vanilla"}
-    <p class="note">Mods need a Fabric profile. <strong>{profile.name}</strong> is vanilla, so pick or create a Fabric profile to install mods.</p>
+    <p class="note">Mods need a modded profile. <strong>{profile.name}</strong> is vanilla, so pick or create a Fabric, Quilt, Forge or NeoForge profile to install mods.</p>
   {/if}
 
   {#if error}

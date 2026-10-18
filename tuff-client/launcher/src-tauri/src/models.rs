@@ -7,6 +7,16 @@ pub enum Loader {
     #[default]
     Vanilla,
     Fabric,
+    Quilt,
+    Forge,
+    NeoForge,
+}
+
+impl Loader {
+    /// Loaders that run mods (everything except vanilla).
+    pub fn is_modded(&self) -> bool {
+        *self != Loader::Vanilla
+    }
 }
 
 

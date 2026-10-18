@@ -5,6 +5,7 @@ mod download;
 mod fabric;
 mod install;
 mod java;
+mod loaders;
 mod launch;
 mod meta;
 mod modrinth;
@@ -13,6 +14,8 @@ mod paths;
 mod presets;
 mod servers;
 mod skins;
+#[cfg(test)]
+mod smoke;
 mod store;
 mod system;
 
@@ -208,9 +211,16 @@ async fn list_versions(state: State<'_, AppState>) -> CmdResult<VersionList> {
     })
 }
 
+/// Loader versions for a Minecraft version, newest first (stable ones flagged).
 #[tauri::command]
-async fn fabric_loaders(state: State<'_, AppState>, game_version: String) -> CmdResult<Vec<fabric::LoaderVersion>> {
-    fabric::loader_versions(&state.http, &game_version).await.map_err(err)
+async fn loader_versions(state: State<'_, AppState>, loader: Loader, game_version: String) -> CmdResult<Vec<fabric::LoaderVersion>> {
+    loaders::versions(&state.http, &loader, &game_version).await.map_err(err)
+}
+
+/// Minecraft versions Glade presets (Fabric) can use, newest first.
+#[tauri::command]
+async fn preset_game_versions(state: State<'_, AppState>) -> CmdResult<Vec<fabric::GameVersion>> {
+    fabric::game_versions(&state.http).await.map_err(err)
 }
 
 // ---------------------------------------------------------------- profiles
@@ -319,9 +329,11 @@ fn free_profile_id(state: &AppState, base: &str) -> String {
 /// Creates a Glade profile from a preset in its own folder: the Glade mod, the
 /// preset's mods, shader and resource packs, and its video settings.
 #[tauri::command]
-async fn create_preset_profile(state: State<'_, AppState>, preset: String) -> CmdResult<TuffProfileResult> {
+async fn create_preset_profile(state: State<'_, AppState>, preset: String, game_version: Option<String>) -> CmdResult<TuffProfileResult> {
     let preset = presets::find(&preset).ok_or_else(|| format!("Unknown preset '{preset}'"))?;
-    let loader = fabric::latest_stable(&state.http, TUFF_MC_VERSION).await.map_err(err)?;
+    let game_version = game_version.filter(|v| !v.trim().is_empty()).unwrap_or_else(|| TUFF_MC_VERSION.into());
+    // presets are always Fabric
+    let loader = loaders::latest(&state.http, &Loader::Fabric, &game_version).await.map_err(err)?;
     let id = free_profile_id(&state, &format!("glade-{}", preset.id));
     let profile = save_profile(
         state.clone(),
@@ -329,7 +341,7 @@ async fn create_preset_profile(state: State<'_, AppState>, preset: String) -> Cm
             id: id.clone(),
             name: format!("Glade {}", preset.name),
             icon: preset.icon.into(),
-            game_version: TUFF_MC_VERSION.into(),
+            game_version: game_version.clone(),
             loader: Loader::Fabric,
             loader_version: Some(loader),
             is_tuff: true,
@@ -339,6 +351,10 @@ async fn create_preset_profile(state: State<'_, AppState>, preset: String) -> Cm
         },
     )?;
     let (mut installed, mut skipped) = (Vec::new(), Vec::new());
+    if game_version != TUFF_MC_VERSION {
+        // the Glade mod itself is built for one Minecraft version
+        skipped.push(format!("Glade mod (built for {TUFF_MC_VERSION})"));
+    }
     let groups: [(&[&str], &str); 3] = [(preset.mods, "mod"), (preset.shaders, "shader"), (preset.resourcepacks, "resourcepack")];
     for (slugs, kind) in groups {
         for slug in slugs {
@@ -361,7 +377,7 @@ async fn create_preset_profile(state: State<'_, AppState>, preset: String) -> Cm
 
 #[tauri::command]
 async fn create_tuff_profile(state: State<'_, AppState>) -> CmdResult<TuffProfileResult> {
-    create_preset_profile(state, "performance".into()).await
+    create_preset_profile(state, "performance".into(), None).await
 }
 
 // ---------------------------------------------------------------- accounts
@@ -742,10 +758,14 @@ async fn launch(app: AppHandle, state: State<'_, AppState>, profile_id: String, 
     });
 
     let exit_app = app.clone();
+    let crash_dir = game_dir.clone();
+    let loader_name = modrinth::mod_loaders(&profile.loader)[0].to_string();
     tokio::spawn(async move {
+        let mut killed = false;
         let status = tokio::select! {
             status = child.wait() => status,
             _ = kill_rx => {
+                killed = true;
                 let _ = child.kill().await;
                 child.wait().await
             }
@@ -764,10 +784,26 @@ async fn launch(app: AppHandle, state: State<'_, AppState>, profile_id: String, 
         state.discord.set(state.discord_app_id(), Presence::Clear);
         restore_window(&exit_app);
         let _ = exit_app.emit("game-state", json!({ "running": false, "profileId": profile_id }));
-        let _ = exit_app.emit(
-            "game-exit",
-            json!({ "profileId": profile_id, "code": code, "crash": crash::analyze(&lines, code) }),
-        );
+        // stopping the game from the launcher isn't a crash
+        let crash = if killed || code == 0 {
+            None
+        } else {
+            let dir = crash_dir.clone();
+            let loader = loader_name.clone();
+            tokio::task::spawn_blocking(move || {
+                let ctx = crash::Context {
+                    crash_report: crash::newest_file(&dir.join("crash-reports"), "crash-", started),
+                    fatal_log: crash::newest_file(&dir, "hs_err_pid", started),
+                    mods: crash::scan_mods(&dir.join("mods")),
+                    loader,
+                };
+                crash::analyze(&lines, code, Some(&ctx))
+            })
+            .await
+            .ok()
+            .flatten()
+        };
+        let _ = exit_app.emit("game-exit", json!({ "profileId": profile_id, "code": code, "crash": crash }));
     });
     Ok(())
 }
@@ -1042,7 +1078,8 @@ pub fn run() {
             open_url,
             open_folder,
             list_versions,
-            fabric_loaders,
+            loader_versions,
+            preset_game_versions,
             list_profiles,
             save_profile,
             delete_profile,

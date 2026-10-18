@@ -25,6 +25,18 @@ pub async fn loader_versions(http: &reqwest::Client, game_version: &str) -> Resu
     Ok(entries.into_iter().map(|e| e.loader).collect())
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct GameVersion {
+    pub version: String,
+    pub stable: bool,
+}
+
+/// Every Minecraft version Fabric supports, newest first, with releases marked stable.
+pub async fn game_versions(http: &reqwest::Client) -> Result<Vec<GameVersion>> {
+    Ok(http.get(format!("{META}/versions/game")).send().await?.error_for_status()?.json().await?)
+}
+
+#[allow(dead_code)]
 pub async fn latest_stable(http: &reqwest::Client, game_version: &str) -> Result<String> {
     let versions = loader_versions(http, game_version).await?;
     versions

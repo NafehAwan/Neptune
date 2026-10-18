@@ -55,7 +55,8 @@ export const api = {
   openFolder: (profileId?: string, sub?: string) => call<void>("open_folder", { profileId: profileId ?? null, sub: sub ?? null }),
 
   listVersions: () => call<T.VersionList>("list_versions"),
-  fabricLoaders: (gameVersion: string) => call<T.LoaderVersion[]>("fabric_loaders", { gameVersion }),
+  loaderVersions: (loader: T.Loader, gameVersion: string) => call<T.LoaderVersion[]>("loader_versions", { loader, gameVersion }),
+  presetGameVersions: () => call<T.GameVersion[]>("preset_game_versions"),
 
   listProfiles: () => call<T.Profile[]>("list_profiles"),
   saveProfile: (profile: T.Profile) => call<T.Profile>("save_profile", { profile }),
@@ -63,7 +64,7 @@ export const api = {
   duplicateProfile: (id: string) => call<T.Profile>("duplicate_profile", { id }),
   createTuffProfile: () => call<T.TuffProfileResult>("create_tuff_profile"),
   listPresets: () => call<T.Preset[]>("list_presets"),
-  createPresetProfile: (preset: string) => call<T.TuffProfileResult>("create_preset_profile", { preset }),
+  createPresetProfile: (preset: string, gameVersion: string | null) => call<T.TuffProfileResult>("create_preset_profile", { preset, gameVersion }),
 
   listAccounts: () => call<T.AccountList>("list_accounts"),
   addOfflineAccount: (name: string) => call<T.Account>("add_offline_account", { name }),

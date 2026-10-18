@@ -74,7 +74,12 @@ pub async fn search(
         facets.push(vec![format!("versions:{v}")]);
     }
     if let (Some(l), "mod" | "modpack") = (loader, kind) {
-        facets.push(vec![format!("categories:{l}")]);
+        // Quilt runs Fabric mods too
+        let mut any = vec![format!("categories:{l}")];
+        if l == "quilt" && kind == "mod" {
+            any.push("categories:fabric".into());
+        }
+        facets.push(any);
     }
     let url = format!(
         "{API}/search?query={}&facets={}&index={}&offset={offset}&limit=20",
@@ -95,12 +100,29 @@ pub async fn project(http: &reqwest::Client, id: &str) -> Result<Value> {
         .await?)
 }
 
+/// Modrinth loader names whose builds run on this profile.
+pub fn mod_loaders(loader: &Loader) -> Vec<&'static str> {
+    match loader {
+        Loader::Vanilla => vec!["minecraft"],
+        Loader::Fabric => vec!["fabric"],
+        Loader::Quilt => vec!["quilt", "fabric"],
+        Loader::Forge => vec!["forge"],
+        Loader::NeoForge => vec!["neoforge"],
+    }
+}
+
+/// The mod that loads shader packs on each loader.
+fn shader_mod(loader: &Loader) -> Option<&'static str> {
+    match loader {
+        Loader::Fabric | Loader::Quilt | Loader::NeoForge => Some("iris"),
+        Loader::Forge => Some("oculus"),
+        Loader::Vanilla => None,
+    }
+}
+
 fn loaders_for(kind: &str, profile: &Profile) -> Option<Vec<&'static str>> {
     match kind {
-        "mod" => Some(vec![match profile.loader {
-            Loader::Fabric => "fabric",
-            Loader::Vanilla => "minecraft",
-        }]),
+        "mod" => Some(mod_loaders(&profile.loader)),
         "shader" => Some(vec!["iris", "optifine"]),
         "resourcepack" => Some(vec!["minecraft"]),
         "datapack" => Some(vec!["datapack"]),
@@ -119,11 +141,24 @@ async fn best_version(http: &reqwest::Client, project_id: &str, kind: &str, prof
         url.push_str(&format!("&loaders={}", urlencoding::encode(&json!(loaders).to_string())));
     }
     let versions: Vec<Value> = http.get(url).send().await?.error_for_status()?.json().await?;
+    // Quilt can run Fabric builds, but a native Quilt build is preferred
+    let preferred = |v: &&Value| profile.loader != Loader::Quilt || v["loaders"].as_array().is_some_and(|l| l.iter().any(|x| x == "quilt"));
     Ok(versions
         .iter()
-        .find(|v| v["version_type"] == "release")
+        .find(|v| v["version_type"] == "release" && preferred(v))
+        .or_else(|| versions.iter().find(|v| v["version_type"] == "release"))
         .or_else(|| versions.first())
         .cloned())
+}
+
+/// Whether a specific version (say, one a dependency pins) runs on this profile.
+fn fits(version: &Value, kind: &str, profile: &Profile) -> bool {
+    let game = version["game_versions"].as_array().is_some_and(|g| g.iter().any(|v| v == profile.game_version.as_str()));
+    let loader = match loaders_for(kind, profile) {
+        Some(wanted) => version["loaders"].as_array().is_some_and(|l| l.iter().any(|x| wanted.iter().any(|w| x == w))),
+        None => true,
+    };
+    game && loader
 }
 
 fn primary_file(version: &Value) -> Result<&Value> {
@@ -152,8 +187,8 @@ pub async fn install(
     project_id: &str,
     kind: &str,
 ) -> Result<Vec<String>> {
-    if kind == "mod" && profile.loader == Loader::Vanilla {
-        bail!("Mods need a Fabric profile. Switch this profile to Fabric or create a Glade profile.");
+    if kind == "mod" && !profile.loader.is_modded() {
+        bail!("Mods need a modded profile. Switch this profile to Fabric (or Quilt, Forge, NeoForge) or create a Glade profile.");
     }
     if kind == "modpack" {
         bail!("Modpacks are installed as new profiles");
@@ -173,19 +208,30 @@ pub async fn install(
         if installed_projects.contains(&pid) {
             continue;
         }
-        let version = match version_id {
-            Some(vid) => Some(
-                http.get(format!("{API}/version/{}", urlencoding::encode(&vid)))
-                    .send()
-                    .await?
-                    .error_for_status()?
-                    .json::<Value>()
-                    .await?,
-            ),
+        // A dependency may pin a version; use it only if it fits this profile's
+        // Minecraft version and loader, otherwise pick the best one that does.
+        let pinned = match version_id {
+            Some(vid) => http
+                .get(format!("{API}/version/{}", urlencoding::encode(&vid)))
+                .send()
+                .await?
+                .error_for_status()?
+                .json::<Value>()
+                .await
+                .ok()
+                .filter(|v| fits(v, &kind, profile)),
+            None => None,
+        };
+        let version = match pinned {
+            Some(v) => Some(v),
             None => best_version(http, &pid, &kind, profile).await?,
         };
         let Some(version) = version else {
             if requested == project_id {
+                let loader = crate::loaders::display_name(&profile.loader);
+                if kind == "mod" {
+                    bail!("No version of this mod supports {loader} on Minecraft {}.", profile.game_version);
+                }
                 bail!("No version of this project supports Minecraft {}.", profile.game_version);
             }
             continue;
@@ -233,9 +279,11 @@ pub async fn install(
                 queue.push_back((dep_project, dep_version, "mod".into()));
             }
         }
-        // Shader packs need Iris on Fabric.
-        if kind == "shader" && profile.loader == Loader::Fabric {
-            queue.push_back(("iris".into(), None, "mod".into()));
+        // Shader packs need Iris (Oculus on Forge).
+        if kind == "shader" {
+            if let Some(m) = shader_mod(&profile.loader) {
+                queue.push_back((m.into(), None, "mod".into()));
+            }
         }
     }
     save_index(paths, &profile.id, &index)?;
@@ -335,8 +383,10 @@ pub async fn check_updates(http: &reqwest::Client, paths: &Paths, profile: &Prof
         return Ok(vec![]);
     }
     let mut body = json!({ "hashes": hashes, "algorithm": "sha1", "game_versions": [profile.game_version] });
-    if profile.loader == Loader::Fabric {
-        body["loaders"] = json!(["fabric", "minecraft", "iris"]);
+    if profile.loader.is_modded() {
+        let mut loaders = mod_loaders(&profile.loader);
+        loaders.extend(["minecraft", "iris", "optifine"]);
+        body["loaders"] = json!(loaders);
     }
     let latest: Value = http
         .post(format!("{API}/version_files/update"))
@@ -428,10 +478,17 @@ pub fn read_mrpack_info(pack: &Path) -> Result<ModpackInfo> {
         .get("minecraft")
         .cloned()
         .ok_or_else(|| anyhow!("modpack has no Minecraft version"))?;
-    let (loader, loader_version) = if let Some(v) = index.dependencies.get("fabric-loader") {
+    let deps = &index.dependencies;
+    let (loader, loader_version) = if let Some(v) = deps.get("fabric-loader") {
         (Loader::Fabric, Some(v.clone()))
-    } else if index.dependencies.keys().any(|k| k != "minecraft") {
-        bail!("Only Fabric and vanilla modpacks are supported.");
+    } else if let Some(v) = deps.get("quilt-loader") {
+        (Loader::Quilt, Some(v.clone()))
+    } else if let Some(v) = deps.get("neoforge") {
+        (Loader::NeoForge, Some(v.clone()))
+    } else if let Some(v) = deps.get("forge") {
+        (Loader::Forge, Some(v.clone()))
+    } else if deps.keys().any(|k| k != "minecraft") {
+        bail!("This modpack needs a loader Glade doesn't support yet.");
     } else {
         (Loader::Vanilla, None)
     };

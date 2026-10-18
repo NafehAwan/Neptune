@@ -81,7 +81,18 @@ export async function mockCall(cmd: string, args: Record<string, any> = {}): Pro
         latestRelease: "26.3", latestSnapshot: "26.4-snapshot-2",
         versions: ["26.4-snapshot-2", "26.3", "26.2", "26.1", "1.21.11", "1.21.10", "1.21.8", "1.20.6", "1.20.1", "1.19.4", "1.18.2", "1.16.5", "1.12.2", "1.8.9"].map((id) => ({ id, kind: id.includes("snapshot") ? "snapshot" : "release", releaseTime: "" })),
       };
-    case "fabric_loaders": return [{ version: "0.19.5", stable: true }, { version: "0.19.4", stable: true }];
+    case "loader_versions": {
+      const v = args.gameVersion as string;
+      switch (args.loader) {
+        case "fabric": return [{ version: "0.19.6-beta.1", stable: false }, { version: "0.19.5", stable: true }, { version: "0.19.4", stable: true }];
+        case "quilt": return [{ version: "0.30.0-beta.2", stable: false }, { version: "0.29.2", stable: true }];
+        case "forge": return v.startsWith("26.") ? [] : [{ version: "47.4.0", stable: true }, { version: "47.3.12", stable: true }];
+        case "neoforge": return v === "1.12.2" ? [] : [{ version: "21.1.80-beta", stable: false }, { version: "21.1.77", stable: true }];
+        default: return [];
+      }
+    }
+    case "preset_game_versions":
+      return ["26.4-snapshot-2", "26.3", "26.2", "26.1", "1.21.11", "1.21.10", "1.21.8", "1.20.6", "1.20.1"].map((version) => ({ version, stable: !version.includes("snapshot") }));
     case "running_game": return null;
     case "launch": throw "This is a browser preview. Launch the desktop app to play.";
     case "list_servers": return servers;
@@ -108,9 +119,9 @@ export async function mockCall(cmd: string, args: Record<string, any> = {}): Pro
       await new Promise((r) => setTimeout(r, 1200));
       let id = `glade-${preset.id}`, n = 2;
       while (profiles.some((p) => p.id === id)) id = `glade-${preset.id}-${n++}`;
-      const profile: T.Profile = { id, name: `Glade ${preset.name}`, icon: preset.icon, gameVersion: "26.3", loader: "fabric", loaderVersion: "0.19.5", memoryMb: 4096, jvmArgs: "", javaPath: null, resolution: null, created: now, lastPlayed: null, playTimeSecs: 0, isTuff: true, preset: preset.id };
+      const profile: T.Profile = { id, name: `Glade ${preset.name}`, icon: preset.icon, gameVersion: args.gameVersion ?? "26.3", loader: "fabric", loaderVersion: "0.19.5", memoryMb: 4096, jvmArgs: "", javaPath: null, resolution: null, created: now, lastPlayed: null, playTimeSecs: 0, isTuff: true, preset: preset.id };
       profiles = [...profiles, profile];
-      return { profile, installed: preset.mods, skipped: [] };
+      return { profile, installed: preset.mods, skipped: profile.gameVersion === "26.3" ? [] : ["Glade mod (built for 26.3)"] };
     }
     default: return null;
   }

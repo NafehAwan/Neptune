@@ -1,3 +1,17 @@
+import type { Loader } from "./types";
+
+export const LOADERS: { id: Loader; label: string }[] = [
+  { id: "vanilla", label: "Vanilla" },
+  { id: "fabric", label: "Fabric" },
+  { id: "quilt", label: "Quilt" },
+  { id: "forge", label: "Forge" },
+  { id: "neoforge", label: "NeoForge" },
+];
+
+export function loaderName(loader: Loader): string {
+  return LOADERS.find((l) => l.id === loader)?.label ?? loader;
+}
+
 export function playTime(secs: number): string {
   if (secs < 60) return "Not played yet";
   const h = Math.floor(secs / 3600);

@@ -5,7 +5,7 @@ use crate::download::{download_all, DlTask};
 use crate::meta::{self, Features, VersionJson};
 use crate::models::{Loader, Profile};
 use crate::paths::Paths;
-use crate::{fabric, java};
+use crate::{java, loaders};
 use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -46,17 +46,20 @@ struct AssetObject {
 
 pub async fn resolve_version(http: &reqwest::Client, paths: &Paths, profile: &Profile) -> Result<VersionJson> {
     let vanilla = meta::vanilla_json(http, paths, &profile.game_version).await?;
-    Ok(match profile.loader {
-        Loader::Vanilla => vanilla,
-        Loader::Fabric => {
-            let loader = match &profile.loader_version {
-                Some(v) => v.clone(),
-                None => fabric::latest_stable(http, &profile.game_version).await?,
-            };
-            let child = fabric::profile_json(http, paths, &profile.game_version, &loader).await?;
-            meta::merge(child, vanilla)
-        }
-    })
+    if profile.loader == Loader::Vanilla {
+        return Ok(vanilla);
+    }
+    let loader = loader_version(http, profile).await?;
+    let child = loaders::child_json(http, paths, &profile.loader, &profile.game_version, &loader).await?;
+    Ok(meta::merge(child, vanilla))
+}
+
+/// The profile's pinned loader version, or the newest stable one.
+pub async fn loader_version(http: &reqwest::Client, profile: &Profile) -> Result<String> {
+    match &profile.loader_version {
+        Some(v) if !v.trim().is_empty() => Ok(v.clone()),
+        _ => loaders::latest(http, &profile.loader, &profile.game_version).await,
+    }
 }
 
 pub async fn prepare(
@@ -94,6 +97,13 @@ pub async fn prepare(
     let mut classpath = Vec::new();
     let mut natives = Vec::new();
     for lib in version.libraries.iter().filter(|l| l.allowed(features)) {
+        if let Some(path) = lib.generated_path() {
+            // made by the Forge/NeoForge installer, nothing to download
+            let path = lib_root.join(path);
+            if !classpath.contains(&path) {
+                classpath.push(path);
+            }
+        }
         if let Some(a) = lib.artifact() {
             let path = lib_root.join(&a.path);
             if !classpath.contains(&path) {
@@ -107,8 +117,22 @@ pub async fn prepare(
             tasks.push(DlTask { url: n.url, path, sha1: n.sha1, size: n.size });
         }
     }
-    classpath.push(client_jar);
+    let forge_like = matches!(profile.loader, Loader::Forge | Loader::NeoForge);
+    // Forge and NeoForge skip a game jar named after their version id (their
+    // ignore list), so the vanilla jar goes on the classpath under that name.
+    let game_jar = if forge_like {
+        paths.versions().join(&version.id).join(format!("{}.jar", version.id))
+    } else {
+        client_jar.clone()
+    };
+    classpath.push(game_jar.clone());
     download_all(http, tasks, concurrency, |d, t| report("Downloading game files", d, t)).await?;
+    if forge_like && !game_jar.exists() {
+        std::fs::create_dir_all(game_jar.parent().unwrap())?;
+        if std::fs::hard_link(&client_jar, &game_jar).is_err() {
+            std::fs::copy(&client_jar, &game_jar)?;
+        }
+    }
 
     // Old-style natives
     let natives_dir = paths.natives(&version.id);
@@ -154,6 +178,8 @@ pub async fn prepare(
             }
         })
         .collect();
+    // CI smoke tests start the game without sounds and music to save time
+    let tasks = if std::env::var_os("GLADE_SKIP_ASSETS").is_some() { Vec::new() } else { tasks };
     download_all(http, tasks, concurrency, |d, t| report("Downloading assets", d, t)).await?;
     let mut effective_assets_root = assets_root.clone();
     if index.is_virtual || index.map_to_resources {
@@ -199,6 +225,22 @@ pub async fn prepare(
             }
         }
     };
+
+    if forge_like {
+        let loader = loader_version(http, profile).await?;
+        loaders::finish_install(
+            http,
+            paths,
+            &profile.loader,
+            &game_version,
+            &loader,
+            &client_jar,
+            &java,
+            concurrency,
+            &|stage, d, t| report(stage, d, t),
+        )
+        .await?;
+    }
 
     Ok(Prepared {
         assets_index: index_ref.id,

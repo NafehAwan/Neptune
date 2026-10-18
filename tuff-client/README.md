@@ -26,12 +26,17 @@ game look alike.
   Mojang's art.
 - **3D heads**: every head is a real 3D model, and the skin's outer layer stands
   off the head as individual blocks.
-- **Profiles**: any release or snapshot, vanilla or Fabric. Each profile has its
-  own folder, memory, JVM arguments, Java, resolution and icon. Libraries,
+- **Profiles**: any release or snapshot with Vanilla, Fabric, Quilt, Forge or
+  NeoForge. Stable versions are listed by default; "Show unstable versions"
+  adds snapshots and beta loaders. Forge and NeoForge are installed by Glade
+  itself (it runs the installer's processors), Quilt and Fabric from their
+  metadata servers. Each profile has its own folder, memory, JVM arguments,
+  Java, resolution and icon. Libraries,
   assets and Java runtimes are shared and checked with SHA-1.
-- **Glade presets**: ready-made Fabric 26.3 profiles with the Glade mod, each
-  in its own folder so worlds, mods and settings never mix (create a preset
-  twice and you get a second folder):
+- **Glade presets**: ready-made Fabric profiles, each in its own folder. Pick
+  any Minecraft version Fabric supports (stable by default); on 26.3 they also
+  get the Glade mod. Folders never mix worlds, mods or settings (create a
+  preset twice and you get a second folder):
   - *Performance*: Sodium, Lithium, FerriteCore, ModernFix, ImmediatelyFast,
     Entity Culling, More Culling, Dynamic FPS and BadOptimizations. The game
     looks exactly the same.
@@ -46,19 +51,27 @@ game look alike.
   Every preset also installs Mod Menu, so Mods on the title screen lists all
   installed mods.
   Mods without a build for the profile's version are skipped and listed.
-  Custom profiles take any version, vanilla or Fabric. The list lives in
-  `launcher/src-tauri/src/presets.rs`.
+  The list lives in `launcher/src-tauri/src/presets.rs`.
 - **Mods**: Modrinth search for mods, resource packs, shaders and modpacks,
-  filtered to the profile. Installs required dependencies (and Iris for
-  shaders), checks for updates in one request, lets you toggle or remove
-  content, and imports `.mrpack` files.
+  filtered to the chosen profile's Minecraft version and loader, and installed
+  straight into that profile. Glade picks the newest release built for that
+  version and loader (Quilt profiles also take Fabric builds), installs
+  required dependencies that fit too, adds Iris (Oculus on Forge) for shaders,
+  checks for updates in one request, lets you toggle or remove content, and
+  imports `.mrpack` files (Fabric, Quilt, Forge and NeoForge packs).
 - **Servers**: live player counts, MOTD, favicon and ping (Server List Ping
   with SRV lookup). Join goes straight into the server.
 - **Wardrobe**: 3D skin preview with animations; upload or reset skins, pick
   classic or slim arms, and switch capes.
 - **Screenshots**: a gallery across all profiles.
-- **Console**: live game log with level filters and search, plus a plain-language
-  explanation when the game crashes.
+- **Console**: live game log with level filters and search.
+- **Crash help**: when the game crashes, a dialog says why and names the mod
+  behind it, with a button to turn that mod off. It reads the log, the crash
+  report and the JVM's fatal error log: missing or wrong-version dependencies
+  (Fabric, Quilt, Forge and NeoForge messages), mods for another Minecraft
+  version or loader, duplicates, mixin failures, the wrong Java, running out of
+  memory and graphics driver crashes. Other crashes are traced through the stack
+  to the mod jar the crashing code lives in.
 - **Performance**: Java is downloaded automatically for each version, with
   tuned G1 flags. The home scene pauses when the window is unfocused or hidden
   (and stays still with Reduce motion), and the window can minimize or hide

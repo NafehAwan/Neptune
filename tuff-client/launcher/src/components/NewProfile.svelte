@@ -4,7 +4,7 @@
   import { api } from "../lib/api";
   import { app, refreshProfiles, selectProfile } from "../lib/state.svelte";
   import { toast } from "../lib/toast.svelte";
-  import type { Preset, Profile } from "../lib/types";
+  import type { GameVersion, Preset, Profile } from "../lib/types";
   import Icon from "./Icon.svelte";
   import Modal from "./Modal.svelte";
   import ProfileIcon from "./ProfileIcon.svelte";
@@ -14,9 +14,17 @@
   let presets = $state<Preset[]>([]);
   let picked = $state("performance");
   let busy = $state<string | null>(null);
+  // presets are Fabric; any Minecraft version Fabric supports
+  const gladeVersion = app.info?.tuffMcVersion ?? "26.3";
+  let versions = $state<GameVersion[]>([]);
+  let version = $state(gladeVersion);
+  let unstable = $state(false);
+  const shownVersions = $derived(versions.filter((v) => v.stable || unstable || v.version === version));
 
   onMount(async () => {
     presets = await api.listPresets().catch(() => []);
+    versions = await api.presetGameVersions().catch(() => [{ version: gladeVersion, stable: true }]);
+    if (!versions.some((v) => v.version === version)) version = versions.find((v) => v.stable)?.version ?? gladeVersion;
   });
 
   const owned = (id: string) => app.profiles.filter((p) => p.preset === id).length;
@@ -26,7 +34,7 @@
     if (!preset || busy) return;
     busy = preset.id;
     try {
-      const r = await api.createPresetProfile(preset.id);
+      const r = await api.createPresetProfile(preset.id, version);
       await refreshProfiles();
       await selectProfile(r.profile.id);
       const missing = r.skipped.length ? ` ${r.skipped.length} not available for ${r.profile.gameVersion} yet.` : "";
@@ -67,11 +75,25 @@
         <span class="tile plus"><Icon name="plus" size={18} /></span>
         <span class="name">Custom</span>
       </div>
-      <p class="tag">Any Minecraft version, vanilla or Fabric. Pick your own mods from the Mods page afterwards.</p>
+      <p class="tag">Any Minecraft version with Vanilla, Fabric, Quilt, Forge or NeoForge. Pick your own mods from the Mods page afterwards.</p>
     </button>
   </div>
 
+
   {#snippet footer()}
+    <div class="vpick">
+      <label class="vfield">
+        <span>Minecraft</span>
+        <select class="input" bind:value={version} disabled={!!busy || !versions.length} title="Minecraft version (Fabric)">
+          {#if !versions.length}<option value={version}>{version}</option>{/if}
+          {#each shownVersions as v (v.version)}<option value={v.version}>{v.version}{v.stable ? "" : " (unstable)"}{v.version === gladeVersion ? " · recommended" : ""}</option>{/each}
+        </select>
+      </label>
+      <label class="unstable"><input type="checkbox" bind:checked={unstable} disabled={!!busy} /> Unstable</label>
+      <p class="vnote">
+        {#if version === gladeVersion}Fabric · includes the Glade mod{:else}Fabric · without the Glade mod (built for {gladeVersion}); mods without a {version} build are skipped{/if}
+      </p>
+    </div>
     <button class="btn ghost" onclick={onclose} disabled={!!busy}>Cancel</button>
     <button class="btn primary" onclick={create} disabled={!!busy || !presets.length}>
       {#if busy}<span class="spinner"></span> Installing mods…{:else}<Icon name="spark" size={14} /> Create {presets.find((p) => p.id === picked)?.name ?? ""}{/if}
@@ -103,4 +125,10 @@
   .meta { margin-top: auto; font-size: 11px; color: var(--muted); }
   .have { color: var(--accent); }
   .custom { border-style: dashed; border-color: rgba(47, 107, 79, 0.35); }
+  .vpick { margin-right: auto; display: grid; grid-template-columns: auto auto; align-items: center; gap: 4px 12px; max-width: 420px; }
+  .vfield { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--muted); }
+  .vfield select { width: 190px; height: 36px; }
+  .unstable { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+  .unstable input { accent-color: var(--accent); }
+  .vnote { grid-column: 1 / -1; font-size: 11.5px; color: var(--muted); line-height: 1.35; }
 </style>

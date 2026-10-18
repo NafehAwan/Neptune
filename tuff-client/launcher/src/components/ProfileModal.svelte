@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, untrack } from "svelte";
   import { api, pickJava } from "../lib/api";
+  import { LOADERS, loaderName } from "../lib/format";
   import { profileIconNames } from "../lib/icons";
   import { app, refreshProfiles } from "../lib/state.svelte";
   import { toast } from "../lib/toast.svelte";
@@ -20,13 +21,18 @@
   let draft = $state<Profile>(initial ? structuredClone($state.snapshot(initial)) : blank());
   let versions = $state<VersionEntry[]>([]);
   let loaders = $state<LoaderVersion[]>([]);
-  let snapshots = $state(app.settings?.showSnapshots ?? false);
+  let loadersFor = $state("");
+  let loadersError = $state("");
+  // stable releases only, unless the player asks for snapshots and betas
+  let unstable = $state(app.settings?.showSnapshots ?? false);
   let advanced = $state(false);
   let saving = $state(false);
   let versionError = $state("");
 
   const maxMemory = $derived(Math.max(2048, Math.floor(((app.info?.totalMemoryMb ?? 8192) - 1024) / 512) * 512));
-  const shown = $derived(versions.filter((v) => v.kind === "release" || (snapshots && v.kind === "snapshot") || v.id === draft.gameVersion));
+  const shown = $derived(versions.filter((v) => v.kind === "release" || (unstable && v.kind === "snapshot") || v.id === draft.gameVersion));
+  const shownLoaders = $derived(loaders.filter((l) => l.stable || unstable || l.version === draft.loaderVersion));
+  const latestStable = $derived(loaders.find((l) => l.stable) ?? loaders[0]);
 
   onMount(async () => {
     try {
@@ -40,12 +46,26 @@
 
   $effect(() => {
     const game = draft.gameVersion;
-    if (draft.loader !== "fabric" || !game) { loaders = []; return; }
-    api.fabricLoaders(game).then((l) => {
+    const loader = draft.loader;
+    const key = `${loader}:${game}`;
+    if (loader === "vanilla" || !game) { loaders = []; loadersFor = key; return; }
+    loadersFor = "";
+    loadersError = "";
+    api.loaderVersions(loader, game).then((l) => {
+      if (`${draft.loader}:${draft.gameVersion}` !== key) return;
       loaders = l;
+      loadersFor = key;
       if (draft.loaderVersion && !l.some((x) => x.version === draft.loaderVersion)) draft.loaderVersion = null;
-    }).catch(() => (loaders = []));
+    }).catch((e) => { loaders = []; loadersFor = key; loadersError = String(e); });
   });
+
+  function pickLoader(id: typeof draft.loader) {
+    if (draft.loader === id) return;
+    draft.loader = id;
+    draft.loaderVersion = null;
+  }
+
+  const unsupported = $derived(draft.loader !== "vanilla" && loadersFor === `${draft.loader}:${draft.gameVersion}` && !loaders.length);
 
   async function save() {
     saving = true;
@@ -96,26 +116,29 @@
         {#each shown as v (v.id)}<option value={v.id}>{v.id}{v.kind === "snapshot" ? " (snapshot)" : ""}</option>{/each}
       </select>
     </label>
-    <div class="field">
-      <span>Loader</span>
-      <div class="seg">
-        <button class:on={draft.loader === "fabric"} onclick={() => (draft.loader = "fabric")} disabled={draft.isTuff}>Fabric</button>
-        <button class:on={draft.loader === "vanilla"} onclick={() => { draft.loader = "vanilla"; draft.loaderVersion = null; }} disabled={draft.isTuff}>Vanilla</button>
-      </div>
+    {#if draft.loader !== "vanilla"}
+      <label class="field">
+        <span>{loaderName(draft.loader)} version</span>
+        <select class="input" bind:value={draft.loaderVersion} disabled={unsupported}>
+          <option value={null}>{latestStable ? `Latest stable (${latestStable.version})` : loadersFor ? "Not available" : "Loading…"}</option>
+          {#each shownLoaders as l (l.version)}<option value={l.version}>{l.version}{l.stable ? "" : " (beta)"}</option>{/each}
+        </select>
+      </label>
+    {/if}
+  </div>
+  <div class="field">
+    <span>Mod loader</span>
+    <div class="seg loaders">
+      {#each LOADERS as l (l.id)}
+        <button class:on={draft.loader === l.id} onclick={() => pickLoader(l.id)} disabled={draft.isTuff}>{l.label}</button>
+      {/each}
     </div>
   </div>
   {#if versionError}<p class="faint small selectable">{versionError}</p>{/if}
-  <label class="check"><input type="checkbox" bind:checked={snapshots} /> Show snapshots</label>
-
-  {#if draft.loader === "fabric"}
-    <label class="field">
-      <span>Fabric loader</span>
-      <select class="input" bind:value={draft.loaderVersion}>
-        <option value={null}>Latest stable{loaders.find((l) => l.stable) ? ` (${loaders.find((l) => l.stable)?.version})` : ""}</option>
-        {#each loaders as l (l.version)}<option value={l.version}>{l.version}{l.stable ? "" : " (beta)"}</option>{/each}
-      </select>
-    </label>
+  {#if unsupported}
+    <p class="note small">{loaderName(draft.loader)} doesn't support Minecraft {draft.gameVersion} yet. Pick another version or loader.{#if loadersError} <span class="faint selectable">({loadersError})</span>{/if}</p>
   {/if}
+  <label class="check"><input type="checkbox" bind:checked={unstable} /> Show unstable versions (snapshots and betas)</label>
 
   <div class="field">
     <span class="row"><span class="grow">Memory</span><span class="mono mem">{(draft.memoryMb / 1024).toFixed(1)} GB</span></span>
@@ -149,7 +172,7 @@
 
   {#snippet footer()}
     <button class="btn ghost" onclick={onclose}>Cancel</button>
-    <button class="btn primary" onclick={save} disabled={saving || !draft.name.trim() || !draft.gameVersion}>{initial ? "Save" : "Create"}</button>
+    <button class="btn primary" onclick={save} disabled={saving || !draft.name.trim() || !draft.gameVersion || unsupported}>{initial ? "Save" : "Create"}</button>
   {/snippet}
 </Modal>
 
@@ -160,8 +183,9 @@
   .icon-pick:hover { transform: translateY(-2px); }
   .icon-pick.on { border-color: var(--accent); }
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .grid2 .seg { width: 100%; }
-  .grid2 .seg button { flex: 1; }
+  .loaders { width: 100%; }
+  .loaders button { flex: 1; }
+  .note { color: var(--warn); margin-top: -6px; }
   .check { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); margin-top: -6px; }
   .check input { accent-color: var(--accent); }
   .mem { color: var(--accent-hover); }

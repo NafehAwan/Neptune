@@ -5,7 +5,7 @@
   import NewProfile from "../components/NewProfile.svelte";
   import ProfileModal from "../components/ProfileModal.svelte";
   import { api, pickFile } from "../lib/api";
-  import { ago, bytes, playTime } from "../lib/format";
+  import { ago, bytes, playTime, loaderName } from "../lib/format";
   import { app, go, play, refreshProfiles, selectProfile } from "../lib/state.svelte";
   import { toast } from "../lib/toast.svelte";
   import type { ContentItem, ContentKind, ContentUpdate, Profile } from "../lib/types";
@@ -162,7 +162,7 @@
               <ProfileIcon name={p.icon} size={38} />
               <span class="grow">
                 <span class="name ellipsis">{p.name}</span>
-                <span class="sub">{p.loader === "fabric" ? "Fabric" : "Vanilla"} {p.gameVersion}</span>
+                <span class="sub">{loaderName(p.loader)} {p.gameVersion}</span>
               </span>
               {#if app.running === p.id}<span class="dot on"></span>{/if}
             </button>
@@ -177,7 +177,7 @@
             <div class="grow">
               <h2 class="ellipsis">{selected.name}</h2>
               <div class="chips">
-                <span class="chip">{selected.loader === "fabric" ? `Fabric ${selected.loaderVersion ?? "latest"}` : "Vanilla"}</span>
+                <span class="chip">{selected.loader === "vanilla" ? "Vanilla" : `${loaderName(selected.loader)} ${selected.loaderVersion ?? "latest"}`}</span>
                 <span class="chip">{selected.gameVersion}</span>
                 <span class="chip">{(selected.memoryMb / 1024).toFixed(1)} GB</span>
                 {#if selected.isTuff}<span class="chip copper">{selected.preset ? `Glade ${({ performance: "Performance", "performance-plus": "Performance+", "performance-plus-plus": "Performance++", scenic: "Scenic" } as Record<string, string>)[selected.preset] ?? ""}` : "Glade"}</span>{/if}

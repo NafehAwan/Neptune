@@ -315,6 +315,16 @@ impl Library {
         })
     }
 
+    /// Classpath entry with no download: Forge and NeoForge list the jars their
+    /// installer generates with an empty URL.
+    pub fn generated_path(&self) -> Option<String> {
+        let a = self.downloads.as_ref()?.artifact.as_ref()?;
+        if !a.url.is_empty() {
+            return None;
+        }
+        a.path.clone().or_else(|| maven_path(&self.name))
+    }
+
     /// Pre-1.19 style native jar (extracted to the natives directory).
     pub fn native(&self) -> Option<LibFile> {
         let classifier = self

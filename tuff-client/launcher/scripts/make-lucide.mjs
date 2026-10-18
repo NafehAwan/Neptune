@@ -9,7 +9,7 @@ const MAP = {
   console: "terminal", gear: "settings", play: "play", plus: "plus", folder: "folder", trash: "trash-2", edit: "pencil",
   close: "x", minimize: "minus", maximize: "square", user: "user", "user-plus": "user-plus", download: "download",
   search: "search", check: "check", chevron: "chevron-down", stop: "square", copy: "copy", refresh: "refresh-cw",
-  spark: "sparkles", link: "link", bell: "bell", logout: "log-out", grid: "layout-grid",
+  spark: "sparkles", link: "link", bell: "bell", logout: "log-out", grid: "layout-grid", alert: "triangle-alert",
 };
 const dir = new URL("../../design/node_modules/lucide-static/icons/", import.meta.url);
 const out = {};

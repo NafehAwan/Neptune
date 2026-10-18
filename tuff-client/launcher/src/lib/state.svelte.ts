@@ -1,4 +1,4 @@
-import { api, on } from "./api";
+import { api, isTauri, on } from "./api";
 import { toast } from "./toast.svelte";
 import type { Account, AppInfo, GameExit, LaunchProgress, LogLine, Profile, Settings } from "./types";
 
@@ -19,6 +19,8 @@ export const app = $state({
   progress: null as LaunchProgress | null,
   logs: [] as LogLine[],
   lastExit: null as GameExit | null,
+  /** The crash dialog is showing for app.lastExit. */
+  crashOpen: false,
   /** Profile the library page should open, set by other pages. */
   focusProfile: null as string | null,
   accountModal: false,
@@ -96,7 +98,22 @@ export async function init() {
   });
   await on<GameExit>("game-exit", (exit) => {
     app.lastExit = exit;
-    if (exit.crash) toast(`${exit.crash.title}. Open the console for details.`, "error");
+    if (exit.crash) app.crashOpen = true;
   });
   app.ready = true;
+  // browser preview only: ?crash shows the crash dialog with a sample report
+  if (!isTauri && location.search.includes("crash")) {
+    app.lastExit = {
+      profileId: app.profiles[0]?.id ?? "",
+      code: 1,
+      crash: {
+        title: "Sodium needs Fabric API",
+        hint: "Install Fabric API from the Mods page, or turn Sodium off.",
+        culprit: "Sodium",
+        modFile: "sodium-fabric-0.6.13+mc26.3.jar",
+        evidence: ["- Mod 'Sodium' (sodium) 0.6.13 requires any version of 'Fabric API' (fabric-api), which is missing!"],
+      },
+    };
+    app.crashOpen = true;
+  }
 }

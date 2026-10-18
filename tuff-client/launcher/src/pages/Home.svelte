@@ -7,7 +7,7 @@
   import NewProfile from "../components/NewProfile.svelte";
   import ProfileModal from "../components/ProfileModal.svelte";
   import { api } from "../lib/api";
-  import { ago, compact, greeting, playTime } from "../lib/format";
+  import { ago, compact, greeting, playTime, loaderName } from "../lib/format";
   import { activeAccount, app, go, play, refreshProfiles, selectProfile, selectedProfile } from "../lib/state.svelte";
   import { toast } from "../lib/toast.svelte";
   import type { PingResult, Server } from "../lib/types";
@@ -83,7 +83,7 @@
           <button class="prof" onclick={() => (picker = !picker)} aria-haspopup="listbox" aria-expanded={picker}>
             <span class="pi"><Icon name="cube" size={20} /></span>
             <span class="meta">
-              <span class="pname ellipsis">{profile.name} · {profile.loader === "fabric" ? "Fabric" : "Vanilla"} {profile.gameVersion}</span>
+              <span class="pname ellipsis">{profile.name} · {loaderName(profile.loader)} {profile.gameVersion}</span>
               <span class="pinfo">{playTime(profile.playTimeSecs)}</span>
             </span>
             <span class="caret" class:up={picker}><Icon name="chevron" size={16} /></span>
@@ -96,7 +96,7 @@
                   <ProfileIcon name={p.icon} size={30} />
                   <span class="grow">
                     <span class="oname ellipsis">{p.name}</span>
-                    <span class="oinfo">{p.loader === "fabric" ? "Fabric" : "Vanilla"} {p.gameVersion} · {ago(p.lastPlayed)}</span>
+                    <span class="oinfo">{loaderName(p.loader)} {p.gameVersion} · {ago(p.lastPlayed)}</span>
                   </span>
                   {#if p.isTuff}<span class="chip copper">Glade</span>{/if}
                 </button>

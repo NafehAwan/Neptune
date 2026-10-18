@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { fade } from "svelte/transition";
+  import CrashModal from "./components/CrashModal.svelte";
   import GroveScene from "./components/GroveScene.svelte";
   import Sidebar from "./components/Sidebar.svelte";
   import TitleBar from "./components/TitleBar.svelte";
@@ -72,6 +73,7 @@
       <div class="boot"><span class="spinner"></span></div>
     {/if}
   </main>
+  {#if app.crashOpen && app.lastExit?.crash}<CrashModal exit={app.lastExit} onclose={() => (app.crashOpen = false)} />{/if}
   <Toasts />
 </div>
 
