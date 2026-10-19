@@ -7,14 +7,10 @@ import java.util.Map;
 
 import com.mojang.realmsclient.RealmsMainScreen;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.gui.screens.options.OptionsScreen;
 import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
-import net.minecraft.client.input.CharacterEvent;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -29,7 +25,7 @@ import net.tuffclient.TuffClient;
  * Everything is laid out in the mockup's 1280x720 space (see {@link Ui#mockup})
  * with the mockup's own sizes, so it looks the same at any window size.
  */
-public final class TuffTitleScreen extends Screen {
+public final class TuffTitleScreen extends GladeScreen {
 	private static final Identifier EMBLEM = Identifier.fromNamespaceAndPath(TuffClient.MOD_ID, "textures/gui/title/emblem.png");
 	private static final float H = 720;
 
@@ -141,14 +137,13 @@ public final class TuffTitleScreen extends Screen {
 	}
 
 	@Override
-	public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-		Gfx g = Gfx.of(graphics);
+	protected void drawBackground(Gfx g, int mouseX, int mouseY, float partialTick) {
 		// the glass blurs what's behind it, like the mockup's backdrop-filter
 		float z = zoom(), lift = (1 - stage(0)) * 8;
 		List<float[]> glass = new ArrayList<>();
 		glass.add(new float[] {(vw() / 2 - CARD_W / 2) * z, (CARD_Y + lift) * z, CARD_W * z, CARD_H * z, 28 * z});
 		accounts.glass(glass, z);
-		background.renderWithGlass(g, width, height, animate(), () -> extractBlurredBackground(graphics), glass);
+		background.renderWithGlass(g, width, height, animate(), () -> blurBehind(g), glass);
 	}
 
 	private float stage(float delay) {
@@ -157,8 +152,7 @@ public final class TuffTitleScreen extends Screen {
 	}
 
 	@Override
-	public void extractRenderState(GuiGraphicsExtractor graphics, int guiMouseX, int guiMouseY, float partialTick) {
-		Gfx g = Gfx.of(graphics);
+	protected void draw(Gfx g, int guiMouseX, int guiMouseY, float partialTick) {
 		long now = System.nanoTime();
 		float dt = Math.min(0.1f, (now - last) / 1e9f);
 		last = now;
@@ -254,7 +248,7 @@ public final class TuffTitleScreen extends Screen {
 	}
 
 	@Override
-	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+	protected boolean onClick(Input.Click event, boolean doubleClick) {
 		if (pending != null) return true;
 		if (event.button() == 0) {
 			float z = zoom();
@@ -268,24 +262,24 @@ public final class TuffTitleScreen extends Screen {
 				}
 			}
 		}
-		return super.mouseClicked(event, doubleClick);
+		return super.onClick(event, doubleClick);
 	}
 
 	@Override
-	public boolean keyPressed(KeyEvent event) {
+	protected boolean onKey(Input.Key event) {
 		if (pending != null) return true;
 		if (accounts.keyPressed(event)) return true;
 		if (!accounts.isOpen() && TuffClient.menuKey().matches(event)) {
 			open(new TuffMenuScreen(this));
 			return true;
 		}
-		return super.keyPressed(event);
+		return super.onKey(event);
 	}
 
 	@Override
-	public boolean charTyped(CharacterEvent event) {
+	protected boolean onType(Input.Typed event) {
 		if (accounts.charTyped(event)) return true;
-		return super.charTyped(event);
+		return super.onType(event);
 	}
 
 	@Override

@@ -9,13 +9,9 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.options.controls.KeyBindsScreen;
 import net.minecraft.client.gui.screens.packs.PackSelectionScreen;
-import net.minecraft.client.input.CharacterEvent;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -42,7 +38,7 @@ import net.tuffclient.setting.TextSetting;
  * switch. A footer row reaches the Theme, Packs and Settings pages and the HUD
  * editor. Laid out in the mockup's 1280x720 space (see {@link Ui#mockup}).
  */
-public final class TuffMenuScreen extends Screen {
+public final class TuffMenuScreen extends GladeScreen {
 	public enum Page {
 		MODS("Mods", "grid"), THEME("Theme", "palette"), PACKS("Packs", "package"), SETTINGS("Settings", "settings");
 
@@ -65,7 +61,7 @@ public final class TuffMenuScreen extends Screen {
 		}
 	}
 
-	private record Hit(float x1, float y1, float x2, float y2, Consumer<MouseButtonEvent> action) {
+	private record Hit(float x1, float y1, float x2, float y2, Consumer<Input.Click> action) {
 	}
 
 	private static final Identifier EMBLEM = Identifier.fromNamespaceAndPath(TuffClient.MOD_ID, "textures/gui/title/emblem.png");
@@ -269,7 +265,7 @@ public final class TuffMenuScreen extends Screen {
 		minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
 	}
 
-	private void hit(float x1, float y1, float x2, float y2, Consumer<MouseButtonEvent> action) {
+	private void hit(float x1, float y1, float x2, float y2, Consumer<Input.Click> action) {
 		hits.add(new Hit(x1, y1, x2, y2, action));
 	}
 
@@ -291,13 +287,12 @@ public final class TuffMenuScreen extends Screen {
 	// ------------------------------------------------------------------ rendering
 
 	@Override
-	public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-		Gfx g = Gfx.of(graphics);
+	protected void drawBackground(Gfx g, int mouseX, int mouseY, float partialTick) {
 		if (minecraft.level == null) background.render(g, width, height, modules().titleScreen.animate.get());
 		if (modules().ui.blur.get()) {
 			// the forest has to sit in its own layer for the blur to reach it
 			g.nextStratum();
-			extractBlurredBackground(graphics);
+			blurBehind(g);
 			g.nextStratum();
 			g.fill(0, 0, width, height, 0x0FFFFFFF);
 		} else {
@@ -306,8 +301,7 @@ public final class TuffMenuScreen extends Screen {
 	}
 
 	@Override
-	public void extractRenderState(GuiGraphicsExtractor graphics, int guiMouseX, int guiMouseY, float partialTick) {
-		Gfx g = Gfx.of(graphics);
+	protected void draw(Gfx g, int guiMouseX, int guiMouseY, float partialTick) {
 		float z = zoom();
 		float mouseX = guiMouseX / z, mouseY = guiMouseY / z;
 		long now = System.nanoTime();
@@ -1189,7 +1183,7 @@ public final class TuffMenuScreen extends Screen {
 	// ------------------------------------------------------------------ input
 
 	@Override
-	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+	protected boolean onClick(Input.Click event, boolean doubleClick) {
 		float z = zoom();
 		double x = event.x() / z, y = event.y() / z;
 		clickX = x;
@@ -1208,27 +1202,27 @@ public final class TuffMenuScreen extends Screen {
 			onClose();
 			return true;
 		}
-		return super.mouseClicked(event, doubleClick);
+		return super.onClick(event, doubleClick);
 	}
 
 	@Override
-	public boolean mouseDragged(MouseButtonEvent event, double dx, double dy) {
+	protected boolean onDrag(Input.Click event, double dx, double dy) {
 		if (drag != null) {
 			drag.accept(event.x() / zoom(), event.y() / zoom());
 			return true;
 		}
-		return super.mouseDragged(event, dx, dy);
+		return super.onDrag(event, dx, dy);
 	}
 
 	@Override
-	public boolean mouseReleased(MouseButtonEvent event) {
+	protected boolean onRelease(Input.Click event) {
 		dragging = null;
 		drag = null;
-		return super.mouseReleased(event);
+		return super.onRelease(event);
 	}
 
 	@Override
-	public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+	protected boolean onScroll(double mouseX, double mouseY, double scrollX, double scrollY) {
 		if (drawer != null && mouseX / zoom() > drawerLeft) {
 			drawerScroll = (float) Math.max(0, Math.min(drawerMax, drawerScroll - scrollY * 30));
 		} else {
@@ -1238,7 +1232,7 @@ public final class TuffMenuScreen extends Screen {
 	}
 
 	@Override
-	public boolean keyPressed(KeyEvent event) {
+	protected boolean onKey(Input.Key event) {
 		if (focusedText != null) {
 			if (event.isEscape() || event.key() == InputConstants.KEY_RETURN) focusedText = null;
 			else if (event.key() == InputConstants.KEY_BACKSPACE && !focusedText.get().isEmpty()) {
@@ -1266,11 +1260,11 @@ public final class TuffMenuScreen extends Screen {
 			query = query.substring(0, query.length() - 1);
 			return true;
 		}
-		return super.keyPressed(event);
+		return super.onKey(event);
 	}
 
 	@Override
-	public boolean charTyped(CharacterEvent event) {
+	protected boolean onType(Input.Typed event) {
 		if (focusedText != null) {
 			if (event.isAllowedChatCharacter()) focusedText.set(focusedText.get() + event.codepointAsString());
 			return true;
@@ -1286,7 +1280,7 @@ public final class TuffMenuScreen extends Screen {
 			scrollTarget = 0;
 			return true;
 		}
-		return super.charTyped(event);
+		return super.onType(event);
 	}
 
 	private void commitHex() {

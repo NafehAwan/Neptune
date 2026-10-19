@@ -7,8 +7,6 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.options.SkinCustomizationScreen;
-import net.minecraft.client.input.CharacterEvent;
-import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.sounds.SoundEvents;
 import net.tuffclient.account.Accounts;
@@ -259,7 +257,7 @@ public final class AccountMenu {
 		return false;
 	}
 
-	public boolean keyPressed(KeyEvent event) {
+	public boolean keyPressed(Input.Key event) {
 		if (!open) return false;
 		if (event.isEscape()) {
 			setOpen(false);
@@ -276,7 +274,7 @@ public final class AccountMenu {
 		return adding;
 	}
 
-	public boolean charTyped(CharacterEvent event) {
+	public boolean charTyped(Input.Typed event) {
 		if (!open || !adding) return false;
 		String c = event.codepointAsString();
 		if (c.matches("[A-Za-z0-9_]") && name.length() < 16) name += c;

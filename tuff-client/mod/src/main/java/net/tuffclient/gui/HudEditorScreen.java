@@ -1,8 +1,6 @@
 package net.tuffclient.gui;
 
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.tuffclient.ModuleManager;
 import net.tuffclient.TuffClient;
@@ -11,7 +9,7 @@ import net.tuffclient.module.hud.CpsModule;
 import net.tuffclient.module.hud.HudModule;
 
 /** Drag HUD modules around, with snapping to screen edges, the center and each other. */
-public final class HudEditorScreen extends Screen {
+public final class HudEditorScreen extends GladeScreen {
 	private static final int SNAP = 4;
 	private final Screen parent;
 	private HudModule dragging;
@@ -26,16 +24,14 @@ public final class HudEditorScreen extends Screen {
 	}
 
 	@Override
-	public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-		Gfx g = Gfx.of(graphics);
+	protected void drawBackground(Gfx g, int mouseX, int mouseY, float partialTick) {
 		g.fill(0, 0, width, height, minecraft.player == null ? 0xFF2A3A30 : 0x50000000);
 		g.fill(width / 2, 0, width / 2 + 1, height, 0x18FFFFFF);
 		g.fill(0, height / 2, width, height / 2 + 1, 0x18FFFFFF);
 	}
 
 	@Override
-	public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-		Gfx g = Gfx.of(graphics);
+	protected void draw(Gfx g, int mouseX, int mouseY, float partialTick) {
 		CpsModule.sample(minecraft);
 		HudModule hovered = dragging != null ? dragging : at(mouseX, mouseY);
 		for (HudModule m : TuffClient.modules().hud()) {
@@ -80,7 +76,7 @@ public final class HudEditorScreen extends Screen {
 	}
 
 	@Override
-	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+	protected boolean onClick(Input.Click event, boolean doubleClick) {
 		int bw = 104, bx = width / 2 - bw / 2, by = height - 30;
 		if (Theme.inside(event.x(), event.y(), bx, by, bx + bw, by + 20)) {
 			minecraft.gui.setScreen(new TuffMenuScreen(this, TuffMenuScreen.Page.MODS));
@@ -98,12 +94,12 @@ public final class HudEditorScreen extends Screen {
 			}
 			return true;
 		}
-		return super.mouseClicked(event, doubleClick);
+		return super.onClick(event, doubleClick);
 	}
 
 	@Override
-	public boolean mouseDragged(MouseButtonEvent event, double dx, double dy) {
-		if (dragging == null) return super.mouseDragged(event, dx, dy);
+	protected boolean onDrag(Input.Click event, double dx, double dy) {
+		if (dragging == null) return super.onDrag(event, dx, dy);
 		int[] p = ModuleManager.position(dragging, width, height);
 		int w = p[2], h = p[3];
 		int nx = (int) Math.round(event.x() - grabX);
@@ -139,15 +135,15 @@ public final class HudEditorScreen extends Screen {
 	}
 
 	@Override
-	public boolean mouseReleased(MouseButtonEvent event) {
+	protected boolean onRelease(Input.Click event) {
 		dragging = null;
 		guideX = null;
 		guideY = null;
-		return super.mouseReleased(event);
+		return super.onRelease(event);
 	}
 
 	@Override
-	public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+	protected boolean onScroll(double mouseX, double mouseY, double scrollX, double scrollY) {
 		HudModule m = at(mouseX, mouseY);
 		if (m != null) {
 			m.scale.set(m.scale.get() + (scrollY > 0 ? 0.1 : -0.1));
