@@ -1,3 +1,4 @@
+// glade: minecraft >=26.1
 package net.tuffclient.gui;
 
 import net.minecraft.client.gui.GuiGraphicsExtractor;

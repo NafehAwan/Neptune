@@ -79,7 +79,7 @@ public final class HudEditorScreen extends GladeScreen {
 	protected boolean onClick(Input.Click event, boolean doubleClick) {
 		int bw = 104, bx = width / 2 - bw / 2, by = height - 30;
 		if (Theme.inside(event.x(), event.y(), bx, by, bx + bw, by + 20)) {
-			minecraft.gui.setScreen(new TuffMenuScreen(this, TuffMenuScreen.Page.MODS));
+			net.tuffclient.Mc.setScreen(new TuffMenuScreen(this, TuffMenuScreen.Page.MODS));
 			return true;
 		}
 		HudModule m = at(event.x(), event.y());
@@ -155,7 +155,7 @@ public final class HudEditorScreen extends GladeScreen {
 	@Override
 	public void onClose() {
 		TuffConfig.save(TuffClient.modules());
-		minecraft.gui.setScreen(parent);
+		net.tuffclient.Mc.setScreen(parent);
 	}
 
 	@Override

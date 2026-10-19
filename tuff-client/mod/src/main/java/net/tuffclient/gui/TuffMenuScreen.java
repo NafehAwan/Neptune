@@ -449,7 +449,7 @@ public final class TuffMenuScreen extends GladeScreen {
 			Ui.textAt(g, item[1], bx + 12 + 16 + 8, Ui.mid(y + 16, 12.5f), Theme.alpha(color, a), Ui.Font.UI_12_5_M);
 			hit(bx, y, bx + bw, y + 32, e -> {
 				click();
-				if (item[0].equals("hud")) minecraft.gui.setScreen(new HudEditorScreen(this));
+				if (item[0].equals("hud")) net.tuffclient.Mc.setScreen(new HudEditorScreen(this));
 				else setPage(Page.valueOf(item[0]));
 			});
 			bx -= 4;
@@ -1059,7 +1059,7 @@ public final class TuffMenuScreen extends GladeScreen {
 		float cy = y - 10;
 		cy = optionRow(g, mouseX, mouseY, x, cy, w, "Glade title screen", "Use the Glade main menu instead of the vanilla one.", title.isEnabled(), null, title::toggle, a);
 		cy = optionRow(g, mouseX, mouseY, x, cy, w, "Animated background", "Drifting clouds, a moving sun and swaying trees.", title.animate.get(), null, title.animate::toggle, a);
-		cy = optionRow(g, mouseX, mouseY, x, cy, w, "Keybinds", "Menu is Right Shift, zoom is C by default.", null, "Open", () -> minecraft.gui.setScreen(new KeyBindsScreen(this, minecraft.options)), a);
+		cy = optionRow(g, mouseX, mouseY, x, cy, w, "Keybinds", "Menu is Right Shift, zoom is C by default.", null, "Open", () -> net.tuffclient.Mc.setScreen(new KeyBindsScreen(this, minecraft.options)), a);
 		cy = optionRow(g, mouseX, mouseY, x, cy, w, "HUD layout", "Move every HUD module back to its default spot.", null, "Reset", () -> {
 			for (HudModule m : modules().hud()) m.resetPosition();
 			TuffConfig.save(modules());
@@ -1111,10 +1111,10 @@ public final class TuffMenuScreen extends GladeScreen {
 		hit(x, by, x + mw, by + 38, e -> {
 			click();
 			if (packsDirty) applyPacks();
-			minecraft.gui.setScreen(new PackSelectionScreen(repo, r -> {
+			net.tuffclient.Mc.setScreen(new PackSelectionScreen(repo, r -> {
 				minecraft.options.updateResourcePacks(r);
 				enabledPacks = null;
-				minecraft.gui.setScreen(this);
+				net.tuffclient.Mc.setScreen(this);
 			}, minecraft.getResourcePackDirectory(), Component.literal("Resource packs")));
 		});
 		String apply = packsDirty ? "Apply changes" : "Up to date";
@@ -1298,7 +1298,7 @@ public final class TuffMenuScreen extends GladeScreen {
 	@Override
 	public void onClose() {
 		TuffConfig.save(modules());
-		minecraft.gui.setScreen(parent);
+		net.tuffclient.Mc.setScreen(parent);
 	}
 
 	@Override

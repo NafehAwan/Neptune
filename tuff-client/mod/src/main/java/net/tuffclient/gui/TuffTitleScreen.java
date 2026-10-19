@@ -64,7 +64,7 @@ public final class TuffTitleScreen extends GladeScreen {
 	private void open(Screen screen) {
 		if (pending != null) return;
 		if (!animate()) {
-			minecraft.gui.setScreen(screen);
+			net.tuffclient.Mc.setScreen(screen);
 			return;
 		}
 		pending = screen;
@@ -288,7 +288,7 @@ public final class TuffTitleScreen extends GladeScreen {
 		// the card has faded out: open the screen that was asked for (between frames, not mid-draw)
 		if (pending != null && leave >= 1 && !switching) {
 			switching = true;
-			minecraft.gui.setScreen(pending);
+			net.tuffclient.Mc.setScreen(pending);
 		}
 	}
 

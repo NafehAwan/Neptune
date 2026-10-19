@@ -150,7 +150,7 @@ public final class ModuleManager {
 	public void renderHud(Gfx g) {
 		Minecraft client = Minecraft.getInstance();
 		if (client.player == null) return;
-		if (!client.gui.hud.isHidden()) {
+		if (!net.tuffclient.Mc.hudHidden()) {
 			if (waypoints.isEnabled()) waypoints.render(g);
 			for (HudModule m : hud) {
 				if (m.isEnabled()) renderModule(g, client.font, m, false);

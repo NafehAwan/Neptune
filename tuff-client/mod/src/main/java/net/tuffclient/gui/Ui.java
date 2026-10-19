@@ -2,7 +2,6 @@ package net.tuffclient.gui;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.FontDescription;
 import net.minecraft.resources.Identifier;
 import net.tuffclient.TuffClient;
 
@@ -33,15 +32,15 @@ public final class Ui {
 		MONO_10_5("mono10_5"), MONO_10_5_M("mono10_5m"), MONO_11_M("mono11m"), MONO_11_5("mono11_5");
 
 		/** One copy per oversample level, so glyphs are rasterised near the size they are shown at. */
-		private final FontDescription[] variants = new FontDescription[MAX_OVERSAMPLE];
+		private final Identifier[] variants = new Identifier[MAX_OVERSAMPLE];
 
 		Font(String id) {
 			for (int i = 0; i < MAX_OVERSAMPLE; i++) {
-				variants[i] = new FontDescription.Resource(Identifier.fromNamespaceAndPath(TuffClient.MOD_ID, id + "_" + (i + 1)));
+				variants[i] = Identifier.fromNamespaceAndPath(TuffClient.MOD_ID, id + "_" + (i + 1));
 			}
 		}
 
-		FontDescription description() {
+		Identifier description() {
 			int oversample = (int) Math.ceil(scale() - 0.2f);
 			return variants[Math.max(1, Math.min(MAX_OVERSAMPLE, oversample)) - 1];
 		}
@@ -80,13 +79,13 @@ public final class Ui {
 	private static final java.util.Map<String, Integer> WIDTHS = new java.util.HashMap<>();
 
 	private static String key(String s, Font font) {
-		FontDescription d = font.description();
+		Identifier d = font.description();
 		return System.identityHashCode(d) + "|" + s;
 	}
 
 	public static Component text(String s, Font font) {
 		if (TEXTS.size() > 4096) TEXTS.clear();
-		return TEXTS.computeIfAbsent(key(s, font), k -> Component.literal(s).withStyle(style -> style.withFont(font.description())));
+		return TEXTS.computeIfAbsent(key(s, font), k -> Component.literal(s).withStyle(style -> Fonts.withFont(style, font.description())));
 	}
 
 	public static int width(String s, Font font) {

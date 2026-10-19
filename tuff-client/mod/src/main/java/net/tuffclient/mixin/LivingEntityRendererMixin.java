@@ -18,6 +18,6 @@ public abstract class LivingEntityRendererMixin {
 		if (m == null || !m.isEnabled()) return;
 		Minecraft mc = Minecraft.getInstance();
 		if (m.hideAll.get()) cir.setReturnValue(false);
-		else if (m.own.get() && entity == mc.player && !mc.options.getCameraType().isFirstPerson() && !mc.gui.hud.isHidden()) cir.setReturnValue(true);
+		else if (m.own.get() && entity == mc.player && !mc.options.getCameraType().isFirstPerson() && !net.tuffclient.Mc.hudHidden()) cir.setReturnValue(true);
 	}
 }

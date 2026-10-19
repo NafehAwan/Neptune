@@ -30,6 +30,29 @@ fun latestFabricApi(mc: String): String {
         ?: error("No Fabric API build for Minecraft $mc")
 }
 
+// Files written for some Minecraft versions only start with a line like
+// "// glade: minecraft >=1.21.6 <26.1"; other versions leave them out.
+fun inRange(range: String): Boolean = range.trim().split(Regex("\\s+")).all { t ->
+    when {
+        t.startsWith(">=") -> sc.current.parsed >= t.substring(2)
+        t.startsWith("<=") -> sc.current.parsed <= t.substring(2)
+        t.startsWith(">") -> sc.current.parsed > t.substring(1)
+        t.startsWith("<") -> sc.current.parsed < t.substring(1)
+        else -> mc == t
+    }
+}
+val javaRoot = rootProject.file("src/main/java")
+val versionedOut: List<String> = javaRoot.walkTopDown()
+    .filter { it.isFile && it.name.endsWith(".java") }
+    .mapNotNull { f ->
+        val header = f.useLines { lines -> lines.take(2).firstOrNull { it.startsWith("// glade: minecraft ") } }
+        header?.removePrefix("// glade: minecraft ")?.takeIf { !inRange(it) }?.let { f.relativeTo(javaRoot).invariantSeparatorsPath }
+    }
+    .toList()
+sourceSets.named("main") {
+    java { versionedOut.forEach { exclude(it) } }
+}
+
 val fapiVersion: String = (findProperty("deps.fabric_api") as String?) ?: latestFabricApi(mc)
 
 dependencies {
@@ -101,3 +124,13 @@ tasks.register<Copy>("buildAndCollect") {
     from(loomx.modJar.flatMap { it.archiveFile })
     into(rootProject.layout.buildDirectory.dir("libs"))
 }
+
+// For tools/apidump.py: the jars this version compiles against.
+tasks.register("gladeClasspath") {
+    notCompatibleWithConfigurationCache("writes the resolved classpath for the API dump")
+    val out = layout.buildDirectory.file("glade-classpath.txt")
+    doLast {
+        out.get().asFile.apply { parentFile.mkdirs() }.writeText(project.configurations.getByName("compileClasspath").files.joinToString("\n"))
+    }
+}
+

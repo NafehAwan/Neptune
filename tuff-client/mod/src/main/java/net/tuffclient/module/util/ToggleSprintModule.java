@@ -12,7 +12,7 @@ public final class ToggleSprintModule extends Module {
 
 	@Override
 	public void tick(Minecraft client) {
-		if (client.player != null && client.gui.screen() == null) client.options.keySprint.setDown(true);
+		if (client.player != null && net.tuffclient.Mc.screen() == null) client.options.keySprint.setDown(true);
 	}
 
 	@Override

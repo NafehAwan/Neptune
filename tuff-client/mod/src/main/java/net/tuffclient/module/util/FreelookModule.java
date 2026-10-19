@@ -46,7 +46,7 @@ public final class FreelookModule extends Module {
 	public void update(Minecraft mc, boolean down) {
 		boolean want = toggle.get() ? (down && !wasDown ? !active : active) : down;
 		wasDown = down;
-		if (mc.player == null || mc.gui.screen() != null && !active) want = false;
+		if (mc.player == null || net.tuffclient.Mc.screen() != null && !active) want = false;
 		if (want == active) return;
 		active = want;
 		if (active) {

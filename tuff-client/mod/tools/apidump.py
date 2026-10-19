@@ -65,6 +65,9 @@ def game_jar(version):
 
 
 def fabric_jars(version):
+    listing = os.path.join(ROOT, "versions", version, "build", "glade-classpath.txt")
+    if os.path.exists(listing):
+        return [p for p in open(listing).read().split("\n") if "fabric" in os.path.basename(p) and p.endswith(".jar")]
     out = []
     for p in glob.glob(os.path.join(HOME, "caches", "modules-2", "files-2.1", "net.fabricmc.fabric-api", "*", "*", "*", "*.jar")):
         if "sources" in p:

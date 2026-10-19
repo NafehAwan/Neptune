@@ -33,7 +33,7 @@ public final class AutoReconnectModule extends Module {
 			last = mc.getCurrentServer();
 			tries = 0;
 		}
-		Screen screen = mc.gui.screen();
+		Screen screen = net.tuffclient.Mc.screen();
 		if (!(screen instanceof DisconnectedScreen) || last == null) {
 			countingOn = null;
 			return;

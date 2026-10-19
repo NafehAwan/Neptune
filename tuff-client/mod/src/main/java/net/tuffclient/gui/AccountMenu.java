@@ -123,7 +123,7 @@ public final class AccountMenu {
 		Ui.textAt(g, current.microsoft() ? "Microsoft account · skin from Minecraft" : "Offline account · default skin", textX, top + 12 * 1.038f, Theme.alpha(Theme.MUTED, a), Ui.Font.UI_12);
 		top += 12 * 1.26f + 8;
 		float chipX = textX;
-		chipX = pill(g, chipX, top, "Change skin", mouseX, mouseY, a, () -> Minecraft.getInstance().gui.setScreen(new SkinCustomizationScreen(parent, Minecraft.getInstance().options)));
+		chipX = pill(g, chipX, top, "Change skin", mouseX, mouseY, a, () -> net.tuffclient.Mc.setScreen(new SkinCustomizationScreen(parent, Minecraft.getInstance().options)));
 		pill(g, chipX + 6, top, "Profile", mouseX, mouseY, a, () -> say(current.microsoft() ? "Edit your profile on minecraft.net or in the Glade launcher" : "Offline accounts have no online profile"));
 
 		float cy = hy + 112;
