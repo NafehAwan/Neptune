@@ -848,9 +848,9 @@ public final class TuffMenuScreen extends Screen {
 			for (int i = speeds.length - 1; i >= 0; i--) {
 				float bw = 10 + Ui.width(speeds[i], Ui.Font.UI_12_5_M) + 10;
 				sx -= bw;
-				boolean on = c.speed == i;
-				Ui.round(g, sx, wy - 3, bw, 24, 12, Theme.alpha(on ? Theme.COPPER : 0xFFEFF1EC, a));
-				Ui.textAt(g, speeds[i], sx + 10, Ui.mid(wy + 9, 12.5f), Theme.alpha(on ? Theme.INK : Theme.TEXT, a), Ui.Font.UI_12_5_M);
+				boolean picked = c.speed == i;
+				Ui.round(g, sx, wy - 3, bw, 24, 12, Theme.alpha(picked ? Theme.COPPER : 0xFFEFF1EC, a));
+				Ui.textAt(g, speeds[i], sx + 10, Ui.mid(wy + 9, 12.5f), Theme.alpha(picked ? Theme.INK : Theme.TEXT, a), Ui.Font.UI_12_5_M);
 				final int index = i;
 				if (live) hit(sx, wy - 3, sx + bw, wy + 21, e -> {
 					click();
