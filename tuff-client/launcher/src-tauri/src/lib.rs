@@ -787,7 +787,7 @@ async fn launch(app: AppHandle, state: State<'_, AppState>, profile_id: String, 
 
     let exit_app = app.clone();
     let crash_dir = game_dir.clone();
-    let loader_name = modrinth::mod_loaders(&profile.loader)[0].to_string();
+    let loader_name = modrinth::profile_loaders(&profile)[0].to_string();
     tokio::spawn(async move {
         let mut killed = false;
         let status = tokio::select! {

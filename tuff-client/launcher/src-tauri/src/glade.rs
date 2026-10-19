@@ -29,6 +29,16 @@ const OLD_FILES: &[&str] = &["tuff-client.jar"];
 /// Glade's Fabric mod id.
 pub const MOD_ID: &str = "tuff";
 pub const FABRIC_API: &str = "fabric-api";
+pub const LEGACY_FABRIC_API: &str = "legacy-fabric-api";
+
+/// The Fabric API Glade needs on this Minecraft version (its mod id and Modrinth slug).
+pub fn api_for(game_version: &str) -> &'static str {
+    if crate::fabric::is_legacy(game_version) {
+        LEGACY_FABRIC_API
+    } else {
+        FABRIC_API
+    }
+}
 
 /// What a mod jar says about itself in `fabric.mod.json`.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -277,14 +287,15 @@ pub async fn ensure(http: &reqwest::Client, paths: &Paths, profile: &Profile, bu
 
     // Fabric API: turn it back on, or install it.
     modrinth::prune_index(paths, &profile.id);
+    let api = api_for(&profile.game_version);
     let found = scan(&mods);
-    if !found.iter().any(|m| m.enabled && m.info.id == FABRIC_API) {
-        if let Some(off) = found.iter().find(|m| m.info.id == FABRIC_API) {
+    if !found.iter().any(|m| m.enabled && m.info.id == api) {
+        if let Some(off) = found.iter().find(|m| m.info.id == api) {
             let name = off.file.trim_end_matches(".disabled").to_string();
             modrinth::set_enabled(paths, &profile.id, "mod", &name, true)?;
             report.fixed.push("Turned Fabric API back on (Glade needs it)".into());
         } else {
-            modrinth::install(http, paths, profile, FABRIC_API, "mod")
+            modrinth::install(http, paths, profile, api, "mod")
                 .await
                 .context("installing Fabric API, which Glade needs")?;
             report.fixed.push("Installed Fabric API (Glade needs it)".into());
@@ -319,7 +330,7 @@ pub fn locked(paths: &Paths, profile: &Profile, builds: &Builds, kind: &str, fil
     }
     let dir = paths.instance(&profile.id).join("mods");
     let path = [dir.join(file), dir.join(format!("{file}.disabled"))].into_iter().find(|p| p.is_file())?;
-    (read_info(&path)?.id == FABRIC_API).then_some("Glade needs Fabric API")
+    (read_info(&path)?.id == api_for(&profile.game_version)).then_some("Glade needs Fabric API")
 }
 
 /// The lowest Fabric Loader version this Glade build accepts.

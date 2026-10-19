@@ -103,6 +103,15 @@ pub async fn project(http: &reqwest::Client, id: &str) -> Result<Value> {
 }
 
 /// Modrinth loader names whose builds run on this profile.
+/// Modrinth loader tags for mods that run on this profile (Legacy Fabric for
+/// Fabric before 1.14).
+pub fn profile_loaders(profile: &Profile) -> Vec<&'static str> {
+    if profile.loader == Loader::Fabric && crate::fabric::is_legacy(&profile.game_version) {
+        return vec!["legacy-fabric", "fabric"];
+    }
+    mod_loaders(&profile.loader)
+}
+
 pub fn mod_loaders(loader: &Loader) -> Vec<&'static str> {
     match loader {
         Loader::Vanilla => vec!["minecraft"],
@@ -124,7 +133,7 @@ fn shader_mod(loader: &Loader) -> Option<&'static str> {
 
 fn loaders_for(kind: &str, profile: &Profile) -> Option<Vec<&'static str>> {
     match kind {
-        "mod" => Some(mod_loaders(&profile.loader)),
+        "mod" => Some(profile_loaders(profile)),
         "shader" => Some(vec!["iris", "optifine"]),
         "resourcepack" => Some(vec!["minecraft"]),
         "datapack" => Some(vec!["datapack"]),
@@ -403,7 +412,7 @@ pub async fn check_updates(http: &reqwest::Client, paths: &Paths, profile: &Prof
     }
     let mut body = json!({ "hashes": hashes, "algorithm": "sha1", "game_versions": [profile.game_version] });
     if profile.loader.is_modded() {
-        let mut loaders = mod_loaders(&profile.loader);
+        let mut loaders = profile_loaders(profile);
         loaders.extend(["minecraft", "iris", "optifine"]);
         body["loaders"] = json!(loaders);
     }

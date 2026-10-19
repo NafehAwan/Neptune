@@ -7,6 +7,22 @@ use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 
 const META: &str = "https://meta.fabricmc.net/v2";
+/// Fabric for Minecraft before 1.14 (1.8.9 and friends), with the same API.
+const LEGACY_META: &str = "https://meta.legacyfabric.net/v2";
+
+/// Minecraft before 1.14 runs Fabric through Legacy Fabric.
+pub fn is_legacy(game_version: &str) -> bool {
+    let mut parts = game_version.split('.');
+    parts.next() == Some("1") && parts.next().and_then(|m| m.parse::<u32>().ok()).is_some_and(|m| m < 14)
+}
+
+fn meta(game_version: &str) -> &'static str {
+    if is_legacy(game_version) {
+        LEGACY_META
+    } else {
+        META
+    }
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct LoaderVersion {
@@ -20,7 +36,7 @@ struct LoaderEntry {
 }
 
 pub async fn loader_versions(http: &reqwest::Client, game_version: &str) -> Result<Vec<LoaderVersion>> {
-    let url = format!("{META}/versions/loader/{}", urlencoding::encode(game_version));
+    let url = format!("{}/versions/loader/{}", meta(game_version), urlencoding::encode(game_version));
     let entries: Vec<LoaderEntry> = http.get(url).send().await?.error_for_status()?.json().await?;
     Ok(entries.into_iter().map(|e| e.loader).collect())
 }
@@ -31,9 +47,20 @@ pub struct GameVersion {
     pub stable: bool,
 }
 
-/// Every Minecraft version Fabric supports, newest first, with releases marked stable.
+/// Every Minecraft version Fabric supports, newest first, with releases marked
+/// stable; the older ones come from Legacy Fabric.
 pub async fn game_versions(http: &reqwest::Client) -> Result<Vec<GameVersion>> {
-    Ok(http.get(format!("{META}/versions/game")).send().await?.error_for_status()?.json().await?)
+    let mut list: Vec<GameVersion> = http.get(format!("{META}/versions/game")).send().await?.error_for_status()?.json().await?;
+    let legacy: Vec<GameVersion> = match http.get(format!("{LEGACY_META}/versions/game")).send().await {
+        Ok(r) => r.json().await.unwrap_or_default(),
+        Err(_) => Vec::new(),
+    };
+    for v in legacy.into_iter().filter(|v| is_legacy(&v.version)) {
+        if !list.iter().any(|x| x.version == v.version) {
+            list.push(v);
+        }
+    }
+    Ok(list)
 }
 
 #[allow(dead_code)]
@@ -65,7 +92,8 @@ pub async fn profile_json(
         }
     }
     let url = format!(
-        "{META}/versions/loader/{}/{}/profile/json",
+        "{}/versions/loader/{}/{}/profile/json",
+        meta(game_version),
         urlencoding::encode(game_version),
         urlencoding::encode(loader)
     );
@@ -74,4 +102,20 @@ pub async fn profile_json(
     std::fs::create_dir_all(path.parent().unwrap())?;
     std::fs::write(&path, &bytes)?;
     Ok(v)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn legacy_versions() {
+        assert!(is_legacy("1.8.9"));
+        assert!(is_legacy("1.8.8"));
+        assert!(is_legacy("1.12.2"));
+        assert!(is_legacy("1.13.2"));
+        assert!(!is_legacy("1.14"));
+        assert!(!is_legacy("1.21.11"));
+        assert!(!is_legacy("26.3"));
+    }
 }

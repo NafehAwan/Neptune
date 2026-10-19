@@ -48,6 +48,47 @@ jobs:
           path: tuff-client/mod/build/libs/tuff-client-*.jar
           if-no-files-found: warn
 
+  mod-legacy:
+    name: Fabric mod (1.8.9)
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: tuff-client/mod-legacy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build
+        run: |
+          ./gradlew build 2>&1 | tee build.log; status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then echo "=== COMPILE ERRORS"; grep -E "error:|What went wrong|^> |Could not" -A3 build.log | head -200; exit 1; fi
+          ls build/libs
+      - name: Print the 1.8.9 classes Glade uses
+        if: always()
+        run: |
+          JAR=$(find ~/.gradle .gradle -name '*.jar' -path '*1.8.9*' 2>/dev/null | grep -viE 'sources|intermediary|unpicked' | xargs -r ls -S | head -1)
+          echo "JAR $JAR"
+          [ -n "$JAR" ] || exit 0
+          unzip -l "$JAR" | awk '{print $4}' | grep '^net/minecraft/client/' | grep -v '\$' | sed 's/\.class$//' > classes.txt
+          echo "=== CLIENT CLASSES"; cat classes.txt
+          for c in $(grep -iE '/(MinecraftClient|Minecraft|Screen|DrawableHelper|TextRenderer|Tessellator|BufferBuilder|GlStateManager|Window|InGameHud|KeyBinding|GameOptions|ItemRenderer|ClientPlayerEntity|TitleScreen|GameRenderer|Mouse|Keyboard|PlayerListHud|ChatHud|DebugHud|ClientPlayerInteractionManager|Camera|WorldRenderer|HeldItemRenderer)$' classes.txt); do
+            echo "=== $c"; javap -classpath "$JAR" -p "${c//\//.}" | head -150
+          done
+          for c in net/minecraft/entity/player/PlayerEntity net/minecraft/item/ItemStack net/minecraft/entity/LivingEntity net/minecraft/util/math/BlockPos net/minecraft/text/Text; do
+            echo "=== $c"; javap -classpath "$JAR" -p "${c//\//.}" 2>&1 | head -80
+          done
+          echo "=== LEGACY FABRIC API"
+          find ~/.gradle -name 'legacy-fabric-*.jar' | grep -v sources | head -40
+          for j in $(find ~/.gradle -name 'legacy-fabric-*.jar' | grep -v sources | grep -E 'keybind|lifecycle|rendering|command|resource'); do unzip -l "$j" | awk '{print $4}' | grep '/api/.*\.class$'; done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tuff-mod-legacy
+          path: tuff-client/mod-legacy/build/libs/tuff-client-*.jar
+          if-no-files-found: warn
+
   mod-test:
     name: Fabric mod in-game test
     needs: mod
@@ -128,7 +169,7 @@ jobs:
       - name: Install Quilt, Forge and NeoForge profiles and start the game
         env:
           GLADE_SKIP_ASSETS: "1"
-          GLADE_SMOKE: "quilt:1.21.1,neoforge:1.21.1,forge:1.20.1,forge:1.12.2"
+          GLADE_SMOKE: "fabric:1.8.9,fabric:1.8.8,quilt:1.21.1,neoforge:1.21.1,forge:1.20.1,forge:1.12.2"
         run: timeout 40m xvfb-run -a -s "-screen 0 1280x720x24 +extension GLX +render -noreset" cargo test --locked smoke -- --ignored --nocapture
 
   launcher:

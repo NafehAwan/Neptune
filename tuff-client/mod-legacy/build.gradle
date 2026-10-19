@@ -1,0 +1,33 @@
+plugins {
+	id "net.fabricmc.fabric-loom-remap" version "${loom_version}"
+	id "legacy-looming" version "${loom_version}" // must match Loom's version
+}
+
+// One version for all of Glade: the launcher's.
+def gladeVersion = (file("../launcher/src-tauri/tauri.conf.json").text =~ /"version"\s*:\s*"([^"]+)"/)[0][1]
+version = "${gladeVersion}+${project.minecraft_version}"
+base { archivesName = "tuff-client" }
+
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	mappings(legacy.yarn(project.minecraft_version, project.yarn_build))
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	modImplementation "net.legacyfabric.legacy-fabric-api:legacy-fabric-api:${project.fabric_version}"
+}
+
+processResources {
+	inputs.property "version", gladeVersion
+	filesMatching("fabric.mod.json") {
+		expand "version": gladeVersion
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.encoding = "UTF-8"
+	it.options.release = 8
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_1_8
+	targetCompatibility = JavaVersion.VERSION_1_8
+}

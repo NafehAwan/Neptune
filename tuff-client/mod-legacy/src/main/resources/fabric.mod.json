@@ -1,0 +1,20 @@
+{
+	"schemaVersion": 1,
+	"id": "tuff",
+	"version": "${version}",
+	"name": "Glade",
+	"description": "The Glade in-game mod for Minecraft 1.8.9: HUD, keystrokes, CPS, armor status, zoom, freelook and a mod menu.",
+	"authors": ["Glade"],
+	"license": "GPL-3.0",
+	"icon": "assets/tuff/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"client": ["net.tuffclient.legacy.GladeLegacy"]
+	},
+	"mixins": ["tuff.mixins.json"],
+	"depends": {
+		"fabricloader": ">=0.16.0",
+		"minecraft": "1.8.9",
+		"legacy-fabric-api": "*"
+	}
+}
