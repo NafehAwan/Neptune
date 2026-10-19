@@ -142,7 +142,10 @@ profiles automatically.
   - *Mods*: filter chips (All, New, Favorites, HUD, Utility, Visual), search,
     and a grid of cards with a big icon or a live HUD preview, a heart to
     favorite, and a switch. Grid or list view; right-click or the gear opens a
-    settings drawer (switches, choices and sliders).
+    settings drawer (switches, choices, sliders, text fields and colors).
+    Colors open a color wheel: hue and saturation on the wheel, brightness and
+    opacity bars, swatches, a hex field you can type into and a Chroma
+    (rainbow) switch.
   - *Theme*: accent color (Forest by default, Copper, Amethyst, Mint, Sky,
     Rose, Gold, Red), background blur and animations.
   - *Packs*: enable, disable and reorder resource packs.
@@ -150,9 +153,26 @@ profiles automatically.
 - **HUD editor**: drag modules anywhere, with snapping to screen edges, the
   center and other modules. Scroll to resize; right-click to reset.
 - **HUD modules**: FPS, CPS, Keystrokes, Armor Status, Coordinates and
-  direction, Ping, Potion Effects, Clock, Server address, Speed, Memory.
-- **Utility and visual**: Zoom (hold C, smooth and with optional cinematic
-  camera), Fullbright, Toggle Sprint, Crosshair, Hide Scoreboard.
+  direction, Ping, Potion Effects, Clock, Server address, Speed, Memory,
+  Compass (with waypoints), Biome & Light (warns where mobs can spawn), Item
+  Counter (arrows, totems, golden apples, pearls and more), Durability Warning,
+  Session Stats (time, blocks mined, kills, deaths, distance), Pack Display and
+  Day & Time (day count, clock, time until night). Every HUD module has the
+  same Style settings: text and label colors, text shadow, background on or
+  off and its color, border and its color, corner radius, padding and scale.
+- **Utility**: Zoom (hold C; smooth, snappy or linear curve, speed, scroll to
+  zoom further, optional cinematic camera), Freelook (hold Left Alt), Waypoints
+  (B adds one where you stand, a death waypoint is added where you die; on
+  screen with distance; managed in the module's settings), Screenshot Tools
+  (a card after F2 and chat buttons to open, show in folder, copy the path or
+  delete), Chat+ (timestamps, merged repeats, click to copy, your name
+  highlighted, mention sound), Clean F3 (only the lines you pick), Auto GG,
+  Auto Reconnect, Toggle Sprint, Hide Scoreboard.
+- **Visual**: Fullbright, Crosshair, Hit Color (the damage flash), Block
+  Outline (color and thickness), Particles (crits and sparkles on every hit,
+  multiplier), Custom Sky (sky and fog tint), Nametags (your own in third
+  person, hide all, background opacity) and Cosmetics (a leaf badge before Glade
+  players' names and a Glade cape; players are listed in `cosmetics/users.json`).
 
 Settings are saved to `config/tuff/config.json`.
 
