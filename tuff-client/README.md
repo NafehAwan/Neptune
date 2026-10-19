@@ -7,7 +7,8 @@ an animated pixel forest.
 ```
 tuff-client/
   launcher/   Tauri 2 app (Rust backend + Svelte 5 UI), ships as a .deb
-  mod/        Glade Fabric mod for Minecraft 26.3 (bundled into the launcher)
+  mod/        Glade Fabric mod for Minecraft 1.21 to 26.3 (bundled into the launcher)
+  mod-legacy/ Glade for Minecraft 1.8.8 and 1.8.9 (Legacy Fabric)
   art/        logo, fonts and icon sources
   design/     the design concepts and mockups the look was picked from
 ```
@@ -120,14 +121,17 @@ named `tuff`, and paste the application ID in Settings → Discord (or build wit
 
 ## Glade mod
 
-Fabric mod for Minecraft 26.3 (Java 25). The launcher puts it into every
-Fabric profile on a Minecraft version it supports (26.3 and 26.3.x) and checks
-it before each launch:
+Fabric mod with one build per group of Minecraft versions: 1.21–1.21.1,
+1.21.2–1.21.3, 1.21.4, 1.21.5, 1.21.6–1.21.8, 1.21.9–1.21.10, 1.21.11, 26.1,
+26.2 and 26.3 (Java 21, or Java 25 on 26.x), plus the 1.8.8/1.8.9 build in
+`mod-legacy/`. The launcher puts the matching build into every Fabric profile
+and checks it before each launch:
 
 - installs Glade, or replaces the profile's copy when it differs from the
   newest build (bundled with the launcher or downloaded by the updater);
 - removes turned-off, renamed or extra copies of Glade;
-- installs Fabric API, or turns it back on (Glade needs it);
+- installs Fabric API, or turns it back on (the 1.21 and 26.x builds need it;
+  the 1.8 build needs only the loader);
 - turns off the older copy when a mod is in the folder twice;
 - moves the profile to a newer Fabric Loader if Glade needs one;
 - takes Glade out of profiles it can't run in, so it never stops a game from
@@ -197,9 +201,37 @@ or removed.
 
 Settings are saved to `config/tuff/config.json`.
 
+On versions before 26.3 a few visual modules aren't available yet and are
+hidden from the menu: Hand & Item View, Small Shield, Old Animations, Item
+Physics and Low Fire (before 26.3), Custom Sky and Clean F3 (before 26.1), the
+cape and 3D skin heads (before 1.21.9) and effect icons (before 1.21.6).
+
 ```sh
 cd tuff-client/mod
-./gradlew build      # build/libs/tuff-client-<version>.jar (version from launcher/src-tauri/tauri.conf.json)
+./gradlew buildAndCollect   # build/libs/tuff-client-<version>+<minecraft>.jar for every Minecraft version
+./gradlew :1.21.1:build     # one version
+```
+
+The versions are built with [Stonecutter](https://stonecutter.kikugie.dev).
+Code that differs between versions lives in small adapters (`gui/Gfx`,
+`gui/GladeScreen`, `Platform`, `Mc`, `compat/*`): the version-specific copies
+are under `src/main/java/net/tuffclient/versioned/` and start with a line like
+`// glade: minecraft >=1.21.6 <26.1`, which picks the versions they build for.
+Mixins work the same way, and modules whose mixins aren't in a build hide
+themselves.
+
+### Glade for 1.8
+
+`mod-legacy/` is Glade for Minecraft 1.8.8 and 1.8.9 on Legacy Fabric (Java
+8). It needs only Fabric Loader and has the same menu (Right Shift), HUD
+editor and look, with FPS, CPS, Keystrokes, Armor Status, Coordinates, Potion
+Effects, Clock, Ping, Speed, Memory, Zoom, Freelook, Toggle Sprint,
+Fullbright, Time Changer and Hide Scoreboard. Settings are saved to
+`config/tuff/config-1.8.json`.
+
+```sh
+cd tuff-client/mod-legacy
+./gradlew build      # build/libs/tuff-client-<version>+1.8.9.jar
 ```
 
 ### Art
@@ -215,20 +247,24 @@ cd tuff-client/mod
 
 `.github/workflows/tuff-client.yml`:
 
-- builds the mod and uploads the jar;
+- builds the mod for every Minecraft version, and the 1.8 build, and uploads
+  the jars;
 - boots real Minecraft with the mod (Fabric client game test on Mesa's software
   Vulkan driver). The test checks that the Glade title screen replaces the
   vanilla one and its fonts load, opens the account menu, adds an offline
   account, switches to it and back, opens every mod menu page, the settings
   drawer and the HUD editor in a world, checks that zoom magnifies the rendered
   image and that fullbright toggles cleanly, and saves screenshots of each step
-  (`./gradlew runClientGameTest` locally);
+  (`./gradlew :26.3:runClientGameTest` locally);
+- installs every loader through the launcher's own code and starts the game
+  headless; on Fabric 1.8.8, 1.8.9, every 1.21.x and 26.x build it checks that
+  Glade loads;
 - bundles the mod into the launcher (the build fails without it), runs the
   Rust tests and Svelte type checks, and uploads the `.deb`;
 - publishes an update: on pushes to `master` (and the development branch), when
   the version in `launcher/src-tauri/tauri.conf.json` has no release yet, it
-  creates the GitHub release `v<version>` with the `.deb`, the mod jar and
-  `latest.json`.
+  creates the GitHub release `v<version>` with the `.deb`, a
+  `glade-<minecraft>.jar` for every Glade build and `latest.json`.
 
 ## Updates
 

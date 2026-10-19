@@ -231,8 +231,8 @@ jobs:
   # Glade mod. Bump the version to ship an update.
   release:
     name: Publish update
-    needs: [launcher, mod-test]
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/claude/serene-euler-8ygwvm')
+    needs: [launcher, mod-test, loaders]
+    if: github.event_name == 'push' && needs.loaders.result == 'success' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/claude/serene-euler-8ygwvm')
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -259,6 +259,7 @@ jobs:
           # every Glade build, one per group of Minecraft versions
           MODS='[]'
           for j in dist/mod/tuff-client-*.jar; do
+            case "$j" in *-sources.jar|*-dev.jar) continue ;; esac
             mc=${j##*+}; mc=${mc%.jar}; name="glade-$mc.jar"
             cp "$j" "out/$name"
             range=$(unzip -p "$j" fabric.mod.json | jq -r .depends.minecraft)
