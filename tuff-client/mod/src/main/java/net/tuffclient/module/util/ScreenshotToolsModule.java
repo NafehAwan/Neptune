@@ -69,7 +69,7 @@ public final class ScreenshotToolsModule extends Module {
 		msg.append(button("Folder", net.tuffclient.compat.ChatEvents.openFile(folder()), "Show the screenshots folder"));
 		msg.append(button("Copy path", net.tuffclient.compat.ChatEvents.copy(file.getAbsolutePath()), "Copy where it's saved"));
 		msg.append(button("Delete", net.tuffclient.compat.ChatEvents.runCommand("/glade screenshot delete " + file.getName()), "Delete this screenshot"));
-		client.player.sendSystemMessage(msg);
+		net.tuffclient.compat.Messages.chat(client.player, msg);
 	}
 
 	private MutableComponent button(String label, ClickEvent click, String hover) {

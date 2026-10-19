@@ -9,6 +9,11 @@ public final class Messages {
 	private Messages() {
 	}
 
+	/** A line in chat that only you see. */
+	public static void chat(LocalPlayer player, Component text) {
+		player.sendSystemMessage(text);
+	}
+
 	public static void overlay(LocalPlayer player, Component text) {
 		player.sendOverlayMessage(text);
 	}

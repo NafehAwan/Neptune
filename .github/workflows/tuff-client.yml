@@ -30,7 +30,7 @@ jobs:
       - name: Build every Minecraft version
         env:
           # Versions that must build; the others are still being ported.
-          READY: "26.3"
+          READY: "1.21.1 1.21.3 1.21.4 1.21.5 1.21.8 1.21.10 1.21.11 26.1 26.2 26.3"
         run: |
           ./gradlew buildAndCollect --continue 2>&1 | tee build.log; status=${PIPESTATUS[0]}
           echo "=== BUILT"; ls build/libs || true
@@ -124,7 +124,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: tuff-mod-screenshots
+          name: glade-test-screenshots
           path: |
             tuff-client/mod/**/run/**/screenshots
             tuff-client/mod/run/**/screenshots
@@ -132,7 +132,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: tuff-mod-test-logs
+          name: glade-test-logs
           path: |
             tuff-client/mod/**/run/**/logs
             tuff-client/mod/run/**/logs
@@ -142,8 +142,10 @@ jobs:
 
   loaders:
     name: Launcher loaders (install and start)
+    needs: [mod, mod-legacy]
+    if: always()
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 75
     defaults:
       run:
         working-directory: tuff-client/launcher/src-tauri
@@ -157,15 +159,23 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: tuff-client/launcher/src-tauri
-      - name: Install Quilt, Forge and NeoForge profiles and start the game
+      - name: Fetch the Glade mod builds
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: tuff-mod*
+          path: tuff-client/launcher/src-tauri/glade-jars
+          merge-multiple: true
+      - name: Install every loader, put Glade in each Fabric profile and start the game
         env:
           GLADE_SKIP_ASSETS: "1"
-          GLADE_SMOKE: "fabric:1.8.9,fabric:1.8.8,quilt:1.21.1,neoforge:1.21.1,forge:1.20.1,forge:1.12.2"
-        run: timeout 40m xvfb-run -a -s "-screen 0 1280x720x24 +extension GLX +render -noreset" cargo test --locked smoke -- --ignored --nocapture
+          GLADE_JARS: glade-jars
+          GLADE_SMOKE: "fabric:1.8.9,fabric:1.8.8,fabric:1.21.1,fabric:1.21.3,fabric:1.21.4,fabric:1.21.5,fabric:1.21.8,fabric:1.21.10,fabric:1.21.11,fabric:26.1,fabric:26.2,fabric:26.3,quilt:1.21.1,neoforge:1.21.1,forge:1.20.1,forge:1.12.2"
+        run: timeout 70m xvfb-run -a -s "-screen 0 1280x720x24 +extension GLX +render -noreset" cargo test --locked smoke -- --ignored --nocapture
 
   launcher:
     name: Launcher (.deb)
-    needs: mod
+    needs: [mod, mod-legacy]
     if: always()
     runs-on: ubuntu-22.04
     defaults:
@@ -173,11 +183,12 @@ jobs:
         working-directory: tuff-client/launcher
     steps:
       - uses: actions/checkout@v4
-      - name: Fetch the Glade mod build
+      - name: Fetch the Glade mod builds
         uses: actions/download-artifact@v4
         with:
-          name: tuff-mod
+          pattern: tuff-mod*
           path: tuff-client/launcher/mod-build
+          merge-multiple: true
       - name: Bundle the mod
         run: |
           # a launcher without the Glade mod would start the game without Glade
@@ -233,8 +244,9 @@ jobs:
           path: dist/deb
       - uses: actions/download-artifact@v4
         with:
-          name: tuff-mod
+          pattern: tuff-mod*
           path: dist/mod
+          merge-multiple: true
       - name: Publish the release if this version is new
         env:
           GH_TOKEN: ${{ github.token }}

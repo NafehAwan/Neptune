@@ -58,6 +58,19 @@ async fn start(http: &reqwest::Client, paths: &Paths, loader: Loader, game_versi
 
     let game_dir = paths.instance(&profile.id);
     std::fs::create_dir_all(&game_dir)?;
+    // With GLADE_JARS set, Fabric profiles get the matching Glade build, and the
+    // game has to log that Glade loaded.
+    let mut want_glade = false;
+    if let Some(dir) = std::env::var_os("GLADE_JARS") {
+        let builds = crate::glade::find_builds(&[std::path::PathBuf::from(dir)], paths);
+        let report = crate::glade::ensure(http, paths, &profile, &builds).await?;
+        if report.installed {
+            println!("  {}: Glade {} installed", profile.id, report.version.unwrap_or_default());
+            want_glade = true;
+        } else if profile.loader == Loader::Fabric {
+            anyhow::bail!("no Glade build for {}: {}", profile.game_version, report.reason.unwrap_or_default());
+        }
+    }
     let session = Session { name: "Smoke".into(), uuid: launch::offline_uuid("Smoke"), token: "0".into(), xuid: "0".into(), user_type: "legacy".into() };
     let libraries = paths.libraries();
     let args = launch::build_args(&ArgInput {
@@ -102,7 +115,8 @@ async fn start(http: &reqwest::Client, paths: &Paths, loader: Loader, game_versi
     let mut tail = std::collections::VecDeque::new();
     let found = tokio::time::timeout(Duration::from_secs(300), async {
         while let Some(line) = rx.recv().await {
-            if STARTED.iter().any(|m| line.contains(m)) {
+            let done = if want_glade { line.contains("Glade loaded") } else { STARTED.iter().any(|m| line.contains(m)) };
+            if done {
                 return Some(line);
             }
             if tail.len() == 40 {

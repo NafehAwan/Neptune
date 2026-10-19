@@ -9,6 +9,11 @@ public final class Messages {
 	private Messages() {
 	}
 
+	/** A line in chat that only you see. */
+	public static void chat(LocalPlayer player, Component text) {
+		net.minecraft.client.Minecraft.getInstance().gui.getChat().addMessage(text);
+	}
+
 	public static void overlay(LocalPlayer player, Component text) {
 		player.displayClientMessage(text, true);
 	}
