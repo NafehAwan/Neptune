@@ -67,7 +67,7 @@ public final class ItemCounterModule extends HudModule {
 		if (icons.isEmpty()) {
 			if (preview) {
 				box(g, font.width("Items") + pad() * 2, linesHeight(1));
-				text(g, font, "Items", pad(), pad(), labelColor());
+				label(g, font, "Items", pad(), pad());
 			} else {
 				width = 0;
 				height = 0;
@@ -83,7 +83,8 @@ public final class ItemCounterModule extends HudModule {
 		for (int i = 0; i < icons.size(); i++) {
 			int x = p + (row ? i * (cell + 4) : 0), y = p + (row ? 0 : i * 17);
 			g.item(icons.get(i), x, y);
-			text(g, font, counts.get(i), x + 18, y + 4, counts.get(i).equals("0") ? labelColor() : textColor());
+			if (counts.get(i).equals("0")) label(g, font, counts.get(i), x + 18, y + 4);
+			else value(g, font, counts.get(i), x + 18, y + 4);
 		}
 	}
 }

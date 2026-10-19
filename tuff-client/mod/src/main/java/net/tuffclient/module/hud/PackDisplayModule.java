@@ -58,7 +58,7 @@ public final class PackDisplayModule extends HudModule {
 		if (icon.get()) Ui.lucide(g, "package", p, p - 1, 9, labelColor());
 		int y = p;
 		for (String s : list) {
-			text(g, font, s, p + iw, y, textColor());
+			value(g, font, s, p + iw, y);
 			y += 10;
 		}
 	}

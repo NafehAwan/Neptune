@@ -29,11 +29,11 @@ public abstract class HudModule extends Module {
 	public final double defaultX;
 	public final double defaultY;
 	public final NumberSetting scale = styled(new NumberSetting("scale", "Scale", 1.0, 0.5, 2.0, 0.1));
-	public final ColorSetting textColor = styled(new ColorSetting("text_color", "Text color", Theme.HUD_TEXT, true));
-	public final ColorSetting labelColor = styled(new ColorSetting("label_color", "Label color", Theme.HUD_MUTED, true));
+	public final ColorSetting textColor = styled(new ColorSetting("text_color", "Text color", Theme.HUD_TEXT, true)).showIf(() -> usesTextColors());
+	public final ColorSetting labelColor = styled(new ColorSetting("label_color", "Label color", Theme.HUD_MUTED, true)).showIf(() -> usesTextColors());
 	public final BoolSetting shadow = styled(new BoolSetting("shadow", "Text shadow", true));
 	public final BoolSetting background = styled(new BoolSetting("background", "Background", true));
-	public final ColorSetting backgroundColor = styled(new ColorSetting("background_color", "Background color", 0x9A101210, true)).showIf(() -> background.get());
+	public final ColorSetting backgroundColor = styled(new ColorSetting("background_color", "Background color", 0x9A101210, true)).showIf(() -> background.get() && usesTextColors());
 	public final BoolSetting border = styled(new BoolSetting("border", "Border", false));
 	public final ColorSetting borderColor = styled(new ColorSetting("border_color", "Border color", 0x80FFFFFF, true)).showIf(() -> border.get());
 	public final NumberSetting radius = styled(new NumberSetting("radius", "Corner radius", 3, 0, 8, 1)).showIf(() -> background.get() || border.get());
@@ -54,6 +54,11 @@ public abstract class HudModule extends Module {
 	private <S extends Setting<?>> S styled(S setting) {
 		style.add(setting);
 		return add(setting);
+	}
+
+	/** Keystrokes has its own key colours, so it hides the shared text and background colours. */
+	protected boolean usesTextColors() {
+		return true;
 	}
 
 	/** Shared look settings, shown in their own section. */
@@ -93,6 +98,69 @@ public abstract class HudModule extends Module {
 
 	protected int labelColor() {
 		return labelColor.argb();
+	}
+
+	/** A value (the number, the name): drawn in Text color, with chroma if it's on. */
+	protected void value(GuiGraphicsExtractor g, Font font, String s, int x, int y) {
+		colored(g, font, s, x, y, textColor);
+	}
+
+	/** A label (FPS, XYZ, Time): drawn in Label color, with chroma if it's on. */
+	protected void label(GuiGraphicsExtractor g, Font font, String s, int x, int y) {
+		colored(g, font, s, x, y, labelColor);
+	}
+
+	/** Text in a colour setting; with chroma wave on, each letter is a step along the rainbow. */
+	protected void colored(GuiGraphicsExtractor g, Font font, String s, int x, int y, ColorSetting c) {
+		if (s.isEmpty()) return;
+		if (!c.chroma || !ColorSetting.wave) {
+			text(g, font, s, x, y, c.argb());
+			return;
+		}
+		int cx = x;
+		for (int i = 0; i < s.length(); ) {
+			int cp = s.codePointAt(i);
+			String ch = new String(Character.toChars(cp));
+			text(g, font, ch, cx, y, c.argb((float) (this.x * 2 + cx * 0.006)));
+			cx += font.width(ch);
+			i += Character.charCount(cp);
+		}
+	}
+
+	/** Quick looks for the Style section: Clean (just text), Boxed and Outline. */
+	public void applyLook(String look) {
+		switch (look) {
+			case "Clean" -> {
+				background.set(false);
+				border.set(false);
+				shadow.set(true);
+			}
+			case "Boxed" -> {
+				background.set(true);
+				backgroundColor.set(0x9A101210);
+				border.set(false);
+				radius.set(3.0);
+			}
+			case "Outline" -> {
+				background.set(false);
+				border.set(true);
+				borderColor.set(0xB3FFFFFF);
+				radius.set(3.0);
+				shadow.set(true);
+			}
+			default -> {
+			}
+		}
+	}
+
+	/** Copies this element's look (colours included) onto another. */
+	public void copyStyleTo(HudModule other) {
+		for (Setting<?> s : settings()) {
+			if (!isStyle(s) || s == scale) continue;
+			for (Setting<?> o : other.settings()) {
+				if (o.id.equals(s.id)) o.fromJson(s.toJson());
+			}
+		}
 	}
 
 	/** Text in this element's style (with or without a shadow). */

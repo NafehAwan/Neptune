@@ -33,8 +33,8 @@ public final class EffectsModule extends HudModule {
 			if (preview) {
 				int p = pad();
 				box(g, 22 + font.width("Speed II") + p * 2, 22 + p * 2 - 4);
-				text(g, font, "Speed II", p + 20, p + 1, textColor());
-				text(g, font, "1:30", p + 20, p + 10, labelColor());
+				value(g, font, "Speed II", p + 20, p + 1);
+				label(g, font, "1:30", p + 20, p + 10);
 			} else {
 				width = 0;
 				height = 0;
@@ -48,9 +48,10 @@ public final class EffectsModule extends HudModule {
 		int y = p - 2;
 		for (MobEffectInstance e : effects) {
 			g.blitSprite(RenderPipelines.GUI_TEXTURED, Hud.getMobEffectSprite(e.getEffect()), p - 1, y + 2, 18, 18);
-			text(g, font, name(e), p + 20, y + 3, textColor());
+			value(g, font, name(e), p + 20, y + 3);
 			String time = e.isInfiniteDuration() ? "**:**" : duration(e.getDuration());
-			text(g, font, time, p + 20, y + 12, e.endsWithin(200) ? Theme.DANGER : labelColor());
+			if (e.endsWithin(200)) text(g, font, time, p + 20, y + 12, Theme.DANGER);
+			else label(g, font, time, p + 20, y + 12);
 			y += 22;
 		}
 	}

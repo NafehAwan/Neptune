@@ -45,9 +45,10 @@ public final class BiomeLightModule extends HudModule {
 		box(g, w + p * 2, linesHeight(lines.size()));
 		int y = p;
 		for (String[] l : lines) {
-			text(g, font, l[0], p, y, labelColor());
+			label(g, font, l[0], p, y);
 			boolean danger = warn.get() && l[0].equals("Light ") && block == 0;
-			text(g, font, l[1], p + font.width(l[0]), y, danger ? warnColor.argb() : textColor());
+			if (danger) text(g, font, l[1], p + font.width(l[0]), y, warnColor.argb());
+			else value(g, font, l[1], p + font.width(l[0]), y);
 			y += 10;
 		}
 	}

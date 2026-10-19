@@ -584,6 +584,7 @@ public final class TuffMenuScreen extends Screen {
 			cy += 18;
 			Ui.spaced(g, "STYLE", px, cy + 10.5f * 1.005f - 7, Theme.alpha(Theme.MUTED, a), Ui.Font.MONO_10_5, 1.26f);
 			cy += 14;
+			cy = looks(g, mouseX, mouseY, px, cy, pw, hud, a, top, bottom);
 			for (Setting<?> setting : m.settings()) {
 				if (!hud.isStyle(setting) || !setting.visible()) continue;
 				cy = setting(g, mouseX, mouseY, px, cy, pw, m, setting, a, top, bottom);
@@ -602,6 +603,35 @@ public final class TuffMenuScreen extends Screen {
 			case ColorSetting c -> colorRow(g, mouseX, mouseY, px, cy, pw, c, a, top, bottom);
 			case TextSetting t -> textRow(g, mouseX, mouseY, px, cy, pw, t, a, top, bottom);
 		};
+	}
+
+	/** One-click looks for a HUD element, and a button to give every element the same look. */
+	private float looks(GuiGraphicsExtractor g, float mouseX, float mouseY, float x, float y, float w, HudModule hud, float a, float top, float bottom) {
+		Ui.textAt(g, "Quick look", x, y + 14 + 13.5f * 1.038f - 7, Theme.alpha(Theme.TEXT, a), Ui.Font.UI_13_5_SB);
+		float cx = x, cy = y + 32;
+		for (String look : new String[] {"Clean", "Boxed", "Outline"}) {
+			float bw = 12 + Ui.width(look, Ui.Font.UI_12_5_M) + 12;
+			boolean over = Theme.inside(mouseX, mouseY, cx, cy, cx + bw, cy + 28);
+			Ui.round(g, cx, cy, bw, 28, 14, Theme.alpha(over ? 0xFFE6EBE4 : 0xFFEFF1EC, a));
+			Ui.textAt(g, look, cx + 12, Ui.mid(cy + 14, 12.5f), Theme.alpha(Theme.TEXT, a), Ui.Font.UI_12_5_M);
+			if (cy + 28 > top && cy < bottom) hit(cx, cy, cx + bw, cy + 28, e -> {
+				click();
+				hud.applyLook(look);
+			});
+			cx += bw + 6;
+		}
+		cy += 38;
+		String all = "Use this look on every HUD module";
+		float bw = 14 + Ui.width(all, Ui.Font.UI_12_5_M) + 14;
+		boolean over = Theme.inside(mouseX, mouseY, x, cy, x + bw, cy + 28);
+		Ui.round(g, x, cy, bw, 28, 9, Theme.alpha(over ? 0xE6FFFFFF : 0x8CFFFFFF, a), Theme.alpha(0x33000000, a), 1);
+		Ui.textAt(g, all, x + 14, Ui.mid(cy + 14, 12.5f), Theme.alpha(Theme.TEXT, a), Ui.Font.UI_12_5_M);
+		if (cy + 28 > top && cy < bottom) hit(x, cy, x + bw, cy + 28, e -> {
+			click();
+			for (HudModule other : modules().hud()) if (other != hud) hud.copyStyleTo(other);
+		});
+		Ui.round(g, x, cy + 41, w, 1, 0.5f, Theme.alpha(Theme.alpha(0xFF1F2A22, 0.08f), a));
+		return cy + 42;
 	}
 
 	/** Module-specific panels below the settings (the waypoint list). */
@@ -983,7 +1013,9 @@ public final class TuffMenuScreen extends Screen {
 		}
 		float cy = sy + 84 + 18;
 		cy = optionRow(g, mouseX, mouseY, x, cy, w, "Background blur", "Blur the game behind Glade menus.", modules().ui.blur.get(), null, modules().ui.blur::toggle, a);
-		optionRow(g, mouseX, mouseY, x, cy, w, "Menu animations", "Smooth transitions, hovers and scrolling.", modules().ui.animations.get(), null, modules().ui.animations::toggle, a);
+		cy = optionRow(g, mouseX, mouseY, x, cy, w, "Menu animations", "Smooth transitions, hovers and scrolling.", modules().ui.animations.get(), null, modules().ui.animations::toggle, a);
+		cy = optionRow(g, mouseX, mouseY, x, cy, w, "Chroma wave", "Rainbow colours flow across the letters instead of changing all at once.", modules().ui.chromaWave.get(), null, modules().ui.chromaWave::toggle, a);
+		optionRow(g, mouseX, mouseY, x, cy, w, "Chroma speed", "How fast rainbow (chroma) colours move.", null, modules().ui.chromaSpeed.choice(), () -> modules().ui.chromaSpeed.cycle(1), a);
 	}
 
 	private void settings(GuiGraphicsExtractor g, float mouseX, float mouseY, float x, float y, float w, float a) {

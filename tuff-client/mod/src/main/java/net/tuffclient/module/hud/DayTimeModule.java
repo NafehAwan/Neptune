@@ -46,8 +46,8 @@ public final class DayTimeModule extends HudModule {
 		box(g, w + p * 2, linesHeight(lines.size()));
 		int y = p;
 		for (String[] l : lines) {
-			text(g, font, l[0], p, y, labelColor());
-			text(g, font, l[1], p + font.width(l[0]), y, textColor());
+			label(g, font, l[0], p, y);
+			value(g, font, l[1], p + font.width(l[0]), y);
 			y += 10;
 		}
 	}

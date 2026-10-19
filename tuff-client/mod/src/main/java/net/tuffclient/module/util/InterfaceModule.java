@@ -11,6 +11,8 @@ public final class InterfaceModule extends Module {
 	public final ChoiceSetting accent;
 	public final BoolSetting blur = add(new BoolSetting("blur", "Background blur", true));
 	public final BoolSetting animations = add(new BoolSetting("animations", "Menu animations", true));
+	public final BoolSetting chromaWave = add(new BoolSetting("chroma_wave", "Chroma wave", true));
+	public final ChoiceSetting chromaSpeed = add(new ChoiceSetting("chroma_speed", "Chroma speed", 1, "Slow", "Normal", "Fast"));
 
 	public InterfaceModule() {
 		super("interface", "Interface", "Theme and menu preferences.", Category.VISUAL, true);
@@ -22,6 +24,12 @@ public final class InterfaceModule extends Module {
 	@Override
 	public boolean hidden() {
 		return true;
+	}
+
+	@Override
+	public void tick(net.minecraft.client.Minecraft client) {
+		net.tuffclient.setting.ColorSetting.wave = chromaWave.get();
+		net.tuffclient.setting.ColorSetting.speed = new float[] {0.4f, 1f, 2.2f}[chromaSpeed.get()];
 	}
 
 	public void applyAccent() {

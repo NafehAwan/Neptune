@@ -12,6 +12,9 @@ public final class ColorSetting extends Setting<Integer> {
 	public final boolean alpha;
 	public boolean chroma;
 	private final int initial;
+	/** Rainbow speed (1 = one loop every 4 seconds) and whether it flows across text; set from the Theme page. */
+	public static float speed = 1;
+	public static boolean wave = true;
 
 	public ColorSetting(String id, String name, int argb, boolean alpha) {
 		super(id, name, alpha ? argb : argb | 0xFF000000);
@@ -21,9 +24,14 @@ public final class ColorSetting extends Setting<Integer> {
 
 	/** The colour to draw with this frame (chroma moves through the hues). */
 	public int argb() {
+		return argb(0);
+	}
+
+	/** The colour with the rainbow shifted by {@code offset} (in loops), for waves across text. */
+	public int argb(float offset) {
 		if (!chroma) return value;
 		float[] hsv = toHsv(value);
-		float hue = (System.currentTimeMillis() % 4000L) / 4000f;
+		float hue = (float) ((System.currentTimeMillis() * (double) speed % 4000.0) / 4000.0) - offset;
 		return fromHsv(hue, Math.max(0.6f, hsv[1]), Math.max(0.7f, hsv[2]), value >>> 24);
 	}
 

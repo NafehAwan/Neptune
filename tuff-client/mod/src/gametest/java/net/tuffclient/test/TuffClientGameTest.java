@@ -196,6 +196,23 @@ public class TuffClientGameTest implements FabricClientGameTest {
 			context.waitTicks(20);
 			world.getConnection().waitForChunksRender();
 			context.takeScreenshot("glade-new-hud");
+			// Chroma wave text, chroma keys and the Clean look.
+			context.runOnClient(client -> {
+				for (var h : TuffClient.modules().hud()) {
+					if (h.id.equals("fps") || h.id.equals("coordinates")) {
+						h.textColor.chroma = true;
+						h.labelColor.chroma = true;
+						h.applyLook("Clean");
+					}
+					if (h.id.equals("keystrokes")) {
+						for (var setting : h.settings()) {
+							if (setting instanceof net.tuffclient.setting.ColorSetting c && (c.id.equals("key_text") || c.id.equals("key_color"))) c.chroma = true;
+						}
+					}
+				}
+			});
+			context.waitTicks(5);
+			context.takeScreenshot("glade-chroma");
 			int waypoints = context.computeOnClient(client -> TuffClient.modules().waypoints.here().size());
 			if (waypoints != 1) throw new AssertionError("Adding a waypoint failed: " + waypoints);
 

@@ -34,7 +34,7 @@ public abstract class TextHudModule extends HudModule {
 		int p = pad();
 		int labelWidth = labelled ? font.width(label) + 4 : 0;
 		box(g, labelWidth + font.width(value) + p * 2, linesHeight(1));
-		if (labelled) text(g, font, label, p, p, labelColor());
-		text(g, font, value, p + labelWidth, p, textColor());
+		if (labelled) label(g, font, label, p, p);
+		value(g, font, value, p + labelWidth, p);
 	}
 }
