@@ -2,11 +2,13 @@
   import { onMount } from "svelte";
   import { backOut } from "svelte/easing";
   import { fly, scale } from "svelte/transition";
+  import DownloadCard from "../components/DownloadCard.svelte";
   import Icon from "../components/Icon.svelte";
   import ProfileIcon from "../components/ProfileIcon.svelte";
   import NewProfile from "../components/NewProfile.svelte";
   import ProfileModal from "../components/ProfileModal.svelte";
   import { api } from "../lib/api";
+  import { launchFraction } from "../lib/progress";
   import { ago, compact, greeting, playTime, loaderName } from "../lib/format";
   import { activeAccount, app, go, play, refreshProfiles, selectProfile, selectedProfile } from "../lib/state.svelte";
   import { toast } from "../lib/toast.svelte";
@@ -16,7 +18,8 @@
   const account = $derived(activeAccount());
   const busy = $derived(app.launching !== null);
   const running = $derived(app.running !== null);
-  const percent = $derived(app.progress && app.progress.total > 0 ? Math.round((app.progress.done / app.progress.total) * 100) : null);
+  const fraction = $derived(app.progress ? launchFraction(app.progress) : null);
+  const percent = $derived(fraction === null ? null : Math.floor(fraction * 100));
 
   let picker = $state(false);
   let creating = $state(false);
@@ -27,7 +30,7 @@
   onMount(async () => {
     servers = (await api.listServers()).slice(0, 4);
     for (const s of servers) {
-      api.pingServer(s.address).then((r) => (pings[s.id] = r)).catch(() => (pings[s.id] = "offline"));
+      api.pingServer(s.address).then((r) => { pings[s.id] = r; }).catch(() => { pings[s.id] = "offline"; });
     }
   });
 
@@ -52,8 +55,8 @@
   <div class="news" in:fly={{ x: 16, duration: 400, delay: 120 }}>
     <div class="newscard lift">
       <div class="k">What's new</div>
-      <div class="tt">Glade 1.1: always up to date</div>
-      <div class="ss">Glade is in every Fabric 26.3 profile and checked before each launch.</div>
+      <div class="tt">Glade 1.3: see every download</div>
+      <div class="ss">Glade runs in game on 1.8.8, 1.8.9, 1.21 and 26.x, and now shows how much is downloaded, how fast and how long is left.</div>
     </div>
     {#if servers.length}
       <div class="newscard lift">
@@ -71,11 +74,7 @@
   </div>
 
   <div class="playbar-wrap">
-    {#if app.progress}
-      <div class="stage" transition:fly={{ y: 6, duration: 160 }}>
-        {app.progress.stage}{#if app.progress.total > 1} · {app.progress.done}/{app.progress.total}{/if}
-      </div>
-    {/if}
+    <DownloadCard inline />
 
     <div class="playbar" in:fly={{ y: 20, duration: 420, delay: 80 }}>
       {#if profile}
@@ -176,7 +175,6 @@
   .p { margin-left: auto; font: 500 11px var(--mono); color: var(--muted); }
 
   .playbar-wrap { position: absolute; left: calc(50% - 150px); transform: translateX(-50%); bottom: 26px; display: grid; justify-items: center; gap: 10px; }
-  .stage { font-size: 12.5px; color: var(--text); background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(14px); padding: 4px 12px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.7); }
   .playbar {
     display: flex; align-items: center; gap: 14px; padding: 10px 10px 10px 14px; border-radius: 18px;
     background: rgba(255, 255, 255, 0.38); border: 1px solid rgba(255, 255, 255, 0.7);

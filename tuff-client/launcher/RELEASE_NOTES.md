@@ -1,5 +1,4 @@
-Glade 1.2.0
-- Glade's in-game mod now runs on Minecraft 1.8.8, 1.8.9, every 1.21 version and 26.1 to 26.3. Make a Fabric profile on any of them and Glade is added and kept up to date.
-- Glade for 1.8 has the same menu (Right Shift), HUD editor and look, with FPS, CPS, Keystrokes, Armor Status, Coordinates, Potion Effects, Clock, Ping, Speed, Memory, Zoom, Freelook, Toggle Sprint, Fullbright, Time Changer and Hide Scoreboard. It needs only Fabric Loader.
-- A few visual modules aren't on older versions yet and are hidden there (Hand & Item View, Small Shield, Old Animations, Item Physics, Low Fire, Custom Sky, Clean F3).
-- Legacy Fabric profiles (like 1.8.9) now start: the launcher used to fail downloading their LWJGL files.
+Glade 1.3.0
+- You can now see every download. Pressing Play shows what's downloading, how many MB of how many, the speed and the time left, on every page (and on the Play button).
+- Creating a Glade profile shows each mod as it downloads, with a progress bar and its size.
+- If Fabric API has to be installed before a launch, that download shows too.

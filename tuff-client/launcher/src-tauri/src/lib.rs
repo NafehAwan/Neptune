@@ -368,16 +368,28 @@ async fn create_preset_profile(app: AppHandle, state: State<'_, AppState>, prese
         },
     )?;
     let (mut installed, mut skipped) = (Vec::new(), Vec::new());
+    let groups: [(&[&str], &str); 3] = [(preset.mods, "mod"), (preset.shaders, "shader"), (preset.resourcepacks, "resourcepack")];
+    // one step for Glade, then one per mod, shader and pack
+    let steps = 1 + groups.iter().map(|(slugs, _)| slugs.len() as u64).sum::<u64>();
+    let send = progress_sender(&app, "create-progress", &profile.id);
+    let step = std::sync::atomic::AtomicU64::new(0);
+    let on_download = |title: &str, s: download::DlStatus| {
+        let mut p = Progress::download(&format!("Downloading {title}"), s);
+        (p.done, p.total) = (step.load(std::sync::atomic::Ordering::Relaxed), steps);
+        send(p);
+    };
+    send(Progress::step("Adding Glade", 0, steps));
     let builds = glade_builds(&app, &state.paths);
-    match glade::ensure(&state.http, &state.paths, &profile, &builds).await {
+    match glade::ensure_with(&state.http, &state.paths, &profile, &builds, &on_download).await {
         Ok(r) if r.installed => installed.push(format!("Glade {}", r.version.unwrap_or_default())),
         Ok(r) => skipped.push(r.reason.unwrap_or_else(|| "Glade mod".into())),
         Err(e) => skipped.push(format!("Glade mod ({e:#})")),
     }
-    let groups: [(&[&str], &str); 3] = [(preset.mods, "mod"), (preset.shaders, "shader"), (preset.resourcepacks, "resourcepack")];
     for (slugs, kind) in groups {
         for slug in slugs {
-            match modrinth::install(&state.http, &state.paths, &profile, slug, kind).await {
+            let i = step.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
+            send(Progress::step(&format!("Finding {}", slug.replace('-', " ")), i, steps));
+            match modrinth::install_with(&state.http, &state.paths, &profile, slug, kind, &on_download).await {
                 Ok(titles) => installed.extend(titles),
                 Err(_) => skipped.push(slug.to_string()),
             }
@@ -387,6 +399,7 @@ async fn create_preset_profile(app: AppHandle, state: State<'_, AppState>, prese
     let files = |kind: &str| -> Vec<String> {
         modrinth::list(&state.paths, &profile.id, kind).map(|l| l.into_iter().map(|i| i.file).collect()).unwrap_or_default()
     };
+    send(Progress::step("Finishing", steps, steps));
     let _ = presets::write_options(&instance, preset, &files("resourcepack"));
     if let Some(shader) = files("shader").first() {
         let _ = presets::enable_shader(&instance, shader);
@@ -555,6 +568,22 @@ struct LaunchProgress {
     progress: Progress,
 }
 
+/// Sends progress for a profile as `event`, at most every 60 ms plus the end
+/// of each stage, so the window stays smooth during big downloads.
+fn progress_sender(app: &AppHandle, event: &'static str, profile_id: &str) -> impl Fn(Progress) + Send + Sync {
+    let app = app.clone();
+    let profile_id = profile_id.to_string();
+    let last = Mutex::new(Instant::now() - Duration::from_secs(1));
+    move |p: Progress| {
+        let mut last = last.lock().unwrap();
+        let finished = p.done == p.total && p.bytes >= p.bytes_total;
+        if finished || last.elapsed() > Duration::from_millis(60) {
+            *last = Instant::now();
+            let _ = app.emit(event, LaunchProgress { profile_id: profile_id.clone(), progress: p });
+        }
+    }
+}
+
 #[derive(Serialize, Clone)]
 struct LogLine {
     line: String,
@@ -574,10 +603,8 @@ fn log_level(line: &str) -> &'static str {
 /// Before every launch: Glade is installed and up to date where it can run,
 /// with what it needs, and taken out where it can't.
 async fn check_glade(app: &AppHandle, state: &AppState, profile: &mut Profile) -> anyhow::Result<glade::Report> {
-    let _ = app.emit("launch-progress", LaunchProgress {
-        profile_id: profile.id.clone(),
-        progress: Progress { stage: "Checking Glade".into(), done: 0, total: 1 },
-    });
+    let send = progress_sender(app, "launch-progress", &profile.id);
+    send(Progress::step("Checking Glade", 0, 1));
     let builds = glade_builds(app, &state.paths);
     // Glade needs a recent Fabric Loader; move old profiles up to the newest one.
     let build = builds.for_version(&profile.game_version).filter(|_| glade::applies(profile, &builds));
@@ -595,7 +622,8 @@ async fn check_glade(app: &AppHandle, state: &AppState, profile: &mut Profile) -
             }
         }
     }
-    let report = glade::ensure(&state.http, &state.paths, profile, &builds).await?;
+    let on_download = |title: &str, s: download::DlStatus| send(Progress::download(&format!("Downloading {title}"), s));
+    let report = glade::ensure_with(&state.http, &state.paths, profile, &builds, &on_download).await?;
     let _ = app.emit("glade-check", json!({ "profileId": profile.id, "report": report }));
     Ok(report)
 }
@@ -619,16 +647,7 @@ async fn launch(app: AppHandle, state: State<'_, AppState>, profile_id: String, 
     let account = active_account(&state).await.map_err(err)?;
     check_glade(&app, &state, &mut profile).await.map_err(|e| format!("Glade check failed: {e:#}"))?;
 
-    let last_emit = Mutex::new(Instant::now() - Duration::from_secs(1));
-    let progress_app = app.clone();
-    let pid = profile_id.clone();
-    let on_progress = move |p: Progress| {
-        let mut last = last_emit.lock().unwrap();
-        if p.done == p.total || last.elapsed() > Duration::from_millis(60) {
-            *last = Instant::now();
-            let _ = progress_app.emit("launch-progress", LaunchProgress { profile_id: pid.clone(), progress: p });
-        }
-    };
+    let on_progress = progress_sender(&app, "launch-progress", &profile_id);
     let features = meta::Features {
         custom_resolution: profile.resolution.is_some(),
         quick_play_multiplayer: server.is_some(),
@@ -682,10 +701,7 @@ async fn launch(app: AppHandle, state: State<'_, AppState>, profile_id: String, 
         launcher_version: &app.package_info().version.to_string(),
     });
 
-    let _ = app.emit("launch-progress", LaunchProgress {
-        profile_id: profile_id.clone(),
-        progress: Progress { stage: "Starting Minecraft".into(), done: 1, total: 1 },
-    });
+    on_progress(Progress::step("Starting Minecraft", 1, 1));
     let mut child = Command::new(&prepared.java)
         .args(&args)
         .current_dir(&game_dir)

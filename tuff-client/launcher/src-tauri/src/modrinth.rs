@@ -2,7 +2,7 @@
 //! `.mrpack` modpack import. Installed files are tracked per profile in
 //! `.tuff/content.json` so the UI can show names, icons and updates.
 
-use crate::download::{download_all, file_sha1, DlTask};
+use crate::download::{download_all, download_all_status, file_sha1, DlStatus, DlTask};
 use crate::models::{Loader, Profile};
 use crate::paths::Paths;
 use crate::store;
@@ -198,6 +198,19 @@ pub async fn install(
     project_id: &str,
     kind: &str,
 ) -> Result<Vec<String>> {
+    install_with(http, paths, profile, project_id, kind, &|_, _| {}).await
+}
+
+/// Like [install], reporting each file as it downloads (its project's title
+/// and the bytes so far). Dependencies are reported too.
+pub async fn install_with(
+    http: &reqwest::Client,
+    paths: &Paths,
+    profile: &Profile,
+    project_id: &str,
+    kind: &str,
+    on_progress: &(dyn Fn(&str, DlStatus) + Send + Sync),
+) -> Result<Vec<String>> {
     if kind == "mod" && !profile.loader.is_modded() {
         bail!("Mods need a modded profile. Switch this profile to Fabric (or Quilt, Forge, NeoForge) or create a Glade profile.");
     }
@@ -250,7 +263,8 @@ pub async fn install(
         let file = primary_file(&version)?;
         let name = safe_file_name(file["filename"].as_str().unwrap_or_default())?.to_string();
         let dir = paths.instance(&profile.id).join(folder_for(&kind)?);
-        download_all(
+        let title = project["title"].as_str().unwrap_or(&name).to_string();
+        download_all_status(
             http,
             vec![DlTask {
                 url: file["url"].as_str().unwrap_or_default().to_string(),
@@ -259,10 +273,9 @@ pub async fn install(
                 size: file["size"].as_u64(),
             }],
             1,
-            |_, _| {},
+            |s| on_progress(&title, s),
         )
         .await?;
-        let title = project["title"].as_str().unwrap_or(&name).to_string();
         index.insert(
             name,
             ContentMeta {

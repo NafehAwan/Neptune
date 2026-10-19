@@ -1,4 +1,5 @@
 import { api, isTauri, on } from "./api";
+import { Speed } from "./progress";
 import { toast } from "./toast.svelte";
 import type { Account, AppInfo, GameExit, GladeReport, LaunchProgress, LauncherUpdate, LogLine, Profile, Settings, UpdateProgress } from "./types";
 
@@ -17,6 +18,12 @@ export const app = $state({
   running: null as string | null,
   launching: null as string | null,
   progress: null as LaunchProgress | null,
+  /** Download speed of the launch, in bytes per second. */
+  speed: 0,
+  /** A Glade preset profile being created, and its download speed. */
+  creating: false,
+  createProgress: null as LaunchProgress | null,
+  createSpeed: 0,
   logs: [] as LogLine[],
   lastExit: null as GameExit | null,
   /** The crash dialog is showing for app.lastExit. */
@@ -28,6 +35,22 @@ export const app = $state({
   update: null as LauncherUpdate | null,
   updateProgress: null as UpdateProgress | null,
 });
+
+const launchSpeed = new Speed();
+const createSpeed = new Speed();
+
+/** Creates a Glade preset profile, keeping app.createProgress up to date meanwhile. */
+export async function createPresetProfile(preset: string, gameVersion: string) {
+  app.creating = true;
+  app.createProgress = { profileId: "", stage: "Starting", done: 0, total: 0, bytes: 0, bytesTotal: 0 };
+  app.createSpeed = 0;
+  try {
+    return await api.createPresetProfile(preset, gameVersion);
+  } finally {
+    app.creating = false;
+    app.createProgress = null;
+  }
+}
 
 const UPDATE_CHECK_MS = 60 * 60 * 1000;
 
@@ -81,7 +104,8 @@ export async function play(profileId: string, server?: string) {
     return;
   }
   app.launching = profileId;
-  app.progress = { profileId, stage: "Preparing", done: 0, total: 0 };
+  app.progress = { profileId, stage: "Preparing", done: 0, total: 0, bytes: 0, bytesTotal: 0 };
+  app.speed = 0;
   app.logs = [];
   app.lastExit = null;
   try {
@@ -102,7 +126,14 @@ export async function init() {
   app.running = await api.runningGame();
 
   await on<LaunchProgress>("launch-progress", (p) => {
-    if (app.launching === p.profileId) app.progress = p;
+    if (app.launching !== p.profileId) return;
+    app.progress = p;
+    app.speed = launchSpeed.sample(p);
+  });
+  await on<LaunchProgress>("create-progress", (p) => {
+    if (!app.creating) return;
+    app.createProgress = p;
+    app.createSpeed = createSpeed.sample(p);
   });
   await on<LogLine[]>("game-log", (batch) => {
     app.logs.push(...batch);

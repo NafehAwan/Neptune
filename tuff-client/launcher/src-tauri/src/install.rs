@@ -1,7 +1,7 @@
 //! Resolves a profile into everything needed to start the game: merged
 //! version JSON, libraries, natives, assets, client jar and Java.
 
-use crate::download::{download_all, DlTask};
+use crate::download::{download_all, download_all_status, DlStatus, DlTask};
 use crate::meta::{self, Features, VersionJson};
 use crate::models::{Loader, Profile};
 use crate::paths::Paths;
@@ -13,11 +13,27 @@ use std::path::PathBuf;
 
 pub const ASSETS_URL: &str = "https://resources.download.minecraft.net";
 
-#[derive(Serialize, Clone, Debug)]
+/// What the launcher is doing: a stage ("Downloading assets"), steps or files
+/// done of total, and the bytes received of the bytes to get (0 when the
+/// stage isn't a download).
+#[derive(Serialize, Clone, Debug, Default)]
+#[serde(rename_all = "camelCase")]
 pub struct Progress {
     pub stage: String,
     pub done: u64,
     pub total: u64,
+    pub bytes: u64,
+    pub bytes_total: u64,
+}
+
+impl Progress {
+    pub fn step(stage: &str, done: u64, total: u64) -> Self {
+        Progress { stage: stage.to_string(), done, total, ..Default::default() }
+    }
+
+    pub fn download(stage: &str, s: DlStatus) -> Self {
+        Progress { stage: stage.to_string(), done: s.files, total: s.files_total, bytes: s.bytes, bytes_total: s.bytes_total }
+    }
 }
 
 pub struct Prepared {
@@ -71,9 +87,8 @@ pub async fn prepare(
     features: &Features,
     progress: &(dyn Fn(Progress) + Send + Sync),
 ) -> Result<Prepared> {
-    let report = |stage: &str, done: u64, total: u64| {
-        progress(Progress { stage: stage.to_string(), done, total })
-    };
+    let report = |stage: &str, done: u64, total: u64| progress(Progress::step(stage, done, total));
+    let report_dl = |stage: &str, s: DlStatus| progress(Progress::download(stage, s));
     report("Reading version", 0, 0);
     let version = resolve_version(http, paths, profile).await?;
     let game_version = profile.game_version.clone();
@@ -126,7 +141,7 @@ pub async fn prepare(
         client_jar.clone()
     };
     classpath.push(game_jar.clone());
-    download_all(http, tasks, concurrency, |d, t| report("Downloading game files", d, t)).await?;
+    download_all_status(http, tasks, concurrency, |s| report_dl("Downloading game files", s)).await?;
     if forge_like && !game_jar.exists() {
         std::fs::create_dir_all(game_jar.parent().unwrap())?;
         if std::fs::hard_link(&client_jar, &game_jar).is_err() {
@@ -180,7 +195,7 @@ pub async fn prepare(
         .collect();
     // CI smoke tests start the game without sounds and music to save time
     let tasks = if std::env::var_os("GLADE_SKIP_ASSETS").is_some() { Vec::new() } else { tasks };
-    download_all(http, tasks, concurrency, |d, t| report("Downloading assets", d, t)).await?;
+    download_all_status(http, tasks, concurrency, |s| report_dl("Downloading sounds and textures", s)).await?;
     let mut effective_assets_root = assets_root.clone();
     if index.is_virtual || index.map_to_resources {
         // Pre-1.7 versions read loose files instead of hashed objects.
@@ -213,9 +228,7 @@ pub async fn prepare(
                 .as_ref()
                 .map(|j| j.component.clone())
                 .unwrap_or_else(|| "jre-legacy".into());
-            match java::ensure_runtime(http, paths, &component, concurrency, |d, t| {
-                report("Downloading Java", d, t)
-            })
+            match java::ensure_runtime(http, paths, &component, concurrency, |s| report_dl("Downloading Java", s))
             .await
             {
                 Ok(path) => path,

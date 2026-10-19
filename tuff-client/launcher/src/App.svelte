@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import { fade } from "svelte/transition";
   import CrashModal from "./components/CrashModal.svelte";
+  import DownloadCard from "./components/DownloadCard.svelte";
   import GroveScene from "./components/GroveScene.svelte";
   import Sidebar from "./components/Sidebar.svelte";
   import TitleBar from "./components/TitleBar.svelte";
@@ -73,6 +74,8 @@
     {:else}
       <div class="boot"><span class="spinner"></span></div>
     {/if}
+    <!-- Home shows it above the Play bar; every other page in the corner -->
+    {#if app.route !== "home"}<DownloadCard />{/if}
   </main>
   {#if app.crashOpen && app.lastExit?.crash}<CrashModal exit={app.lastExit} onclose={() => (app.crashOpen = false)} />{/if}
   <!-- required updates wait until Minecraft is closed -->

@@ -73,6 +73,10 @@ game look alike.
   version or loader, duplicates, mixin failures, the wrong Java, running out of
   memory and graphics driver crashes. Other crashes are traced through the stack
   to the mod jar the crashing code lives in.
+- **Download progress**: while a profile gets ready to play, a card shows the
+  stage, megabytes downloaded of the total, speed and time left (on Home it
+  sits above the Play bar, on other pages in the corner). Creating a Glade
+  profile shows each mod as it downloads.
 - **Performance**: Java is downloaded automatically for each version, with
   tuned G1 flags. The home scene pauses when the window is unfocused or hidden
   (and stays still with Reduce motion), and the window can minimize or hide

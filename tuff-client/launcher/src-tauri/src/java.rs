@@ -1,7 +1,7 @@
 //! Java runtimes from Mojang's runtime manifest, so players never have to
 //! install the right Java themselves. Falls back to a system `java`.
 
-use crate::download::{download_all, DlTask};
+use crate::download::{download_all_status, DlStatus, DlTask};
 use crate::paths::Paths;
 use anyhow::{anyhow, Context, Result};
 use serde_json::Value;
@@ -38,7 +38,7 @@ pub async fn ensure_runtime(
     paths: &Paths,
     component: &str,
     concurrency: usize,
-    on_progress: impl Fn(u64, u64),
+    on_progress: impl Fn(DlStatus) + Sync,
 ) -> Result<PathBuf> {
     let dir = paths.runtimes().join(component);
     let java = java_binary(&dir);
@@ -86,7 +86,7 @@ pub async fn ensure_runtime(
             _ => {}
         }
     }
-    download_all(http, tasks, concurrency, on_progress)
+    download_all_status(http, tasks, concurrency, on_progress)
         .await
         .context("downloading Java")?;
 

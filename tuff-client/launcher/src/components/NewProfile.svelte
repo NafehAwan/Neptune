@@ -2,13 +2,15 @@
   import { onMount } from "svelte";
   import { fly } from "svelte/transition";
   import { api } from "../lib/api";
-  import { app, refreshProfiles, selectProfile } from "../lib/state.svelte";
+  import { createFraction, downloaded } from "../lib/progress";
+  import { app, createPresetProfile, refreshProfiles, selectProfile } from "../lib/state.svelte";
   import { toast } from "../lib/toast.svelte";
   import type { GameVersion, Preset, Profile } from "../lib/types";
   import { gladeRuns } from "../lib/format";
   import Icon from "./Icon.svelte";
   import Modal from "./Modal.svelte";
   import ProfileIcon from "./ProfileIcon.svelte";
+  import ProgressBar from "./ProgressBar.svelte";
 
   let { onclose, oncustom, oncreated }: { onclose: () => void; oncustom: () => void; oncreated?: (p: Profile) => void } = $props();
 
@@ -29,6 +31,9 @@
     if (!versions.some((v) => v.version === version)) version = versions.find((v) => v.stable)?.version ?? gladeVersion;
   });
 
+  const progress = $derived(app.createProgress);
+  const fileDetail = $derived(progress ? downloaded(progress, app.createSpeed) : null);
+
   const owned = (id: string) => app.profiles.filter((p) => p.preset === id).length;
 
   async function create() {
@@ -36,7 +41,7 @@
     if (!preset || busy) return;
     busy = preset.id;
     try {
-      const r = await api.createPresetProfile(preset.id, version);
+      const r = await createPresetProfile(preset.id, version);
       await refreshProfiles();
       await selectProfile(r.profile.id);
       const missing = r.skipped.length ? ` ${r.skipped.length} not available for ${r.profile.gameVersion} yet.` : "";
@@ -83,6 +88,18 @@
 
 
   {#snippet footer()}
+    {#if busy && progress}
+      <div class="making" role="status" aria-live="polite">
+        <div class="mrow">
+          <span class="mstage ellipsis">{progress.stage}</span>
+          <span class="mpct mono">{Math.floor(createFraction(progress) * 100)}%</span>
+        </div>
+        <ProgressBar value={progress.total > 0 ? createFraction(progress) : null} />
+        <div class="mdetail mono ellipsis">
+          {#if progress.total > 0}{Math.min(progress.done + 1, progress.total)} of {progress.total}{/if}{#if fileDetail}{` · ${fileDetail}`}{/if}
+        </div>
+      </div>
+    {:else}
     <div class="vpick">
       <label class="vfield">
         <span>Minecraft</span>
@@ -96,6 +113,7 @@
         {#if withGlade(version)}Fabric · includes the Glade mod, installed and checked before every launch{:else}Fabric · Glade's in-game mod isn't available for {version} yet, so it gets the mods only; mods without a {version} build are skipped{/if}
       </p>
     </div>
+    {/if}
     <button class="btn ghost" onclick={onclose} disabled={!!busy}>Cancel</button>
     <button class="btn primary" onclick={create} disabled={!!busy || !presets.length}>
       {#if busy}<span class="spinner"></span> Installing mods…{:else}<Icon name="spark" size={14} /> Create {presets.find((p) => p.id === picked)?.name ?? ""}{/if}
@@ -132,5 +150,10 @@
   .vfield select { width: 190px; height: 36px; }
   .unstable { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
   .unstable input { accent-color: var(--accent); }
+  .making { margin-right: auto; width: 440px; max-width: 100%; display: grid; gap: 6px; }
+  .mrow { display: flex; align-items: baseline; gap: 10px; }
+  .mstage { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; }
+  .mpct { font-size: 12.5px; font-weight: 600; color: var(--accent-deep); }
+  .mdetail { font-size: 11.5px; color: var(--muted); min-height: 1.3em; }
   .vnote { grid-column: 1 / -1; font-size: 11.5px; color: var(--muted); line-height: 1.35; }
 </style>

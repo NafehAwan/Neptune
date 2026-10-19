@@ -2,6 +2,7 @@ import sampleSkin from "../assets/skins/sample.png";
 // Sample data for running the UI in a plain browser (`npm run dev`) where the
 // Rust backend isn't available. Never loaded inside the desktop app.
 import type * as T from "./types";
+import { previewEmit } from "./api";
 
 // mirrors src-tauri/src/presets.rs
 const PRESETS: T.Preset[] = [
@@ -50,6 +51,18 @@ const mods: T.ContentItem[] = [
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+/** Plays a fake download as progress events: `mb` megabytes at about 6 MB/s. */
+async function fakeDownload(event: string, base: Omit<T.LaunchProgress, "bytes" | "bytesTotal">, mb: number, files = 0) {
+  const total = Math.round(mb * 1024 * 1024);
+  const steps = Math.max(4, Math.round(mb / 0.6));
+  for (let i = 0; i <= steps; i++) {
+    const p = { ...base, bytes: Math.round((total * i) / steps), bytesTotal: total };
+    if (files) Object.assign(p, { done: Math.round((files * i) / steps), total: files });
+    previewEmit(event, p);
+    await delay(100);
+  }
+}
+
 export async function mockCall(cmd: string, args: Record<string, any> = {}): Promise<unknown> {
   await delay(120);
   switch (cmd) {
@@ -95,7 +108,19 @@ export async function mockCall(cmd: string, args: Record<string, any> = {}): Pro
     case "preset_game_versions":
       return ["26.4-snapshot-2", "26.3", "26.2", "26.1", "1.21.11", "1.21.10", "1.21.8", "1.20.6", "1.20.1"].map((version) => ({ version, stable: !version.includes("snapshot") }));
     case "running_game": return null;
-    case "launch": throw "This is a browser preview. Launch the desktop app to play.";
+    case "launch": {
+      // ?download plays a fake first launch
+      if (location.search.includes("download")) {
+        const id = args.profileId as string;
+        const ev = "launch-progress";
+        previewEmit(ev, { profileId: id, stage: "Checking Glade", done: 0, total: 1, bytes: 0, bytesTotal: 0 });
+        await delay(600);
+        await fakeDownload(ev, { profileId: id, stage: "Downloading Fabric API", done: 0, total: 1 }, 2.4);
+        await fakeDownload(ev, { profileId: id, stage: "Downloading game files", done: 0, total: 0 }, 38, 64);
+        await fakeDownload(ev, { profileId: id, stage: "Downloading sounds and textures", done: 0, total: 0 }, 420, 3912);
+      }
+      throw "This is a browser preview. Launch the desktop app to play.";
+    }
     case "list_servers": return servers;
     case "save_servers": servers = args.servers; return null;
     case "ping_server": {
@@ -123,7 +148,16 @@ export async function mockCall(cmd: string, args: Record<string, any> = {}): Pro
     case "list_presets": return PRESETS;
     case "create_preset_profile": {
       const preset = PRESETS.find((p) => p.id === args.preset)!;
-      await new Promise((r) => setTimeout(r, 1200));
+      const ev = "create-progress";
+      const steps = 1 + preset.mods.length + preset.shaders.length + preset.resourcepacks.length;
+      previewEmit(ev, { profileId: "", stage: "Adding Glade", done: 0, total: steps, bytes: 0, bytesTotal: 0 });
+      await delay(300);
+      for (const [i, slug] of [...preset.mods, ...preset.shaders, ...preset.resourcepacks].entries()) {
+        previewEmit(ev, { profileId: "", stage: `Finding ${slug.replace(/-/g, " ")}`, done: i + 1, total: steps, bytes: 0, bytesTotal: 0 });
+        await delay(150);
+        await fakeDownload(ev, { profileId: "", stage: `Downloading ${slug}`, done: i + 1, total: steps }, 0.3 + (i % 4) * 0.9);
+      }
+      previewEmit(ev, { profileId: "", stage: "Finishing", done: steps, total: steps, bytes: 0, bytesTotal: 0 });
       let id = `glade-${preset.id}`, n = 2;
       while (profiles.some((p) => p.id === id)) id = `glade-${preset.id}-${n++}`;
       const profile: T.Profile = { id, name: `Glade ${preset.name}`, icon: preset.icon, gameVersion: args.gameVersion ?? "26.3", loader: "fabric", loaderVersion: "0.19.5", memoryMb: 4096, jvmArgs: "", javaPath: null, resolution: null, created: now, lastPlayed: null, playTimeSecs: 0, isTuff: true, preset: preset.id };

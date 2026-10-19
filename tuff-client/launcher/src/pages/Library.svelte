@@ -6,6 +6,7 @@
   import ProfileModal from "../components/ProfileModal.svelte";
   import { api, pickFile } from "../lib/api";
   import { ago, bytes, gladeRuns, playTime, loaderName } from "../lib/format";
+  import { launchFraction } from "../lib/progress";
   import { app, go, play, refreshProfiles, selectProfile } from "../lib/state.svelte";
   import { toast } from "../lib/toast.svelte";
   import type { ContentItem, ContentKind, ContentUpdate, Profile } from "../lib/types";
@@ -191,7 +192,10 @@
             </div>
             <div class="actions">
               <button class="btn primary playbtn" disabled={!!app.running || !!app.launching} onclick={() => { selectProfile(selected.id); play(selected.id); }}>
-                <Icon name="play" size={12} /> Play
+                {#if app.launching === selected.id}
+                  {@const f = app.progress ? launchFraction(app.progress) : null}
+                  <span class="spinner"></span> {f === null ? "Loading" : `${Math.floor(f * 100)}%`}
+                {:else if app.running === selected.id}Playing{:else}<Icon name="play" size={12} /> Play{/if}
               </button>
               <div class="row tight">
                 <button class="btn small icon" title="Edit" onclick={() => (editing = selected)}><Icon name="edit" size={12} /></button>

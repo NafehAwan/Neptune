@@ -12,8 +12,20 @@ async function call<R>(cmd: string, args?: Record<string, unknown>): Promise<R> 
   return invoke<R>(cmd, args);
 }
 
+// browser preview only: the mock backend sends events through here
+const previewListeners = new Map<string, Set<(payload: unknown) => void>>();
+export function previewEmit(event: string, payload: unknown) {
+  for (const h of previewListeners.get(event) ?? []) h(payload);
+}
+
 export async function on<P>(event: string, handler: (payload: P) => void): Promise<() => void> {
-  if (!isTauri) return () => {};
+  if (!isTauri) {
+    const set = previewListeners.get(event) ?? new Set();
+    previewListeners.set(event, set);
+    const h = handler as (payload: unknown) => void;
+    set.add(h);
+    return () => set.delete(h);
+  }
   const { listen } = await import("@tauri-apps/api/event");
   return listen<P>(event, (e) => handler(e.payload));
 }

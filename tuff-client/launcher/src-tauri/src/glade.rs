@@ -253,7 +253,19 @@ fn remove_glade_files(dir: &Path, keep: Option<&str>) -> Vec<String> {
 
 /// Puts Glade (and what it needs) into the profile, or takes it out of a
 /// profile it can't run in, so it never breaks a game.
+#[allow(dead_code)] // used by the tests and the CI start-up test
 pub async fn ensure(http: &reqwest::Client, paths: &Paths, profile: &Profile, builds: &Builds) -> Result<Report> {
+    ensure_with(http, paths, profile, builds, &|_, _| {}).await
+}
+
+/// Like [ensure], reporting the download when Fabric API has to be installed.
+pub async fn ensure_with(
+    http: &reqwest::Client,
+    paths: &Paths,
+    profile: &Profile,
+    builds: &Builds,
+    on_progress: &(dyn Fn(&str, crate::download::DlStatus) + Send + Sync),
+) -> Result<Report> {
     let mods = paths.instance(&profile.id).join("mods");
     let mut report = Report::default();
     let build = builds.for_version(&profile.game_version);
@@ -294,7 +306,7 @@ pub async fn ensure(http: &reqwest::Client, paths: &Paths, profile: &Profile, bu
             modrinth::set_enabled(paths, &profile.id, "mod", &name, true)?;
             report.fixed.push("Turned Fabric API back on (Glade needs it)".into());
         } else {
-            modrinth::install(http, paths, profile, api, "mod")
+            modrinth::install_with(http, paths, profile, api, "mod", on_progress)
                 .await
                 .context("installing Fabric API, which Glade needs")?;
             report.fixed.push("Installed Fabric API (Glade needs it)".into());

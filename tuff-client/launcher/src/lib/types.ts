@@ -64,7 +64,8 @@ export interface VersionList { latestRelease: string; latestSnapshot: string; ve
 export interface LoaderVersion { version: string; stable: boolean }
 export interface GameVersion { version: string; stable: boolean }
 
-export interface LaunchProgress { profileId: string; stage: string; done: number; total: number }
+/** What the launcher is doing: steps or files done of total, and bytes received of bytesTotal (0 when not downloading). */
+export interface LaunchProgress { profileId: string; stage: string; done: number; total: number; bytes: number; bytesTotal: number }
 export interface LogLine { line: string; level: "info" | "warn" | "error" }
 export interface CrashReport {
   title: string;
