@@ -34,13 +34,33 @@ public abstract class Module {
 		return settings;
 	}
 
+	/** Mixins this module needs; on a Minecraft version without them it's hidden and off. */
+	private String[] mixins = {};
+	private Boolean available;
+
+	protected void requires(String... mixinNames) {
+		mixins = mixinNames;
+	}
+
+	/** Whether this Minecraft version has what the module needs (any of its mixins was built for it). */
+	public boolean available() {
+		if (available == null) {
+			boolean found = mixins.length == 0;
+			for (String name : mixins) {
+				if (Module.class.getClassLoader().getResource("net/tuffclient/mixin/" + name + ".class") != null) found = true;
+			}
+			available = found;
+		}
+		return available;
+	}
+
 	/** Hidden modules hold settings but don't appear as mod cards. */
 	public boolean hidden() {
-		return false;
+		return !available();
 	}
 
 	public boolean isEnabled() {
-		return enabled;
+		return enabled && available();
 	}
 
 	public void setEnabled(boolean value) {

@@ -18,6 +18,7 @@ public final class CustomSkyModule extends Module {
 
 	public CustomSkyModule() {
 		super("custom_sky", "Custom Sky", "Tint the sky and fog to any colour.", Category.VISUAL, false);
+		requires("SkyRendererMixin", "FogRendererMixin");
 	}
 
 	private float t() {

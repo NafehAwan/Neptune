@@ -31,7 +31,7 @@ public final class BiomeLightModule extends HudModule {
 		int block = 12, skyLight = 15;
 		if (level != null && camera != null) {
 			BlockPos pos = camera.blockPosition();
-			biomeName = level.getBiome(pos).unwrapKey().map(k -> pretty(k.identifier().getPath())).orElse("Unknown");
+			biomeName = level.getBiome(pos).unwrapKey().map(k -> pretty(net.tuffclient.compat.ResourceKeys.id(k).getPath())).orElse("Unknown");
 			block = level.getBrightness(LightLayer.BLOCK, pos);
 			skyLight = level.getBrightness(LightLayer.SKY, pos);
 		}

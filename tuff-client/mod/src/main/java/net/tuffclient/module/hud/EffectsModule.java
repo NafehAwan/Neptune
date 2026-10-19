@@ -6,7 +6,6 @@ import java.util.List;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.Hud;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -46,7 +45,8 @@ public final class EffectsModule extends HudModule {
 		box(g, w + p * 2, effects.size() * 22 + p * 2 - 4);
 		int y = p - 2;
 		for (MobEffectInstance e : effects) {
-			g.sprite(Hud.getMobEffectSprite(e.getEffect()), p - 1, y + 2, 18, 18);
+			var icon = net.tuffclient.compat.EffectIcons.sprite(e.getEffect());
+			if (icon != null) g.sprite(icon, p - 1, y + 2, 18, 18);
 			value(g, font, name(e), p + 20, y + 3);
 			String time = e.isInfiniteDuration() ? "**:**" : duration(e.getDuration());
 			if (e.endsWithin(200)) text(g, font, time, p + 20, y + 12, Theme.DANGER);

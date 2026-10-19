@@ -1,3 +1,4 @@
+// glade: minecraft >=1.21.2
 package net.tuffclient.mixin;
 
 import net.minecraft.client.renderer.entity.EntityRenderer;

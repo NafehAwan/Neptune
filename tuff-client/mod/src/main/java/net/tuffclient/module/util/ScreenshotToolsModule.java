@@ -65,16 +65,16 @@ public final class ScreenshotToolsModule extends Module {
 		shownAt = System.currentTimeMillis();
 		if (!chat.get() || client.player == null) return;
 		MutableComponent msg = Component.literal("Screenshot saved ").withStyle(ChatFormatting.GRAY);
-		msg.append(button("Open", new ClickEvent.OpenFile(file), "Open the picture"));
-		msg.append(button("Folder", new ClickEvent.OpenFile(folder()), "Show the screenshots folder"));
-		msg.append(button("Copy path", new ClickEvent.CopyToClipboard(file.getAbsolutePath()), "Copy where it's saved"));
-		msg.append(button("Delete", new ClickEvent.RunCommand("/glade screenshot delete " + file.getName()), "Delete this screenshot"));
+		msg.append(button("Open", net.tuffclient.compat.ChatEvents.openFile(file), "Open the picture"));
+		msg.append(button("Folder", net.tuffclient.compat.ChatEvents.openFile(folder()), "Show the screenshots folder"));
+		msg.append(button("Copy path", net.tuffclient.compat.ChatEvents.copy(file.getAbsolutePath()), "Copy where it's saved"));
+		msg.append(button("Delete", net.tuffclient.compat.ChatEvents.runCommand("/glade screenshot delete " + file.getName()), "Delete this screenshot"));
 		client.player.sendSystemMessage(msg);
 	}
 
 	private MutableComponent button(String label, ClickEvent click, String hover) {
 		int color = accent.argb() & 0xFFFFFF;
-		return Component.literal(" [" + label + "]").withStyle(s -> s.withColor(color).withClickEvent(click).withHoverEvent(new HoverEvent.ShowText(Component.literal(hover))));
+		return Component.literal(" [" + label + "]").withStyle(s -> s.withColor(color).withClickEvent(click).withHoverEvent(net.tuffclient.compat.ChatEvents.showText(Component.literal(hover))));
 	}
 
 	/** Deletes a screenshot by file name (from the chat button). */

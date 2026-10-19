@@ -38,6 +38,7 @@ public final class CleanF3Module extends Module {
 
 	public CleanF3Module() {
 		super("clean_f3", "Clean F3", "A tidy F3 screen with only the lines you want.", Category.UTILITY, false);
+		requires("DebugScreenOverlayMixin");
 	}
 
 	/** Whether an F3 chart is open (then the vanilla screen shows); set by DebugScreenOverlayMixin. */
@@ -46,14 +47,14 @@ public final class CleanF3Module extends Module {
 	public void render(Gfx g) {
 		Minecraft mc = Minecraft.getInstance();
 		Entity cam = mc.getCameraEntity();
-		if (cam == null || mc.level == null || !mc.debugEntries.isOverlayVisible() || charts) return;
+		if (cam == null || mc.level == null || !net.tuffclient.compat.DebugOverlay.visible() || charts) return;
 		List<String[]> lines = new ArrayList<>();
 		BlockPos pos = cam.blockPosition();
 		if (fps.get()) lines.add(new String[] {"FPS", String.valueOf(mc.getFps())});
 		if (position.get()) lines.add(new String[] {"XYZ", String.format("%.1f / %.1f / %.1f", cam.getX(), cam.getY(), cam.getZ())});
 		if (block.get()) lines.add(new String[] {"Block", pos.getX() + " " + pos.getY() + " " + pos.getZ() + "  chunk " + (pos.getX() >> 4) + " " + (pos.getZ() >> 4)});
 		if (facing.get()) lines.add(new String[] {"Facing", FACING[Math.floorMod(Math.round(cam.getYRot() / 90f), 4)] + String.format("  %.1f° / %.1f°", ((cam.getYRot() % 360) + 360) % 360, cam.getXRot())});
-		if (biome.get()) lines.add(new String[] {"Biome", mc.level.getBiome(pos).unwrapKey().map(k -> k.identifier().toString()).orElse("?")});
+		if (biome.get()) lines.add(new String[] {"Biome", mc.level.getBiome(pos).unwrapKey().map(k -> net.tuffclient.compat.ResourceKeys.id(k).toString()).orElse("?")});
 		if (light.get()) lines.add(new String[] {"Light", mc.level.getBrightness(LightLayer.BLOCK, pos) + " block, " + mc.level.getBrightness(LightLayer.SKY, pos) + " sky"});
 		if (target.get()) {
 			HitResult hit = mc.hitResult;

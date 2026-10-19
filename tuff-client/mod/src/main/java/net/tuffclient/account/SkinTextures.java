@@ -1,3 +1,4 @@
+// glade: minecraft >=1.21.9
 package net.tuffclient.account;
 
 import java.util.HashMap;

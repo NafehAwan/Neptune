@@ -76,7 +76,7 @@ public final class ChatPlusModule extends Module {
 		}
 		if (copy.get()) {
 			MutableComponent wrapped = Component.empty().append(out);
-			out = wrapped.withStyle(s -> s.withClickEvent(new ClickEvent.CopyToClipboard(raw)).withHoverEvent(new HoverEvent.ShowText(Component.literal("Click to copy"))));
+			out = wrapped.withStyle(s -> s.withClickEvent(net.tuffclient.compat.ChatEvents.copy(raw)).withHoverEvent(net.tuffclient.compat.ChatEvents.showText(Component.literal("Click to copy"))));
 		}
 		lastText = raw;
 		lastShown = out;

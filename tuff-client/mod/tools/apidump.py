@@ -25,6 +25,13 @@ net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper net.fabricmc.fabri
 net.fabricmc.fabric.api.client.rendering.v1.HudLayerRegistrationCallback net.fabricmc.fabric.api.client.rendering.v1.IdentifiedLayer
 net.fabricmc.fabric.api.client.rendering.v1.LayeredDrawerWrapper net.fabricmc.fabric.api.client.command.v2.ClientCommandManager
 net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement
+net.minecraft.client.gui.components.debug.DebugScreenEntryList net.minecraft.client.gui.components.DebugScreenOverlay
+net.minecraft.client.resources.SkinManager net.minecraft.client.resources.PlayerSkin net.minecraft.world.entity.player.PlayerSkin
+net.minecraft.network.chat.ClickEvent net.minecraft.network.chat.HoverEvent net.minecraft.client.gui.Hud net.minecraft.client.GuiMessage
+net.minecraft.client.multiplayer.chat.GuiMessage net.minecraft.client.User net.minecraft.client.renderer.entity.state.EntityRenderState
+net.minecraft.client.renderer.entity.state.LivingEntityRenderState net.minecraft.client.renderer.entity.state.PlayerRenderState
+net.minecraft.client.renderer.entity.player.PlayerRenderer net.minecraft.client.renderer.entity.ItemRenderer
+net.minecraft.client.multiplayer.ClientLevel net.minecraft.world.level.dimension.DimensionType net.minecraft.client.renderer.DimensionSpecialEffects
 """.split()
 
 

@@ -22,7 +22,7 @@ public final class DayTimeModule extends HudModule {
 	@Override
 	public void render(Gfx g, Font font, boolean preview) {
 		Minecraft mc = Minecraft.getInstance();
-		long t = mc.level == null ? 30000 : mc.level.getOverworldClockTime();
+		long t = mc.level == null ? 30000 : net.tuffclient.compat.WorldTime.dayTime(mc.level);
 		long tod = Math.floorMod(t, 24000L);
 		List<String[]> lines = new ArrayList<>();
 		if (day.get()) lines.add(new String[] {"Day ", String.valueOf(t / 24000 + 1)});

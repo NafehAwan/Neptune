@@ -11,5 +11,6 @@ public final class OldAnimationsModule extends Module {
 
 	public OldAnimationsModule() {
 		super("old_animations", "Old Animations", "1.8-style first person: your item stays up, no dip when switching or attacking.", Category.VISUAL, false);
+		requires("FirstPersonHandsMixin");
 	}
 }

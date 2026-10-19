@@ -16,6 +16,11 @@ public final class TimeWeatherModule extends Module {
 		super("time_weather", "Time & Weather", "Set your own time of day and weather. Only you see it.", Category.VISUAL, false);
 	}
 
+	@Override
+	public void tick(net.minecraft.client.Minecraft client) {
+		if (client.level != null && changeTime.get()) net.tuffclient.compat.WorldTime.force(client.level, ticks());
+	}
+
 	/** The chosen time in ticks (0 is 6:00 in the morning). */
 	public long ticks() {
 		return Math.floorMod(Math.round((hour.get() - 6) * 1000), 24000L);

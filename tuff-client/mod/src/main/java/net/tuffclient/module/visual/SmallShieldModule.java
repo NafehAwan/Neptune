@@ -13,5 +13,6 @@ public final class SmallShieldModule extends Module {
 
 	public SmallShieldModule() {
 		super("small_shield", "Small Shield", "A smaller, lower shield and totem in first person.", Category.VISUAL, false);
+		requires("FirstPersonHandsMixin");
 	}
 }

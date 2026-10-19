@@ -185,7 +185,7 @@ public final class Accounts {
 			cache = null;
 			return null;
 		}
-		((MinecraftAccessor) mc).glade$setUser(new User(account.name(), account.id(), "0", Optional.empty(), Optional.empty()));
+		((MinecraftAccessor) mc).glade$setUser(net.tuffclient.compat.Users.offline(account.name(), account.id()));
 		switched = new GameProfile(account.id(), account.name());
 		cache = null;
 		return null;

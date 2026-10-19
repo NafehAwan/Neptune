@@ -10,5 +10,6 @@ public final class LowFireModule extends Module {
 
 	public LowFireModule() {
 		super("low_fire", "Low Fire", "Lowers the fire on your screen when you're burning.", Category.VISUAL, false);
+		requires("ScreenEffectRendererMixin");
 	}
 }

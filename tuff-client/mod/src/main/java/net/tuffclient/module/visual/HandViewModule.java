@@ -17,5 +17,6 @@ public final class HandViewModule extends Module {
 
 	public HandViewModule() {
 		super("hand_view", "Hand & Item View", "Move and resize your hand and held items in first person.", Category.VISUAL, false);
+		requires("FirstPersonHandsMixin");
 	}
 }

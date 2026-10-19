@@ -1,3 +1,4 @@
+// glade: minecraft >=26.3
 package net.tuffclient.mixin;
 
 import com.llamalad7.mixinextras.sugar.Local;

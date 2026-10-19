@@ -91,7 +91,7 @@ public final class WaypointsModule extends Module {
 	private static String key() {
 		Minecraft mc = Minecraft.getInstance();
 		String server = mc.getCurrentServer() != null ? mc.getCurrentServer().ip : "singleplayer";
-		String dim = mc.level == null ? "?" : mc.level.dimension().identifier().toString();
+		String dim = mc.level == null ? "?" : net.tuffclient.compat.ResourceKeys.id(mc.level.dimension()).toString();
 		return server + "|" + dim;
 	}
 

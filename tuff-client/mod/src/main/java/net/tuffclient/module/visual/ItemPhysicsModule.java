@@ -10,5 +10,6 @@ public final class ItemPhysicsModule extends Module {
 
 	public ItemPhysicsModule() {
 		super("item_physics", "Item Physics", "Dropped items lie flat on the ground instead of spinning.", Category.VISUAL, false);
+		requires("ItemEntityRendererMixin");
 	}
 }
