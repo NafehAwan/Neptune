@@ -152,14 +152,18 @@ profiles automatically.
   - *Settings*: title screen and background toggles, keybinds, HUD reset.
 - **HUD editor**: drag modules anywhere, with snapping to screen edges, the
   center and other modules. Scroll to resize; right-click to reset.
-- **HUD modules**: FPS, CPS, Keystrokes, Armor Status, Coordinates and
+- **HUD modules**: FPS, CPS, Keystrokes, Armor Status (durability colored
+  green, yellow, orange, red; points, percent or both; vertical or horizontal;
+  held item too; blinks under 10%), Coordinates and
   direction, Ping, Potion Effects, Clock, Server address, Speed, Memory,
   Compass (with waypoints), Biome & Light (warns where mobs can spawn), Item
   Counter (arrows, totems, golden apples, pearls and more), Durability Warning,
   Session Stats (time, blocks mined, kills, deaths, distance), Pack Display and
   Day & Time (day count, clock, time until night). Every HUD module has the
-  same Style settings: text and label colors, text shadow, background on or
-  off and its color, border and its color, corner radius, padding and scale.
+  same Style settings, set on each module by itself: text and label colors
+  (any color from the wheel, or chroma), text shadow, background on or off and
+  its color, border and its color, corner radius, padding, scale and a quick
+  look (Default, Clean, Boxed, Outline).
 - **Utility**: Zoom (hold C; smooth, snappy or linear curve, speed, scroll to
   zoom further, optional cinematic camera), Freelook (hold Left Alt), Waypoints
   (B adds one where you stand, a death waypoint is added where you die; on
@@ -172,7 +176,11 @@ profiles automatically.
   Outline (color and thickness), Particles (crits and sparkles on every hit,
   multiplier), Custom Sky (sky and fog tint), Nametags (your own in third
   person, hide all, background opacity) and Cosmetics (a leaf badge before Glade
-  players' names and a Glade cape; players are listed in `cosmetics/users.json`).
+  players' names and a Glade cape; players are listed in `cosmetics/users.json`),
+  Hit Sounds (a sound on each hit you land), Item Physics (dropped items lie
+  flat), Old Animations (the held item never dips), Low Fire, Small Shield
+  (also totems), Hand & Item View (move and resize each hand) and Time &
+  Weather (your own time of day and weather, only on your screen).
 
 Settings are saved to `config/tuff/config.json`.
 
