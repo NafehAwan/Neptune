@@ -76,7 +76,16 @@ public final class TuffMenuScreen extends Screen {
 			Map.entry("effects", "potion"), Map.entry("clock", "clock"), Map.entry("server", "globe"),
 			Map.entry("speed", "bolt"), Map.entry("memory", "chip"), Map.entry("zoom", "zoom"),
 			Map.entry("fullbright", "sun"), Map.entry("toggle_sprint", "sprint"), Map.entry("crosshair", "crosshair"),
-			Map.entry("hide_scoreboard", "scoreboard"), Map.entry("title_screen", "image"));
+			Map.entry("hide_scoreboard", "scoreboard"), Map.entry("title_screen", "image"),
+			Map.entry("compass", "compass"), Map.entry("biome_light", "biome"), Map.entry("item_counter", "backpack"),
+			Map.entry("durability", "alert"), Map.entry("session_stats", "stats"), Map.entry("pack_display", "package"),
+			Map.entry("day_time", "daytime"), Map.entry("waypoints", "flag"), Map.entry("screenshot_tools", "camera"),
+			Map.entry("chat_plus", "chat"), Map.entry("auto_gg", "trophy"), Map.entry("auto_reconnect", "refresh"),
+			Map.entry("freelook", "freelook"), Map.entry("clean_f3", "bug"), Map.entry("hit_color", "droplet"),
+			Map.entry("block_outline", "box"), Map.entry("particles", "sparkles"), Map.entry("custom_sky", "sky"),
+			Map.entry("nametags", "tag"), Map.entry("cosmetics", "award"), Map.entry("hit_sounds", "bell"),
+			Map.entry("item_physics", "box"), Map.entry("old_animations", "sword"), Map.entry("low_fire", "flame"),
+			Map.entry("small_shield", "shield"), Map.entry("hand_view", "hand"), Map.entry("time_weather", "daytime"));
 	/** The short line under each mod name. */
 	private static final Map<String, String> BLURBS = Map.ofEntries(
 			Map.entry("zoom", "Hold C to zoom in"), Map.entry("fullbright", "See clearly at night"),
@@ -87,12 +96,27 @@ public final class TuffMenuScreen extends Screen {
 			Map.entry("effects", "Active effects"), Map.entry("clock", "Real-world time"),
 			Map.entry("server", "Server address"), Map.entry("speed", "Movement speed"),
 			Map.entry("memory", "Memory in use"), Map.entry("hide_scoreboard", "Hide the sidebar scores"),
-			Map.entry("title_screen", "The Glade main menu"));
+			Map.entry("title_screen", "The Glade main menu"),
+			Map.entry("compass", "Heading strip at the top"), Map.entry("biome_light", "Biome and light level"),
+			Map.entry("item_counter", "Arrows, totems, pearls"), Map.entry("durability", "Warns before things break"),
+			Map.entry("session_stats", "Time, kills, blocks mined"), Map.entry("pack_display", "Your resource pack"),
+			Map.entry("day_time", "Day count and time"), Map.entry("waypoints", "Save places, press B"),
+			Map.entry("screenshot_tools", "Open, copy or delete after F2"), Map.entry("chat_plus", "Timestamps, merge, copy"),
+			Map.entry("auto_gg", "Says gg when a game ends"), Map.entry("auto_reconnect", "Rejoin after a disconnect"),
+			Map.entry("freelook", "Hold Alt to look around"), Map.entry("clean_f3", "A tidy F3 screen"),
+			Map.entry("hit_color", "Damage flash colour"), Map.entry("block_outline", "Outline colour and width"),
+			Map.entry("particles", "More hit particles"), Map.entry("custom_sky", "Tint the sky and fog"),
+			Map.entry("nametags", "Own nametag, backgrounds"), Map.entry("cosmetics", "Leaf badge and cape"),
+			Map.entry("hit_sounds", "A sound when you hit"), Map.entry("item_physics", "Dropped items lie flat"),
+			Map.entry("old_animations", "1.7 style animations"), Map.entry("low_fire", "Lower fire on screen"),
+			Map.entry("small_shield", "Smaller shield and totem"), Map.entry("hand_view", "Move and scale your hand"),
+			Map.entry("time_weather", "Your own time and weather"));
 	/** List order, as in the mockup; anything else follows. */
 	private static final List<String> ORDER = List.of("zoom", "fullbright", "crosshair", "toggle_sprint", "freelook", "waypoints", "keystrokes", "fps", "cps",
 			"armor", "coordinates", "compass", "durability", "item_counter", "biome_light", "day_time", "session_stats", "ping", "effects", "clock",
 			"server", "speed", "memory", "pack_display", "chat_plus", "screenshot_tools", "clean_f3", "auto_gg", "auto_reconnect", "hit_color",
-			"block_outline", "particles", "custom_sky", "nametags", "cosmetics", "hide_scoreboard", "title_screen");
+			"block_outline", "particles", "hit_sounds", "custom_sky", "time_weather", "item_physics", "old_animations", "hand_view", "small_shield",
+			"low_fire", "nametags", "cosmetics", "hide_scoreboard", "title_screen");
 
 	// the panel: 940x604, centred, radius 26, padding 26 30
 	private static final float PW = 940, PH = 604, PY = (720 - PH) / 2, PAD_X = 30, PAD_Y = 26;

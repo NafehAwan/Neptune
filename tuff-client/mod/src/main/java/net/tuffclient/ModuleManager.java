@@ -70,6 +70,7 @@ public final class ModuleManager {
 	public final CustomSkyModule customSky = add(new CustomSkyModule());
 	public final NametagsModule nametags = add(new NametagsModule());
 	public final CosmeticsModule cosmetics = add(new CosmeticsModule());
+	public final net.tuffclient.module.visual.HitSoundsModule hitSounds = add(new net.tuffclient.module.visual.HitSoundsModule());
 
 	public ModuleManager() {
 		add(new ToggleSprintModule());

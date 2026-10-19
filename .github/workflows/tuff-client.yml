@@ -31,6 +31,28 @@ jobs:
         run: |
           set -o pipefail
           ./gradlew build 2>&1 | tee build.log || { echo "=== COMPILE ERRORS"; grep -E "error:" -A3 build.log | head -120; exit 1; }
+      - name: Print Minecraft APIs used by Glade
+        if: always()
+        run: |
+          JAR=""
+          for j in $(find ~/.gradle/caches/fabric-loom .gradle/loom-cache -name '*.jar' 2>/dev/null); do
+            if unzip -l "$j" 2>/dev/null | grep -q 'net/minecraft/client/Minecraft.class'; then JAR="$j"; break; fi
+          done
+          echo "API-CLASSES $(unzip -l "$JAR" | grep -oE 'net/minecraft/client/renderer/[A-Za-z0-9/]*(ItemEntity|FirstPerson|ScreenEffect|ItemInHand)[A-Za-z0-9$]*\.class|net/minecraft/world/clock/[A-Za-z0-9$]*\.class|net/minecraft/world/timeline/[A-Za-z0-9$]*\.class' | sort -u | tr '\n' ' ')"
+          dump() { echo "=== $1"; javap -p -cp "$JAR" "$1" 2>&1 | grep -vE 'lambda\$|Compiled from|access\$|^  private static final' ; }
+          code() { echo "=== CODE $1 $2"; javap -c -p -cp "$JAR" "$1" 2>&1 | awk -v m="$2" 'index($0, m) && /\(/ {p=1} p {print} p && /^$/ {p=0}' | grep -E "invoke|getfield|putfield|getstatic|ldc|^  [a-z]" | head -${3:-70}; }
+          for c in net.minecraft.client.renderer.entity.ItemEntityRenderer net.minecraft.client.renderer.entity.state.ItemEntityRenderState \
+            net.minecraft.client.renderer.FirstPersonHandsAndItemsRenderer net.minecraft.client.renderer.ScreenEffectRenderer \
+            net.minecraft.client.ClientClockManager 'net.minecraft.client.ClientClockManager$ClientClockInstance' net.minecraft.world.clock.ClockInstance \
+            net.minecraft.world.clock.ClockManager net.minecraft.world.attribute.EnvironmentAttributeProbe net.minecraft.world.timeline.Timeline; do
+            dump "$c"
+          done
+          echo "=== Level rain"; javap -p -cp "$JAR" net.minecraft.world.level.Level | grep -iE "rain|thunder"
+          code net.minecraft.client.renderer.entity.ItemEntityRenderer "submit(" 60
+          code net.minecraft.client.renderer.FirstPersonHandsAndItemsRenderer "submitArmWithItem" 120
+          code net.minecraft.client.renderer.ScreenEffectRenderer "Fire" 50
+          code net.minecraft.world.attribute.EnvironmentAttributeProbe "getValue" 40
+          code 'net.minecraft.client.ClientClockManager$ClientClockInstance' "" 60
       - uses: actions/upload-artifact@v4
         with:
           name: tuff-mod

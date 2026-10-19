@@ -29,6 +29,7 @@ const ICONS = {
   stats: ["chart-column"], daytime: ["sun-moon"], flag: ["flag"], camera: ["camera"], chat: ["message-square"], trophy: ["trophy"],
   freelook: ["rotate-3d"], bug: ["bug"], droplet: ["droplet"], box: ["box"], sparkles: ["sparkles"], sky: ["cloud-sun"],
   tag: ["tag"], award: ["award"], film: ["film"], refresh: ["refresh-cw"],
+  bell: ["bell"], sword: ["sword"], flame: ["flame"], shield: ["shield"], hand: ["hand"],
 };
 const SIZES = [32, 64, 128];
 

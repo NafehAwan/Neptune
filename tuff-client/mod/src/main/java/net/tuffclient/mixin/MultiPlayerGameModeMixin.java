@@ -21,6 +21,7 @@ public abstract class MultiPlayerGameModeMixin {
 		if (TuffClient.modules() == null) return;
 		SessionStatsModule.onAttack(target);
 		ParticlesModule.onAttack(target);
+		net.tuffclient.module.visual.HitSoundsModule.onAttack(target);
 	}
 
 	@Inject(method = "destroyBlock", at = @At("RETURN"))
