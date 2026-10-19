@@ -33,10 +33,10 @@ public abstract class FirstPersonHandsMixin {
 		var view = modules.handView;
 		if (view.isEnabled()) {
 			float side = main ? 1 : -1;
-			pose.translate((float) (main ? view.mainX.get() : view.offX.get()) * 0.5f * side,
-					(float) (main ? view.mainY.get() : view.offY.get()) * 0.5f,
+			pose.translate((float) (double) (main ? view.mainX.get() : view.offX.get()) * 0.5f * side,
+					(float) (double) (main ? view.mainY.get() : view.offY.get()) * 0.5f,
 					(float) -(main ? view.mainZ.get() : view.offZ.get()) * 0.5f);
-			float s = (float) (main ? view.mainScale.get() : view.offScale.get()) / 100f;
+			float s = (float) (double) (main ? view.mainScale.get() : view.offScale.get()) / 100f;
 			pose.scale(s, s, s);
 		}
 		var shield = modules.smallShield;
