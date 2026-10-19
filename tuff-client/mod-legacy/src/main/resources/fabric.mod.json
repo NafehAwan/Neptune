@@ -14,7 +14,6 @@
 	"mixins": ["tuff.mixins.json"],
 	"depends": {
 		"fabricloader": ">=0.16.0",
-		"minecraft": ">=1.8.8 <=1.8.9",
-		"legacy-fabric-api": "*"
+		"minecraft": ">=1.8.8 <=1.8.9"
 	}
 }

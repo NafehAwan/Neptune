@@ -1,4 +1,4 @@
-// glade: minecraft >=26.1
+// glade: minecraft >=26.3
 package net.tuffclient.mixin;
 
 import net.tuffclient.TuffClient;

@@ -10,7 +10,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import net.minecraft.client.MinecraftClient;
+import net.fabricmc.loader.api.FabricLoader;
 import net.tuffclient.legacy.module.Module;
 import net.tuffclient.legacy.module.ModuleManager;
 
@@ -22,7 +22,7 @@ public final class Config {
 	}
 
 	private static File file() {
-		return new File(MinecraftClient.getInstance().runDirectory, "config/tuff/config-1.8.json");
+		return FabricLoader.getInstance().getConfigDir().resolve("tuff").resolve("config-1.8.json").toFile();
 	}
 
 	public static void load(ModuleManager modules) {

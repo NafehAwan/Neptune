@@ -31,13 +31,10 @@ pub const MOD_ID: &str = "tuff";
 pub const FABRIC_API: &str = "fabric-api";
 pub const LEGACY_FABRIC_API: &str = "legacy-fabric-api";
 
-/// The Fabric API Glade needs on this Minecraft version (its mod id and Modrinth slug).
-pub fn api_for(game_version: &str) -> &'static str {
-    if crate::fabric::is_legacy(game_version) {
-        LEGACY_FABRIC_API
-    } else {
-        FABRIC_API
-    }
+/// The Fabric API a Glade build needs (its mod id and Modrinth slug), if any.
+/// The 1.8 build needs none, so it also runs where no API is published.
+pub fn api_of(build: &Build) -> Option<&str> {
+    build.info.api.as_deref()
 }
 
 /// What a mod jar says about itself in `fabric.mod.json`.
@@ -49,6 +46,8 @@ pub struct ModInfo {
     pub minecraft: Option<String>,
     /// The `depends.fabricloader` range, like `>=0.19.5`.
     pub loader: Option<String>,
+    /// The Fabric API it depends on (`fabric-api` or `legacy-fabric-api`).
+    pub api: Option<String>,
 }
 
 pub fn read_info(jar: &Path) -> Option<ModInfo> {
@@ -74,6 +73,7 @@ fn parse_info(text: &str) -> Option<ModInfo> {
         version: json["version"].as_str().unwrap_or_default().to_string(),
         minecraft: range("minecraft"),
         loader: range("fabricloader"),
+        api: [FABRIC_API, LEGACY_FABRIC_API].into_iter().find(|id| !json["depends"][*id].is_null()).map(String::from),
     })
 }
 
@@ -287,9 +287,8 @@ pub async fn ensure(http: &reqwest::Client, paths: &Paths, profile: &Profile, bu
 
     // Fabric API: turn it back on, or install it.
     modrinth::prune_index(paths, &profile.id);
-    let api = api_for(&profile.game_version);
     let found = scan(&mods);
-    if !found.iter().any(|m| m.enabled && m.info.id == api) {
+    if let Some(api) = api_of(build).filter(|api| !found.iter().any(|m| m.enabled && m.info.id == *api)) {
         if let Some(off) = found.iter().find(|m| m.info.id == api) {
             let name = off.file.trim_end_matches(".disabled").to_string();
             modrinth::set_enabled(paths, &profile.id, "mod", &name, true)?;
@@ -322,15 +321,16 @@ pub async fn ensure(http: &reqwest::Client, paths: &Paths, profile: &Profile, bu
 
 /// Whether the player may turn off or remove this mod file.
 pub fn locked(paths: &Paths, profile: &Profile, builds: &Builds, kind: &str, file: &str) -> Option<&'static str> {
-    if kind != "mod" || !applies(profile, builds) {
+    if kind != "mod" || profile.loader != Loader::Fabric {
         return None;
     }
+    let build = builds.for_version(&profile.game_version)?;
     if file == FILE {
         return Some("Glade is part of this profile");
     }
     let dir = paths.instance(&profile.id).join("mods");
     let path = [dir.join(file), dir.join(format!("{file}.disabled"))].into_iter().find(|p| p.is_file())?;
-    (read_info(&path)?.id == api_for(&profile.game_version)).then_some("Glade needs Fabric API")
+    (Some(read_info(&path)?.id.as_str()) == api_of(build)).then_some("Glade needs Fabric API")
 }
 
 /// The lowest Fabric Loader version this Glade build accepts.
@@ -351,6 +351,11 @@ mod tests {
         assert_eq!(info.loader.as_deref(), Some(">=0.19.5"));
         let arr = parse_info(r#"{"id":"x","depends":{"minecraft":["1.21","1.21.1"]}}"#).unwrap();
         assert_eq!(arr.minecraft.as_deref(), Some("1.21 || 1.21.1"));
+        assert_eq!(info.api, None);
+        let modern = parse_info(r#"{"id":"tuff","depends":{"minecraft":"~26.3","fabric-api":"*"}}"#).unwrap();
+        assert_eq!(modern.api.as_deref(), Some(FABRIC_API));
+        let legacy = parse_info(r#"{"id":"tuff","depends":{"minecraft":"1.8.9","legacy-fabric-api":"*"}}"#).unwrap();
+        assert_eq!(legacy.api.as_deref(), Some(LEGACY_FABRIC_API));
     }
 
     #[test]
@@ -414,7 +419,7 @@ mod tests {
         std::fs::create_dir_all(&mods).unwrap();
         let src = root.join("src");
         std::fs::create_dir_all(&src).unwrap();
-        jar(&src, "glade.jar", r#"{"id":"tuff","version":"1.1.0","depends":{"minecraft":"~26.3"}}"#);
+        jar(&src, "glade.jar", r#"{"id":"tuff","version":"1.1.0","depends":{"minecraft":"~26.3","fabric-api":"*"}}"#);
         // an old, turned-off copy, Fabric API turned off, and a mod twice
         jar(&mods, "tuff-client.jar.disabled", r#"{"id":"tuff","version":"1.0.0"}"#);
         jar(&mods, "fabric-api-0.1.jar.disabled", r#"{"id":"fabric-api","version":"0.1"}"#);
@@ -443,6 +448,23 @@ mod tests {
         let r = ensure(&reqwest::Client::new(), &paths, &other, &builds).await.unwrap();
         assert!(!r.installed && r.reason.is_some());
         assert!(!mods.join(FILE).exists());
+        let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[tokio::test]
+    async fn legacy_build_needs_no_api() {
+        let root = std::env::temp_dir().join(format!("glade-legacy-{}", uuid::Uuid::new_v4()));
+        let paths = Paths { root: root.clone() };
+        let profile = Profile { id: "p".into(), game_version: "1.8.8".into(), loader: Loader::Fabric, ..Default::default() };
+        let src = root.join("src");
+        std::fs::create_dir_all(&src).unwrap();
+        jar(&src, "glade-1.8.jar", r#"{"id":"tuff","version":"1.2.0","depends":{"minecraft":">=1.8.8 <=1.8.9"}}"#);
+        let builds = find_builds(&[src.join("glade-1.8.jar")], &paths);
+        // nothing to download, so this works offline
+        let report = ensure(&reqwest::Client::new(), &paths, &profile, &builds).await.unwrap();
+        assert!(report.installed, "{report:?}");
+        assert!(paths.instance("p").join("mods").join(FILE).is_file());
+        assert!(!report.fixed.iter().any(|f| f.contains("API")), "{:?}", report.fixed);
         let _ = std::fs::remove_dir_all(root);
     }
 }

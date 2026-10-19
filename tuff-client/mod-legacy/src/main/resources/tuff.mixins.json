@@ -5,6 +5,7 @@
 	"compatibilityLevel": "JAVA_8",
 	"client": [
 		"EntityMixin",
+		"GameOptionsMixin",
 		"GameRendererMixin",
 		"InGameHudMixin",
 		"MinecraftClientMixin",
