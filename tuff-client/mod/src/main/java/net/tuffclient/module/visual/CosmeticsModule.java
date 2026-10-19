@@ -72,6 +72,6 @@ public final class CosmeticsModule extends Module {
 
 	/** The badge put before a Glade player's name. */
 	public Component badge() {
-		return Component.literal("☘ ").withStyle(s -> s.withColor(badgeColor.argb() & 0xFFFFFF).withBold(false)).append(Component.empty().withStyle(ChatFormatting.RESET));
+		return Component.literal("☘ ").withStyle(s -> s.withColor(badgeColor.argb() & 0xFFFFFF));
 	}
 }

@@ -632,7 +632,7 @@ public final class TuffMenuScreen extends Screen {
 				hit(ex - 6, y + 6, ex + 20, y + 34, e -> {
 					click();
 					p.visible = !p.visible;
-					wp.save();
+					wp.saveWaypoints();
 				});
 				hit(dx2 - 6, y + 6, dx2 + 20, y + 34, e -> {
 					click();

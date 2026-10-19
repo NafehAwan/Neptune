@@ -78,7 +78,7 @@ public final class WaypointsModule extends Module {
 		return all;
 	}
 
-	public void save() {
+	public void saveWaypoints() {
 		try {
 			Files.createDirectories(FILE.getParent());
 			Files.writeString(FILE, GSON.toJson(all()), StandardCharsets.UTF_8);
@@ -102,7 +102,7 @@ public final class WaypointsModule extends Module {
 
 	public void remove(Point p) {
 		here().remove(p);
-		save();
+		saveWaypoints();
 	}
 
 	public String addKeyName() {
@@ -121,7 +121,7 @@ public final class WaypointsModule extends Module {
 		pt.z = (int) Math.floor(p.getZ());
 		pt.color = COLORS[list.size() % COLORS.length];
 		list.add(pt);
-		save();
+		saveWaypoints();
 		p.sendOverlayMessage(Component.literal("Added " + pt.name + " at " + pt.x + " " + pt.y + " " + pt.z));
 	}
 
@@ -141,7 +141,7 @@ public final class WaypointsModule extends Module {
 			pt.z = (int) Math.floor(p.getZ());
 			pt.color = 0xFFE55A55;
 			list.add(pt);
-			save();
+			saveWaypoints();
 		}
 		wasDead = dead;
 	}

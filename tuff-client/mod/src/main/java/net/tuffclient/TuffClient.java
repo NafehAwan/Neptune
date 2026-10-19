@@ -7,7 +7,7 @@ import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import com.mojang.brigadier.arguments.StringArgumentType;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -57,8 +57,8 @@ public final class TuffClient implements ClientModInitializer {
 		waypointKey = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.tuff.waypoint", SDLScancode.SDL_SCANCODE_B, category));
 		freelookKey = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.tuff.freelook", SDLScancode.SDL_SCANCODE_LALT, category));
 		ClientCommandRegistrationCallback.EVENT.register((dispatcher, registries) -> dispatcher.register(
-				ClientCommandManager.literal("glade").then(ClientCommandManager.literal("screenshot").then(ClientCommandManager.literal("delete")
-						.then(ClientCommandManager.argument("name", StringArgumentType.greedyString()).executes(ctx -> {
+				ClientCommands.literal("glade").then(ClientCommands.literal("screenshot").then(ClientCommands.literal("delete")
+						.then(ClientCommands.argument("name", StringArgumentType.greedyString()).executes(ctx -> {
 							ctx.getSource().sendFeedback(net.minecraft.network.chat.Component.literal(ScreenshotToolsModule.delete(StringArgumentType.getString(ctx, "name"))));
 							return 1;
 						}))))));
