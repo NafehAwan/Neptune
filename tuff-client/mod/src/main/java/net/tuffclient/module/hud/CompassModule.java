@@ -21,7 +21,7 @@ public final class CompassModule extends HudModule {
 	private final ColorSetting marker = add(new ColorSetting("marker", "Center marker", 0xFFE3B23C, false));
 
 	public CompassModule() {
-		super("compass", "Compass", "A strip across the top showing N, E, S, W and which way you face.", 0.5, 0.01, false);
+		super("compass", "Compass", "A strip across the top showing N, E, S, W and which way you face.", 0.41, 0.01, false);
 	}
 
 	@Override

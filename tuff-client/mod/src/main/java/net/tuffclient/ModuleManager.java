@@ -143,12 +143,14 @@ public final class ModuleManager {
 	public void renderHud(GuiGraphicsExtractor g) {
 		Minecraft client = Minecraft.getInstance();
 		if (client.player == null) return;
-		if (cleanF3.isEnabled()) cleanF3.render(g);
-		if (client.gui.hud.isHidden()) return;
-		if (waypoints.isEnabled()) waypoints.render(g);
-		for (HudModule m : hud) {
-			if (m.isEnabled()) renderModule(g, client.font, m, false);
+		if (!client.gui.hud.isHidden()) {
+			if (waypoints.isEnabled()) waypoints.render(g);
+			for (HudModule m : hud) {
+				if (m.isEnabled()) renderModule(g, client.font, m, false);
+			}
+			if (screenshotTools.isEnabled()) screenshotTools.render(g);
 		}
-		if (screenshotTools.isEnabled()) screenshotTools.render(g);
+		// F3 goes over the HUD, like the vanilla debug screen
+		if (cleanF3.isEnabled()) cleanF3.render(g);
 	}
 }

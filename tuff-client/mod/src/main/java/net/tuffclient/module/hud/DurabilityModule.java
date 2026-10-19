@@ -26,7 +26,7 @@ public final class DurabilityModule extends HudModule {
 	private final java.util.Set<String> warned = new java.util.HashSet<>();
 
 	public DurabilityModule() {
-		super("durability", "Durability Warning", "Flashes when your armor or tools are about to break.", 0.5, 0.7, true);
+		super("durability", "Durability Warning", "Flashes when your armor or tools are about to break.", 0.44, 0.66, true);
 	}
 
 	private record Low(ItemStack stack, int percent) {

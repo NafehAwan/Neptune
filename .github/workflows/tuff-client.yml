@@ -31,24 +31,6 @@ jobs:
         run: |
           set -o pipefail
           ./gradlew build 2>&1 | tee build.log || { echo "=== COMPILE ERRORS"; grep -E "error:" -A3 build.log | head -120; exit 1; }
-      - name: Print Minecraft APIs used by Glade
-        if: always()
-        run: |
-          JAR=""
-          for j in $(find ~/.gradle/caches/fabric-loom .gradle/loom-cache -name '*.jar' 2>/dev/null); do
-            if unzip -l "$j" 2>/dev/null | grep -q 'net/minecraft/client/Minecraft.class'; then JAR="$j"; break; fi
-          done
-          RS=$(find ~/.gradle/caches -name 'blaze3d*.jar' -o -name 'renderpearl*.jar' 2>/dev/null | tr '\n' ':')
-          echo "API-CLASSES $(unzip -l "$JAR" | grep -oE 'com/mojang/blaze3d/(pipeline|systems|textures)/[A-Za-z0-9$]*\.class|net/minecraft/client/renderer/SubmitNode[A-Za-z0-9$]*\.class' | sort -u | tr '\n' ' ')"
-          dump() { echo "=== $1"; javap -p -cp "$JAR:$RS" "$1" 2>&1 | grep -vE 'lambda\$|Compiled from|access\$|^  private [a-zA-Z]' ; }
-          code() { echo "=== CODE $1 $2"; javap -c -p -cp "$JAR:$RS" "$1" 2>&1 | awk -v m="$2" 'index($0, m) && /\(/ {p=1} p {print} p && /^$/ {p=0}' | grep -E "invoke|getfield|getstatic|ldc|^  [a-z]" | head -${3:-60}; }
-          for c in com.mojang.blaze3d.pipeline.TextureTarget com.mojang.blaze3d.systems.RenderSystem com.mojang.renderpearl.api.textures.GpuSampler \
-            net.minecraft.client.renderer.SubmitNodeCollection net.minecraft.client.renderer.SubmitNodeStorage; do
-            dump "$c"
-          done
-          code net.minecraft.client.renderer.GameRenderer "public void render()" 90
-          code net.minecraft.client.renderer.SubmitNodeCollection submitNameTag 40
-          code net.minecraft.client.gui.render.GuiRenderer render 40
       - uses: actions/upload-artifact@v4
         with:
           name: tuff-mod

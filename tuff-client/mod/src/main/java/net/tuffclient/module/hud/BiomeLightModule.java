@@ -19,7 +19,7 @@ public final class BiomeLightModule extends HudModule {
 	private final ColorSetting warnColor = add(new ColorSetting("warn_color", "Warning color", 0xFFFF6B6B, false)).showIf(() -> warn.get());
 
 	public BiomeLightModule() {
-		super("biome_light", "Biome & Light", "The biome you're in and the light level, so you know where mobs can spawn.", 0.006, 0.22, false);
+		super("biome_light", "Biome & Light", "The biome you're in and the light level, so you know where mobs can spawn.", 0.006, 0.27, false);
 	}
 
 	@Override

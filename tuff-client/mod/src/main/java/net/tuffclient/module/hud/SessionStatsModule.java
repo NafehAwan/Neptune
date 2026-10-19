@@ -34,7 +34,7 @@ public final class SessionStatsModule extends HudModule {
 	private long lastHitTick;
 
 	public SessionStatsModule() {
-		super("session_stats", "Session Stats", "Play time, blocks mined, kills, deaths and distance this session.", 0.006, 0.55, false);
+		super("session_stats", "Session Stats", "Play time, blocks mined, kills, deaths and distance this session.", 0.885, 0.22, false);
 		instance = this;
 	}
 

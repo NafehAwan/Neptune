@@ -208,16 +208,23 @@ public class TuffClientGameTest implements FabricClientGameTest {
 			context.runOnClient(client -> {
 				client.debugEntries.setOverlayVisible(false);
 				TuffClient.modules().cleanF3.setEnabled(false);
-				TuffClient.modules().customSky.setEnabled(true);
+				var sky = TuffClient.modules().customSky;
+				sky.setEnabled(true);
+				for (var setting : sky.settings()) {
+					if (setting instanceof net.tuffclient.setting.ColorSetting c && c.id.equals("sky_color")) c.set(0xFFFF66CC);
+					if (setting instanceof net.tuffclient.setting.NumberSetting n && n.id.equals("strength")) n.set(90.0);
+				}
 				TuffClient.modules().blockOutline.setEnabled(true);
-				TuffClient.modules().freelook.update(client, true);
 			});
+			context.getInput().holdKey(TuffClient.freelookKey());
 			context.waitTicks(15);
 			context.takeScreenshot("glade-freelook-sky");
-			context.runOnClient(client -> {
-				TuffClient.modules().freelook.update(client, false);
-				TuffClient.modules().customSky.setEnabled(false);
-			});
+			boolean freelooking = context.computeOnClient(client -> TuffClient.modules().freelook.active() && !client.options.getCameraType().isFirstPerson());
+			context.getInput().releaseKey(TuffClient.freelookKey());
+			context.waitTicks(3);
+			boolean back = context.computeOnClient(client -> client.options.getCameraType().isFirstPerson());
+			context.runOnClient(client -> TuffClient.modules().customSky.setEnabled(false));
+			if (!freelooking || !back) throw new AssertionError("Freelook didn't switch the camera: on=" + freelooking + " back=" + back);
 			context.waitTicks(5);
 
 			// Zoom: a gold block 12 blocks ahead must cover far more pixels while zoomed,

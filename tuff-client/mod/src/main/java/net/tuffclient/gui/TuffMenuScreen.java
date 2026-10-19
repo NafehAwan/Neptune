@@ -746,10 +746,8 @@ public final class TuffMenuScreen extends Screen {
 		Ui.outline(g, rx, y, rw, 34, 9, Theme.alpha(0x33000000, a));
 		boolean editing = editingHex == c;
 		String hex = editing ? hexBuffer + ((System.currentTimeMillis() / 500) % 2 == 0 ? "_" : " ") : c.display();
-		boolean dark = st[2] < 0.6f || alpha < 110 ? false : st[1] < 0.5f;
-		int ink = alpha < 110 ? Theme.TEXT : dark ? Theme.TEXT : 0xFFFFFFFF;
-		Ui.round(g, rx + 6, y + 8, rw - 12, 18, 6, Theme.alpha(editing ? 0xE6FFFFFF : 0x40FFFFFF, a));
-		Ui.centeredAt(g, hex, rx + rw / 2, Ui.mid(y + 17, 11.5f), Theme.alpha(editing ? Theme.TEXT : ink, a), Ui.Font.MONO_11_5);
+		Ui.round(g, rx + 6, y + 8, rw - 12, 18, 6, Theme.alpha(editing ? 0xF5FFFFFF : 0xD9FFFFFF, a));
+		Ui.centeredAt(g, hex, rx + rw / 2, Ui.mid(y + 17, 11.5f), Theme.alpha(Theme.TEXT, a), Ui.Font.MONO_11_5);
 		if (live) hit(rx, y, rx + rw, y + 34, e -> {
 			click();
 			editingHex = c;

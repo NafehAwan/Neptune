@@ -28,6 +28,10 @@ public final class TuffClient implements ClientModInitializer {
 	private static KeyMapping waypointKey;
 	private static KeyMapping freelookKey;
 
+	public static KeyMapping freelookKey() {
+		return freelookKey;
+	}
+
 	public static KeyMapping waypointKey() {
 		return waypointKey;
 	}

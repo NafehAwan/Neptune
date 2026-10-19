@@ -16,7 +16,7 @@ public final class DayTimeModule extends HudModule {
 	private final BoolSetting countdown = add(new BoolSetting("countdown", "Time until night or day", true));
 
 	public DayTimeModule() {
-		super("day_time", "Day & Time", "The in-game day, time, and when night starts.", 0.94, 0.06, false);
+		super("day_time", "Day & Time", "The in-game day, time, and when night starts.", 0.885, 0.1, false);
 	}
 
 	@Override
