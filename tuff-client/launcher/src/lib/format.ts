@@ -58,6 +58,8 @@ export function versionInRange(range: string, version: string): boolean {
       if (r === "*") return true;
       if (r.startsWith("~")) return version === r.slice(1) || version.startsWith(r.slice(1) + ".");
       if (r.startsWith(">=")) return plain && cmp(version, r.slice(2)) >= 0;
+      if (r.startsWith("<=")) return plain && cmp(version, r.slice(2)) <= 0;
+      if (r.startsWith(">")) return plain && cmp(version, r.slice(1)) > 0;
       if (r.startsWith("<")) return plain && cmp(version, r.slice(1)) < 0;
       return version === r.replace(/^=/, "");
     }),
@@ -66,5 +68,5 @@ export function versionInRange(range: string, version: string): boolean {
 
 /** Whether Glade's in-game mod runs in a profile with this loader and version. */
 export function gladeRuns(range: string | undefined, loader: Loader, version: string): boolean {
-  return loader === "fabric" && versionInRange(range ?? "~26.3", version);
+  return loader === "fabric" && !!range && versionInRange(range, version);
 }

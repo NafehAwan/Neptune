@@ -183,7 +183,7 @@
                 {#if gladeRuns(app.info?.gladeMinecraft, selected.loader, selected.gameVersion)}
                   <span class="chip glade" title="Glade's in-game mod is installed and checked before every launch"><Icon name="check" size={11} /> Glade {app.info?.gladeVersion ?? ""}</span>
                 {:else if selected.isTuff}
-                  <span class="chip" title="Glade's in-game mod is built for Minecraft {app.info?.tuffMcVersion}">No Glade in-game on {selected.gameVersion}</span>
+                  <span class="chip" title="Glade's in-game mod isn't available for this Minecraft version yet">No Glade in-game on {selected.gameVersion}</span>
                 {/if}
                 {#if selected.isTuff}<span class="chip copper">{selected.preset ? `Glade ${({ performance: "Performance", "performance-plus": "Performance+", "performance-plus-plus": "Performance++", scenic: "Scenic" } as Record<string, string>)[selected.preset] ?? ""}` : "Glade"}</span>{/if}
               </div>

@@ -45,7 +45,7 @@
       "icons/128x128@2x.png",
       "icons/icon.png"
     ],
-    "resources": ["resources/*"],
+    "resources": ["resources/**/*"],
     "linux": {
       "deb": {
         "section": "games",

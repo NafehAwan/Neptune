@@ -10,6 +10,7 @@ plugins {
 val gladeVersion: String = Regex("\"version\"\\s*:\\s*\"([^\"]+)\"")
     .find(rootProject.file("../launcher/src-tauri/tauri.conf.json").readText())!!.groupValues[1]
 val mc: String = sc.current.version
+val mcCompat: String = property("mod.mc_compat") as String
 
 version = "$gladeVersion+$mc"
 base.archivesName = "tuff-client"
@@ -55,7 +56,7 @@ tasks.withType<JavaCompile>().configureEach {
 tasks.processResources {
     val props = mapOf(
         "version" to gladeVersion,
-        "minecraft" to property("mod.mc_compat") as String,
+        "minecraft" to mcCompat,
         "java" to requiredJava.majorVersion,
     )
     inputs.properties(props)

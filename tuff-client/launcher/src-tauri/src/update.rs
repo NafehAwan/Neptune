@@ -33,8 +33,11 @@ pub struct Manifest {
     /// The release page, for downloading by hand.
     pub page: String,
     pub deb: Option<Asset>,
+    /// The 26.3 build alone, read by launcher 1.1.0.
     #[serde(rename = "mod")]
     pub glade_mod: Option<ModAsset>,
+    /// Every Glade build, one per group of Minecraft versions.
+    pub mods: Vec<ModAsset>,
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, Default)]
@@ -51,6 +54,8 @@ pub struct ModAsset {
     pub version: String,
     /// The Minecraft version range the build supports, like `~26.3`.
     pub minecraft: String,
+    /// The jar's file name in the release.
+    pub file: String,
     pub url: String,
     pub sha256: String,
     pub size: u64,
@@ -102,21 +107,30 @@ pub async fn download(http: &reqwest::Client, url: &str, sha256: &str, dest: &Pa
     Ok(())
 }
 
-/// Downloads a newer Glade mod, if there is one. Returns its version.
-pub async fn update_mod(http: &reqwest::Client, paths: &Paths, current: Option<&glade::Build>, manifest: &Manifest) -> Result<Option<String>> {
-    let Some(asset) = manifest.glade_mod.as_ref().filter(|a| !a.url.is_empty()) else { return Ok(None) };
-    if current.is_some_and(|c| glade::compare_versions(&asset.version, &c.info.version) != Ordering::Greater) {
-        return Ok(None);
+/// Downloads every Glade build that is newer than the one the launcher has
+/// for its Minecraft versions. Returns the versions it downloaded.
+pub async fn update_mods(http: &reqwest::Client, paths: &Paths, current: &glade::Builds, manifest: &Manifest) -> Result<Vec<String>> {
+    let assets: Vec<&ModAsset> = if manifest.mods.is_empty() { manifest.glade_mod.iter().collect() } else { manifest.mods.iter().collect() };
+    let mut updated = Vec::new();
+    for asset in assets.into_iter().filter(|a| !a.url.is_empty()) {
+        if current.for_range(&asset.minecraft).is_some_and(|c| glade::compare_versions(&asset.version, &c.info.version) != Ordering::Greater) {
+            continue;
+        }
+        let name = if asset.file.is_empty() { format!("glade-{}.jar", asset.minecraft.replace(|c: char| !c.is_ascii_alphanumeric() && c != '.', "_")) } else { asset.file.clone() };
+        if name.contains(['/', '\\']) || name.starts_with('.') {
+            continue;
+        }
+        let dest = glade::downloads_dir(paths).join(&name);
+        let fresh = dest.with_extension("new");
+        download(http, &asset.url, &asset.sha256, &fresh, |_, _| {}).await?;
+        if glade::read_info(&fresh).map_or(true, |i| i.id != glade::MOD_ID) {
+            let _ = std::fs::remove_file(&fresh);
+            bail!("the downloaded Glade mod isn't valid");
+        }
+        std::fs::rename(&fresh, &dest)?;
+        updated.push(format!("{} for Minecraft {}", asset.version, asset.minecraft.trim_start_matches('~')));
     }
-    let dest = glade::downloaded_path(paths);
-    let fresh = dest.with_extension("new");
-    download(http, &asset.url, &asset.sha256, &fresh, |_, _| {}).await?;
-    if glade::read_info(&fresh).map_or(true, |i| i.id != glade::MOD_ID) {
-        let _ = std::fs::remove_file(&fresh);
-        bail!("the downloaded Glade mod isn't valid");
-    }
-    std::fs::rename(&fresh, &dest)?;
-    Ok(Some(asset.version.clone()))
+    Ok(updated)
 }
 
 fn on_path(program: &str) -> bool {
@@ -166,11 +180,13 @@ mod tests {
     fn reads_the_manifest() {
         let m: Manifest = serde_json::from_str(
             r#"{"version":"1.1.0","notes":"n","page":"p","deb":{"url":"u","sha256":"ab","size":3},
-                "mod":{"version":"1.1.0","minecraft":"~26.3","url":"m","sha256":"cd","size":2}}"#,
+                "mod":{"version":"1.1.0","minecraft":"~26.3","url":"m","sha256":"cd","size":2},
+                "mods":[{"version":"1.2.0","minecraft":"1.21.4","file":"glade-1.21.4.jar","url":"x","sha256":"ef","size":1}]}"#,
         )
         .unwrap();
         assert_eq!(m.version, "1.1.0");
         assert_eq!(m.deb.unwrap().url, "u");
         assert_eq!(m.glade_mod.unwrap().minecraft, "~26.3");
+        assert_eq!(m.mods[0].file, "glade-1.21.4.jar");
     }
 }

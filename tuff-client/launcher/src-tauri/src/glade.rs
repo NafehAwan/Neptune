@@ -55,7 +55,8 @@ fn parse_info(text: &str) -> Option<ModInfo> {
     let json: Value = serde_json::from_str(text).or_else(|_| serde_json::from_str(&text.replace(['\n', '\r'], " "))).ok()?;
     let range = |key: &str| match &json["depends"][key] {
         Value::String(s) => Some(s.clone()),
-        Value::Array(a) => a.iter().filter_map(Value::as_str).next().map(String::from),
+        // a list means any of them
+        Value::Array(a) => Some(a.iter().filter_map(Value::as_str).collect::<Vec<_>>().join(" || ")).filter(|s| !s.is_empty()),
         _ => None,
     };
     Some(ModInfo {
@@ -93,6 +94,10 @@ pub fn accepts(range: &str, version: &str) -> bool {
                 version == base || version.starts_with(&format!("{base}."))
             } else if let Some(min) = r.strip_prefix(">=") {
                 plain(version) && compare_versions(version, min) != Ordering::Less
+            } else if let Some(max) = r.strip_prefix("<=") {
+                plain(version) && compare_versions(version, max) != Ordering::Greater
+            } else if let Some(min) = r.strip_prefix('>') {
+                plain(version) && compare_versions(version, min) == Ordering::Greater
             } else if let Some(max) = r.strip_prefix('<') {
                 plain(version) && compare_versions(version, max) == Ordering::Less
             } else {
@@ -107,7 +112,7 @@ fn plain(version: &str) -> bool {
     version.chars().all(|c| c.is_ascii_digit() || c == '.')
 }
 
-/// The Glade build the launcher will use.
+/// One Glade build: a jar for some Minecraft versions.
 #[derive(Clone, Debug)]
 pub struct Build {
     pub path: PathBuf,
@@ -116,30 +121,72 @@ pub struct Build {
 
 impl Build {
     pub fn runs_on(&self, game_version: &str) -> bool {
-        accepts(self.info.minecraft.as_deref().unwrap_or(crate::TUFF_MC_VERSION), game_version)
+        self.info.minecraft.as_deref().is_some_and(|r| accepts(r, game_version))
     }
 }
 
-/// Where the updater keeps a newer Glade build than the bundled one.
-pub fn downloaded_path(paths: &Paths) -> PathBuf {
-    paths.file("glade").join("glade-mod.jar")
+/// Every Glade build the launcher has: one per group of Minecraft versions.
+#[derive(Clone, Debug, Default)]
+pub struct Builds(pub Vec<Build>);
+
+impl Builds {
+    /// The newest build that runs on this Minecraft version.
+    pub fn for_version(&self, game_version: &str) -> Option<&Build> {
+        self.0.iter().filter(|b| b.runs_on(game_version)).max_by(|a, b| compare_versions(&a.info.version, &b.info.version))
+    }
+
+    /// Every Minecraft version range Glade runs on, as one Fabric range.
+    pub fn ranges(&self) -> String {
+        let mut list: Vec<String> = self.0.iter().filter_map(|b| b.info.minecraft.clone()).collect();
+        list.sort();
+        list.dedup();
+        list.join(" || ")
+    }
+
+    /// The build for this range, if there is one (to compare with an update).
+    pub fn for_range(&self, range: &str) -> Option<&Build> {
+        self.0.iter().filter(|b| b.info.minecraft.as_deref() == Some(range)).max_by(|a, b| compare_versions(&a.info.version, &b.info.version))
+    }
 }
 
-/// The newest of the bundled and the downloaded Glade builds.
-pub fn newest_build(bundled: Option<PathBuf>, paths: &Paths) -> Option<Build> {
-    [bundled, Some(downloaded_path(paths))]
-        .into_iter()
-        .flatten()
-        .filter_map(|path| {
-            let info = read_info(&path).filter(|i| i.id == MOD_ID)?;
-            Some(Build { path, info })
-        })
-        .max_by(|a, b| compare_versions(&a.info.version, &b.info.version))
+/// Where the updater keeps Glade builds newer than the bundled ones.
+pub fn downloads_dir(paths: &Paths) -> PathBuf {
+    paths.file("glade").join("mods")
 }
 
-/// Glade runs on Fabric, on the Minecraft versions its build supports.
-pub fn applies(profile: &Profile, build: Option<&Build>) -> bool {
-    profile.loader == Loader::Fabric && build.is_some_and(|b| b.runs_on(&profile.game_version))
+fn jars_in(dir: &Path) -> Vec<PathBuf> {
+    std::fs::read_dir(dir)
+        .map(|entries| entries.flatten().map(|e| e.path()).filter(|p| p.extension().is_some_and(|x| x == "jar")).collect())
+        .unwrap_or_default()
+}
+
+/// All Glade builds: bundled with the launcher (a folder of jars, or the old
+/// single jar) and downloaded by the updater.
+pub fn find_builds(bundled: &[PathBuf], paths: &Paths) -> Builds {
+    let mut files: Vec<PathBuf> = Vec::new();
+    for b in bundled {
+        if b.is_dir() {
+            files.extend(jars_in(b));
+        } else if b.is_file() {
+            files.push(b.clone());
+        }
+    }
+    files.extend(jars_in(&downloads_dir(paths)));
+    files.push(paths.file("glade").join("glade-mod.jar")); // from launcher 1.1.0
+    Builds(
+        files
+            .into_iter()
+            .filter_map(|path| {
+                let info = read_info(&path).filter(|i| i.id == MOD_ID)?;
+                Some(Build { path, info })
+            })
+            .collect(),
+    )
+}
+
+/// Glade runs on Fabric, on the Minecraft versions it has a build for.
+pub fn applies(profile: &Profile, builds: &Builds) -> bool {
+    profile.loader == Loader::Fabric && builds.for_version(&profile.game_version).is_some()
 }
 
 #[derive(Serialize, Clone, Debug, Default)]
@@ -196,10 +243,11 @@ fn remove_glade_files(dir: &Path, keep: Option<&str>) -> Vec<String> {
 
 /// Puts Glade (and what it needs) into the profile, or takes it out of a
 /// profile it can't run in, so it never breaks a game.
-pub async fn ensure(http: &reqwest::Client, paths: &Paths, profile: &Profile, build: Option<&Build>) -> Result<Report> {
+pub async fn ensure(http: &reqwest::Client, paths: &Paths, profile: &Profile, builds: &Builds) -> Result<Report> {
     let mods = paths.instance(&profile.id).join("mods");
     let mut report = Report::default();
-    let Some(build) = build.filter(|_| applies(profile, build)) else {
+    let build = builds.for_version(&profile.game_version);
+    let Some(build) = build.filter(|_| profile.loader == Loader::Fabric) else {
         // Glade built for another version would stop the game from starting.
         if mods.is_dir() {
             for f in remove_glade_files(&mods, None) {
@@ -208,12 +256,8 @@ pub async fn ensure(http: &reqwest::Client, paths: &Paths, profile: &Profile, bu
         }
         report.reason = Some(match build {
             _ if profile.loader != Loader::Fabric => "Glade's in-game mod runs on Fabric profiles.".into(),
-            Some(b) => format!(
-                "Glade's in-game mod is built for Minecraft {}; this profile is {}.",
-                b.info.minecraft.as_deref().unwrap_or(crate::TUFF_MC_VERSION).trim_start_matches(['~', '=']),
-                profile.game_version
-            ),
-            None => "This copy of the launcher has no Glade mod build.".into(),
+            _ if builds.0.is_empty() => "This copy of the launcher has no Glade mod build.".into(),
+            _ => format!("Glade's in-game mod isn't available for Minecraft {} yet.", profile.game_version),
         });
         return Ok(report);
     };
@@ -266,8 +310,8 @@ pub async fn ensure(http: &reqwest::Client, paths: &Paths, profile: &Profile, bu
 }
 
 /// Whether the player may turn off or remove this mod file.
-pub fn locked(paths: &Paths, profile: &Profile, build: Option<&Build>, kind: &str, file: &str) -> Option<&'static str> {
-    if kind != "mod" || !applies(profile, build) {
+pub fn locked(paths: &Paths, profile: &Profile, builds: &Builds, kind: &str, file: &str) -> Option<&'static str> {
+    if kind != "mod" || !applies(profile, builds) {
         return None;
     }
     if file == FILE {
@@ -295,7 +339,7 @@ mod tests {
         assert_eq!(info.minecraft.as_deref(), Some("~26.3"));
         assert_eq!(info.loader.as_deref(), Some(">=0.19.5"));
         let arr = parse_info(r#"{"id":"x","depends":{"minecraft":["1.21","1.21.1"]}}"#).unwrap();
-        assert_eq!(arr.minecraft.as_deref(), Some("1.21"));
+        assert_eq!(arr.minecraft.as_deref(), Some("1.21 || 1.21.1"));
     }
 
     #[test]
@@ -310,6 +354,29 @@ mod tests {
         assert!(!accepts(">=26.3 <26.5", "26.5"));
         assert!(accepts("*", "1.8.9"));
         assert!(accepts("1.21 || ~26.3", "26.3.2"));
+        assert!(accepts(">=1.21 <=1.21.1", "1.21"));
+        assert!(accepts(">=1.21 <=1.21.1", "1.21.1"));
+        assert!(!accepts(">=1.21 <=1.21.1", "1.21.2"));
+        assert!(accepts(">=1.21.6 <=1.21.8", "1.21.7"));
+        assert!(!accepts(">=1.21.6 <=1.21.8", "1.21.9"));
+    }
+
+    #[test]
+    fn picks_the_build_for_each_version() {
+        let dir = std::env::temp_dir().join(format!("glade-builds-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&dir).unwrap();
+        jar(&dir, "a.jar", r#"{"id":"tuff","version":"1.2.0","depends":{"minecraft":"~26.3"}}"#);
+        jar(&dir, "b.jar", r#"{"id":"tuff","version":"1.2.0","depends":{"minecraft":">=1.21 <=1.21.1"}}"#);
+        jar(&dir, "c.jar", r#"{"id":"tuff","version":"1.3.0","depends":{"minecraft":">=1.21 <=1.21.1"}}"#);
+        jar(&dir, "other.jar", r#"{"id":"sodium","version":"9","depends":{"minecraft":"*"}}"#);
+        let paths = Paths { root: dir.join("home") };
+        let builds = find_builds(&[dir.clone()], &paths);
+        assert_eq!(builds.0.len(), 3);
+        assert_eq!(builds.for_version("1.21").unwrap().info.version, "1.3.0");
+        assert_eq!(builds.for_version("26.3").unwrap().info.version, "1.2.0");
+        assert!(builds.for_version("1.21.5").is_none());
+        assert_eq!(builds.ranges(), ">=1.21 <=1.21.1 || ~26.3");
+        let _ = std::fs::remove_dir_all(dir);
     }
 
     #[test]
@@ -343,25 +410,26 @@ mod tests {
         jar(&mods, "sodium-0.6.jar", r#"{"id":"sodium","version":"0.6.0"}"#);
         jar(&mods, "sodium-0.7.jar", r#"{"id":"sodium","version":"0.7.0"}"#);
 
-        let build = newest_build(Some(src.join("glade.jar")), &paths).unwrap();
-        let report = ensure(&reqwest::Client::new(), &paths, &profile, Some(&build)).await.unwrap();
+        let builds = find_builds(&[src.join("glade.jar")], &paths);
+        assert!(builds.for_version("26.3").is_some());
+        let report = ensure(&reqwest::Client::new(), &paths, &profile, &builds).await.unwrap();
         assert!(report.installed, "{report:?}");
         assert!(mods.join(FILE).is_file());
         assert!(!mods.join("tuff-client.jar.disabled").exists());
         assert!(mods.join("fabric-api-0.1.jar").is_file());
         assert!(mods.join("sodium-0.7.jar").is_file());
         assert!(mods.join("sodium-0.6.jar.disabled").is_file());
-        assert_eq!(locked(&paths, &profile, Some(&build), "mod", FILE), Some("Glade is part of this profile"));
-        assert!(locked(&paths, &profile, Some(&build), "mod", "fabric-api-0.1.jar").is_some());
-        assert!(locked(&paths, &profile, Some(&build), "mod", "sodium-0.7.jar").is_none());
+        assert_eq!(locked(&paths, &profile, &builds, "mod", FILE), Some("Glade is part of this profile"));
+        assert!(locked(&paths, &profile, &builds, "mod", "fabric-api-0.1.jar").is_some());
+        assert!(locked(&paths, &profile, &builds, "mod", "sodium-0.7.jar").is_none());
 
         // a second check changes nothing
-        let again = ensure(&reqwest::Client::new(), &paths, &profile, Some(&build)).await.unwrap();
+        let again = ensure(&reqwest::Client::new(), &paths, &profile, &builds).await.unwrap();
         assert!(again.fixed.is_empty(), "{:?}", again.fixed);
 
         // switching the profile to another version takes Glade out
         let other = Profile { game_version: "1.21.11".into(), ..profile.clone() };
-        let r = ensure(&reqwest::Client::new(), &paths, &other, Some(&build)).await.unwrap();
+        let r = ensure(&reqwest::Client::new(), &paths, &other, &builds).await.unwrap();
         assert!(!r.installed && r.reason.is_some());
         assert!(!mods.join(FILE).exists());
         let _ = std::fs::remove_dir_all(root);

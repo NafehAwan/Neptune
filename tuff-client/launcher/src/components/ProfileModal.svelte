@@ -137,7 +137,8 @@
   {#if draft.gameVersion}
     <p class="faint small">
       {#if gladeRuns(app.info?.gladeMinecraft, draft.loader, draft.gameVersion)}Includes Glade's in-game mod (and Fabric API), checked before every launch.
-      {:else}Glade's in-game mod runs on Fabric {app.info?.tuffMcVersion ?? "26.3"}; this profile plays without it.{/if}
+      {:else if draft.loader !== "fabric"}Glade's in-game mod runs on Fabric profiles; this one plays without it.
+      {:else}Glade's in-game mod isn't available for {draft.gameVersion} yet; this profile plays without it.{/if}
     </p>
   {/if}
   {#if versionError}<p class="faint small selectable">{versionError}</p>{/if}

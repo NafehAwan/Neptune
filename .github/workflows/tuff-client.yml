@@ -148,10 +148,11 @@ jobs:
           path: tuff-client/launcher/mod-build
       - name: Bundle the mod
         run: |
-          JAR=$(ls mod-build/tuff-client-*+26.3.jar 2>/dev/null | head -1 || true)
           # a launcher without the Glade mod would start the game without Glade
-          if [ -z "$JAR" ]; then echo "::error::The Glade mod jar is missing"; exit 1; fi
-          cp "$JAR" src-tauri/resources/tuff-mod.jar; echo "bundled $JAR"
+          if ! ls mod-build/tuff-client-*+26.3.jar >/dev/null 2>&1; then echo "::error::The Glade mod jar is missing"; exit 1; fi
+          mkdir -p src-tauri/resources/glade-mods
+          cp mod-build/tuff-client-*.jar src-tauri/resources/glade-mods/
+          ls -l src-tauri/resources/glade-mods
       - name: Install system dependencies
         run: |
           sudo apt-get update
@@ -211,6 +212,17 @@ jobs:
           if gh release view "v$V" >/dev/null 2>&1; then echo "v$V is already released; bump the version to publish an update"; exit 0; fi
           mkdir -p out
           cp "$(ls dist/deb/*.deb | head -1)" "out/glade_${V}_amd64.deb"
+          # every Glade build, one per group of Minecraft versions
+          MODS='[]'
+          for j in dist/mod/tuff-client-*.jar; do
+            mc=${j##*+}; mc=${mc%.jar}; name="glade-$mc.jar"
+            cp "$j" "out/$name"
+            range=$(unzip -p "$j" fabric.mod.json | jq -r .depends.minecraft)
+            MODS=$(jq --arg v "$V" --arg mc "$range" --arg f "$name" --arg url "https://github.com/${{ github.repository }}/releases/download/v$V/$name" \
+              --arg sha "$(sha256sum "out/$name" | cut -d' ' -f1)" --argjson size "$(stat -c%s "out/$name")" \
+              '. + [{version: $v, minecraft: $mc, file: $f, url: $url, sha256: $sha, size: $size}]' <<<"$MODS")
+          done
+          # launcher 1.1.0 reads only "mod" (the 26.3 build)
           cp "$(ls dist/mod/tuff-client-*+26.3.jar | head -1)" out/glade-mod.jar
           MOD_V=$(unzip -p out/glade-mod.jar fabric.mod.json | jq -r .version)
           MC=$(unzip -p out/glade-mod.jar fabric.mod.json | jq -r .depends.minecraft)
@@ -219,9 +231,11 @@ jobs:
           jq -n --arg v "$V" --arg mc "$MC" --arg page "https://github.com/${{ github.repository }}/releases/tag/v$V" \
             --rawfile notes tuff-client/launcher/RELEASE_NOTES.md \
             --arg deb "$BASE/glade_${V}_amd64.deb" --arg debsha "$(sha256sum "out/glade_${V}_amd64.deb" | cut -d' ' -f1)" --argjson debsize "$(stat -c%s "out/glade_${V}_amd64.deb")" \
+            --argjson mods "$MODS" \
             --arg jar "$BASE/glade-mod.jar" --arg jarsha "$(sha256sum out/glade-mod.jar | cut -d' ' -f1)" --argjson jarsize "$(stat -c%s out/glade-mod.jar)" \
             '{version: $v, notes: ($notes | rtrimstr("\n")), page: $page,
               deb: {url: $deb, sha256: $debsha, size: $debsize},
-              mod: {version: $v, minecraft: $mc, url: $jar, sha256: $jarsha, size: $jarsize}}' > out/latest.json
+              mod: {version: $v, minecraft: $mc, url: $jar, sha256: $jarsha, size: $jarsize},
+              mods: $mods}' > out/latest.json
           cat out/latest.json
           gh release create "v$V" out/* --title "Glade $V" --notes-file tuff-client/launcher/RELEASE_NOTES.md --target "$GITHUB_SHA" --latest

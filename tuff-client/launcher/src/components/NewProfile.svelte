@@ -93,7 +93,7 @@
       </label>
       <label class="unstable"><input type="checkbox" bind:checked={unstable} disabled={!!busy} /> Unstable</label>
       <p class="vnote">
-        {#if withGlade(version)}Fabric · includes the Glade mod, installed and checked before every launch{:else}Fabric · Glade's in-game mod is built for {gladeVersion}, so {version} gets the mods only; mods without a {version} build are skipped{/if}
+        {#if withGlade(version)}Fabric · includes the Glade mod, installed and checked before every launch{:else}Fabric · Glade's in-game mod isn't available for {version} yet, so it gets the mods only; mods without a {version} build are skipped{/if}
       </p>
     </div>
     <button class="btn ghost" onclick={onclose} disabled={!!busy}>Cancel</button>
