@@ -45,6 +45,7 @@ const mods: T.ContentItem[] = [
 ].map(([title, v], i) => ({
   file: `${title.toLowerCase().replace(/\W+/g, "-")}.jar`, kind: "mod" as const, enabled: i !== 6, size: 400000 + i * 91234,
   meta: { projectId: `id${i}`, versionId: `v${i}`, title, iconUrl: null, versionNumber: v },
+  locked: title === "Glade" ? "Glade is part of this profile" : title === "Fabric API" ? "Glade needs Fabric API" : null,
 }));
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -53,7 +54,7 @@ export async function mockCall(cmd: string, args: Record<string, any> = {}): Pro
   await delay(120);
   switch (cmd) {
     case "app_info":
-      return { version: "1.0.0", dataDir: "~/.local/share/tuff-client", totalMemoryMb: 16384, suggestedMemoryMb: 4096, msLoginConfigured: false, discordConfigured: false, tuffModBundled: true, tuffMcVersion: "26.3" };
+      return { version: "1.0.0", dataDir: "~/.local/share/tuff-client", totalMemoryMb: 16384, suggestedMemoryMb: 4096, msLoginConfigured: false, discordConfigured: false, tuffModBundled: true, tuffMcVersion: "26.3", gladeVersion: "1.1.0", gladeMinecraft: "~26.3" };
     case "get_settings": return settings;
     case "save_settings": settings = args.settings; return settings;
     case "list_profiles": return profiles;
@@ -103,6 +104,12 @@ export async function mockCall(cmd: string, args: Record<string, any> = {}): Pro
       return { online: Math.floor(Math.random() * 40000), max: 100000, motd: "A Minecraft network", version: "26.3", latencyMs: 20 + Math.floor(Math.random() * 80), favicon: null };
     }
     case "content_list": return args.kind === "mod" ? mods : [];
+    case "check_update":
+      // browser preview only: ?update shows the update screen
+      return location.search.includes("update")
+        ? { launcher: { version: "1.2.0", current: "1.1.0", notes: "Glade is now in every Fabric profile.", page: "#", canInstall: true }, modUpdated: null }
+        : { launcher: null, modUpdated: null };
+    case "install_update": await new Promise((r) => setTimeout(r, 1500)); throw "The password prompt was closed, so the update wasn't installed.";
     case "content_updates": return [{ file: mods[1].file, kind: "mod", title: "Sodium", current: "0.8.2", latest: "0.8.3" }];
     case "modrinth_search": {
       const titles = ["Sodium", "Iris Shaders", "Lithium", "Fabric API", "Mod Menu", "Entity Culling", "ImmediatelyFast", "Zoomify", "Continuity", "Sound Physics"];

@@ -120,8 +120,21 @@ named `tuff`, and paste the application ID in Settings → Discord (or build wit
 
 ## Glade mod
 
-Fabric mod for Minecraft 26.3 (Java 25). The launcher installs it into Glade
-profiles automatically.
+Fabric mod for Minecraft 26.3 (Java 25). The launcher puts it into every
+Fabric profile on a Minecraft version it supports (26.3 and 26.3.x) and checks
+it before each launch:
+
+- installs Glade, or replaces the profile's copy when it differs from the
+  newest build (bundled with the launcher or downloaded by the updater);
+- removes turned-off, renamed or extra copies of Glade;
+- installs Fabric API, or turns it back on (Glade needs it);
+- turns off the older copy when a mod is in the folder twice;
+- moves the profile to a newer Fabric Loader if Glade needs one;
+- takes Glade out of profiles it can't run in, so it never stops a game from
+  starting.
+
+Glade and Fabric API show as *Required* in the Library and can't be turned off
+or removed.
 
 - **Title screen**: the animated grove (a sun on a slow arc with turning rays,
   blocky clouds at three depths, birds, rolling hills, three layers of trees
@@ -186,7 +199,7 @@ Settings are saved to `config/tuff/config.json`.
 
 ```sh
 cd tuff-client/mod
-./gradlew build      # build/libs/tuff-client-1.0.0.jar
+./gradlew build      # build/libs/tuff-client-<version>.jar (version from launcher/src-tauri/tauri.conf.json)
 ```
 
 ### Art
@@ -210,8 +223,26 @@ cd tuff-client/mod
   drawer and the HUD editor in a world, checks that zoom magnifies the rendered
   image and that fullbright toggles cleanly, and saves screenshots of each step
   (`./gradlew runClientGameTest` locally);
-- bundles the mod into the launcher, runs the Rust tests and Svelte type
-  checks, and uploads the `.deb`.
+- bundles the mod into the launcher (the build fails without it), runs the
+  Rust tests and Svelte type checks, and uploads the `.deb`;
+- publishes an update: on pushes to `master` (and the development branch), when
+  the version in `launcher/src-tauri/tauri.conf.json` has no release yet, it
+  creates the GitHub release `v<version>` with the `.deb`, the mod jar and
+  `latest.json`.
+
+## Updates
+
+Updates are always on. At start and every hour the launcher reads
+`latest.json` from the repository's latest release:
+
+- a newer Glade mod is downloaded quietly and used from the next launch;
+- a newer launcher shows an update screen with no close button. It downloads
+  the `.deb`, checks its SHA-256, installs it with the system password prompt
+  (`pkexec dpkg -i`) and restarts. It waits while Minecraft is running.
+
+To ship an update, raise `version` in `launcher/src-tauri/tauri.conf.json` (the
+mod uses the same version), write `launcher/RELEASE_NOTES.md`, and push. The
+repository must stay public for players to download updates.
 
 Glade is not an official Minecraft product and is not approved by or
 associated with Mojang or Microsoft.

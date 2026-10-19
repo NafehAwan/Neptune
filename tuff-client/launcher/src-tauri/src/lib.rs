@@ -3,6 +3,7 @@ mod crash;
 mod discord;
 mod download;
 mod fabric;
+mod glade;
 mod install;
 mod java;
 mod loaders;
@@ -18,6 +19,7 @@ mod skins;
 mod smoke;
 mod store;
 mod system;
+mod update;
 
 use anyhow::{anyhow, Context};
 use discord::{Discord, Presence};
@@ -112,6 +114,12 @@ fn bundled_mod(app: &AppHandle) -> Option<PathBuf> {
     path.is_file().then_some(path)
 }
 
+/// The newest Glade mod build: the one bundled with the launcher, or a newer
+/// one the updater downloaded.
+fn glade_build(app: &AppHandle, paths: &Paths) -> Option<glade::Build> {
+    glade::newest_build(bundled_mod(app), paths)
+}
+
 // ---------------------------------------------------------------- app info
 
 #[derive(Serialize)]
@@ -125,11 +133,16 @@ struct AppInfo {
     discord_configured: bool,
     tuff_mod_bundled: bool,
     tuff_mc_version: String,
+    /// The Glade mod's version, and the Minecraft versions it runs on (`~26.3`).
+    glade_version: Option<String>,
+    glade_minecraft: String,
 }
 
 #[tauri::command]
 fn app_info(app: AppHandle, state: State<'_, AppState>) -> AppInfo {
     let settings = state.settings();
+    let build = glade_build(&app, &state.paths);
+    let glade_minecraft = build.as_ref().and_then(|b| b.info.minecraft.clone()).unwrap_or_else(|| format!("~{TUFF_MC_VERSION}"));
     AppInfo {
         version: app.package_info().version.to_string(),
         data_dir: state.paths.root.to_string_lossy().into_owned(),
@@ -137,8 +150,10 @@ fn app_info(app: AppHandle, state: State<'_, AppState>) -> AppInfo {
         suggested_memory_mb: system::suggested_memory_mb(),
         ms_login_configured: auth::client_id(settings.ms_client_id.as_deref()).is_ok(),
         discord_configured: settings.discord_app_id.is_some() || discord::BUILD_APP_ID.is_some(),
-        tuff_mod_bundled: bundled_mod(&app).is_some(),
-        tuff_mc_version: TUFF_MC_VERSION.into(),
+        tuff_mod_bundled: build.is_some(),
+        tuff_mc_version: glade_minecraft.trim_start_matches(['~', '=']).to_string(),
+        glade_version: build.map(|b| b.info.version),
+        glade_minecraft,
     }
 }
 
@@ -329,7 +344,7 @@ fn free_profile_id(state: &AppState, base: &str) -> String {
 /// Creates a Glade profile from a preset in its own folder: the Glade mod, the
 /// preset's mods, shader and resource packs, and its video settings.
 #[tauri::command]
-async fn create_preset_profile(state: State<'_, AppState>, preset: String, game_version: Option<String>) -> CmdResult<TuffProfileResult> {
+async fn create_preset_profile(app: AppHandle, state: State<'_, AppState>, preset: String, game_version: Option<String>) -> CmdResult<TuffProfileResult> {
     let preset = presets::find(&preset).ok_or_else(|| format!("Unknown preset '{preset}'"))?;
     let game_version = game_version.filter(|v| !v.trim().is_empty()).unwrap_or_else(|| TUFF_MC_VERSION.into());
     // presets are always Fabric
@@ -351,9 +366,11 @@ async fn create_preset_profile(state: State<'_, AppState>, preset: String, game_
         },
     )?;
     let (mut installed, mut skipped) = (Vec::new(), Vec::new());
-    if game_version != TUFF_MC_VERSION {
-        // the Glade mod itself is built for one Minecraft version
-        skipped.push(format!("Glade mod (built for {TUFF_MC_VERSION})"));
+    let build = glade_build(&app, &state.paths);
+    match glade::ensure(&state.http, &state.paths, &profile, build.as_ref()).await {
+        Ok(r) if r.installed => installed.push(format!("Glade {}", r.version.unwrap_or_default())),
+        Ok(r) => skipped.push(r.reason.unwrap_or_else(|| "Glade mod".into())),
+        Err(e) => skipped.push(format!("Glade mod ({e:#})")),
     }
     let groups: [(&[&str], &str); 3] = [(preset.mods, "mod"), (preset.shaders, "shader"), (preset.resourcepacks, "resourcepack")];
     for (slugs, kind) in groups {
@@ -376,8 +393,8 @@ async fn create_preset_profile(state: State<'_, AppState>, preset: String, game_
 }
 
 #[tauri::command]
-async fn create_tuff_profile(state: State<'_, AppState>) -> CmdResult<TuffProfileResult> {
-    create_preset_profile(state, "performance".into(), None).await
+async fn create_tuff_profile(app: AppHandle, state: State<'_, AppState>) -> CmdResult<TuffProfileResult> {
+    create_preset_profile(app, state, "performance".into(), None).await
 }
 
 // ---------------------------------------------------------------- accounts
@@ -552,24 +569,32 @@ fn log_level(line: &str) -> &'static str {
     }
 }
 
-fn ensure_tuff_mod(app: &AppHandle, paths: &Paths, profile: &Profile) {
-    if !profile.is_tuff || profile.game_version != TUFF_MC_VERSION {
-        return;
+/// Before every launch: Glade is installed and up to date where it can run,
+/// with what it needs, and taken out where it can't.
+async fn check_glade(app: &AppHandle, state: &AppState, profile: &mut Profile) -> anyhow::Result<glade::Report> {
+    let _ = app.emit("launch-progress", LaunchProgress {
+        profile_id: profile.id.clone(),
+        progress: Progress { stage: "Checking Glade".into(), done: 0, total: 1 },
+    });
+    let build = glade_build(app, &state.paths);
+    // Glade needs a recent Fabric Loader; move old profiles up to the newest one.
+    if let (true, Some(b), Some(current)) = (glade::applies(profile, build.as_ref()), build.as_ref(), profile.loader_version.clone()) {
+        if let Some(min) = glade::min_loader(b) {
+            if glade::compare_versions(&current, &min) == std::cmp::Ordering::Less {
+                let latest = loaders::latest(&state.http, &Loader::Fabric, &profile.game_version).await?;
+                profile.loader_version = Some(latest.clone());
+                let id = profile.id.clone();
+                state.update_profiles(|list| {
+                    if let Some(p) = list.iter_mut().find(|p| p.id == id) {
+                        p.loader_version = Some(latest.clone());
+                    }
+                })?;
+            }
+        }
     }
-    let Some(source) = bundled_mod(app) else { return };
-    let mods = paths.instance(&profile.id).join("mods");
-    let target = mods.join("tuff-client.jar");
-    if target.with_extension("jar.disabled").exists() {
-        return; // the player turned it off
-    }
-    let same = match (std::fs::metadata(&source), std::fs::metadata(&target)) {
-        (Ok(a), Ok(b)) => a.len() == b.len(),
-        _ => false,
-    };
-    if !same {
-        let _ = std::fs::create_dir_all(&mods);
-        let _ = std::fs::copy(&source, &target);
-    }
+    let report = glade::ensure(&state.http, &state.paths, profile, build.as_ref()).await?;
+    let _ = app.emit("glade-check", json!({ "profileId": profile.id, "report": report }));
+    Ok(report)
 }
 
 fn restore_window(app: &AppHandle) {
@@ -586,10 +611,10 @@ async fn launch(app: AppHandle, state: State<'_, AppState>, profile_id: String, 
     if game.is_some() {
         return Err("Minecraft is already running.".into());
     }
-    let profile = state.profile(&profile_id).map_err(err)?;
+    let mut profile = state.profile(&profile_id).map_err(err)?;
     let settings = state.settings();
     let account = active_account(&state).await.map_err(err)?;
-    ensure_tuff_mod(&app, &state.paths, &profile);
+    check_glade(&app, &state, &mut profile).await.map_err(|e| format!("Glade check failed: {e:#}"))?;
 
     let last_emit = Mutex::new(Instant::now() - Duration::from_secs(1));
     let progress_app = app.clone();
@@ -847,18 +872,119 @@ async fn modrinth_install(state: State<'_, AppState>, profile_id: String, projec
 }
 
 #[tauri::command]
-fn content_list(state: State<'_, AppState>, profile_id: String, kind: String) -> CmdResult<Vec<modrinth::ContentItem>> {
-    modrinth::list(&state.paths, &profile_id, &kind).map_err(err)
+fn content_list(app: AppHandle, state: State<'_, AppState>, profile_id: String, kind: String) -> CmdResult<Vec<modrinth::ContentItem>> {
+    let mut items = modrinth::list(&state.paths, &profile_id, &kind).map_err(err)?;
+    let profile = state.profile(&profile_id).map_err(err)?;
+    let build = glade_build(&app, &state.paths);
+    for item in &mut items {
+        item.locked = glade::locked(&state.paths, &profile, build.as_ref(), &kind, &item.file).map(String::from);
+        if item.file == glade::FILE && item.meta.is_none() {
+            let dir = state.paths.instance(&profile_id).join("mods");
+            let version = glade::read_info(&dir.join(glade::FILE)).map(|i| i.version).unwrap_or_default();
+            item.meta = Some(modrinth::ContentMeta { title: "Glade".into(), version_number: version, ..Default::default() });
+        }
+    }
+    // Glade first
+    items.sort_by_key(|i| i.locked.is_none());
+    Ok(items)
+}
+
+/// Refuses changes to Glade and what it needs.
+fn check_unlocked(app: &AppHandle, state: &AppState, profile_id: &str, kind: &str, file: &str) -> CmdResult<()> {
+    let profile = state.profile(profile_id).map_err(err)?;
+    match glade::locked(&state.paths, &profile, glade_build(app, &state.paths).as_ref(), kind, file) {
+        Some(why) => Err(format!("{why}, so it can't be turned off or removed.")),
+        None => Ok(()),
+    }
 }
 
 #[tauri::command]
-fn content_toggle(state: State<'_, AppState>, profile_id: String, kind: String, file: String, enabled: bool) -> CmdResult<()> {
+fn content_toggle(app: AppHandle, state: State<'_, AppState>, profile_id: String, kind: String, file: String, enabled: bool) -> CmdResult<()> {
+    if !enabled {
+        check_unlocked(&app, &state, &profile_id, &kind, &file)?;
+    }
     modrinth::set_enabled(&state.paths, &profile_id, &kind, &file, enabled).map_err(err)
 }
 
 #[tauri::command]
-fn content_remove(state: State<'_, AppState>, profile_id: String, kind: String, file: String) -> CmdResult<()> {
+fn content_remove(app: AppHandle, state: State<'_, AppState>, profile_id: String, kind: String, file: String) -> CmdResult<()> {
+    check_unlocked(&app, &state, &profile_id, &kind, &file)?;
     modrinth::remove(&state.paths, &profile_id, &kind, &file).map_err(err)
+}
+
+// ---------------------------------------------------------------- updates
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct UpdateStatus {
+    /// A newer launcher, if there is one.
+    launcher: Option<LauncherUpdate>,
+    /// The Glade mod version just downloaded, if it was updated.
+    mod_updated: Option<String>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct LauncherUpdate {
+    version: String,
+    current: String,
+    notes: String,
+    page: String,
+    /// The launcher can install it itself (installed from the .deb).
+    can_install: bool,
+}
+
+#[tauri::command]
+async fn check_update(app: AppHandle, state: State<'_, AppState>) -> CmdResult<UpdateStatus> {
+    let manifest = update::manifest(&state.http).await.map_err(err)?;
+    let mod_updated = update::update_mod(&state.http, &state.paths, glade_build(&app, &state.paths).as_ref(), &manifest)
+        .await
+        .unwrap_or_else(|e| {
+            eprintln!("Glade mod update failed: {e:#}");
+            None
+        });
+    let current = app.package_info().version.to_string();
+    let launcher = (update::is_newer(&manifest.version, &current) && manifest.deb.is_some()).then(|| LauncherUpdate {
+        version: manifest.version.clone(),
+        current,
+        notes: manifest.notes.clone(),
+        page: manifest.page.clone(),
+        can_install: update::can_install(),
+    });
+    Ok(UpdateStatus { launcher, mod_updated })
+}
+
+#[derive(Serialize, Clone)]
+struct UpdateProgress {
+    stage: &'static str,
+    done: u64,
+    total: u64,
+}
+
+/// Downloads and installs the newer launcher, then restarts into it.
+#[tauri::command]
+async fn install_update(app: AppHandle, state: State<'_, AppState>) -> CmdResult<()> {
+    if state.game.lock().await.is_some() {
+        return Err("Close Minecraft first; the update restarts the launcher.".into());
+    }
+    let manifest = update::manifest(&state.http).await.map_err(err)?;
+    let deb = manifest.deb.clone().ok_or("This release has no .deb to install.")?;
+    let path = update::deb_path(&state.paths, &manifest.version);
+    let progress_app = app.clone();
+    let last = Mutex::new(Instant::now() - Duration::from_secs(1));
+    update::download(&state.http, &deb.url, &deb.sha256, &path, move |done, total| {
+        let mut last = last.lock().unwrap();
+        if done == total || last.elapsed() > Duration::from_millis(80) {
+            *last = Instant::now();
+            let _ = progress_app.emit("update-progress", UpdateProgress { stage: "download", done, total: total.max(deb.size) });
+        }
+    })
+    .await
+    .map_err(err)?;
+    let _ = app.emit("update-progress", UpdateProgress { stage: "install", done: 1, total: 1 });
+    update::install_deb(&path).await.map_err(err)?;
+    let _ = std::fs::remove_file(&path);
+    app.restart();
 }
 
 #[tauri::command]
@@ -1105,6 +1231,8 @@ pub fn run() {
             content_remove,
             content_updates,
             content_update,
+            check_update,
+            install_update,
             import_mrpack,
             install_modpack,
             list_servers,

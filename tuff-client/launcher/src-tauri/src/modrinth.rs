@@ -36,6 +36,8 @@ pub struct ContentItem {
     pub enabled: bool,
     pub size: u64,
     pub meta: Option<ContentMeta>,
+    /// Why the player can't turn this off or remove it, if they can't.
+    pub locked: Option<String>,
 }
 
 pub fn folder_for(kind: &str) -> Result<&'static str> {
@@ -318,6 +320,7 @@ pub fn list(paths: &Paths, profile_id: &str, kind: &str) -> Result<Vec<ContentIt
             kind: kind.to_string(),
             enabled,
             size: meta.len(),
+            locked: None,
         });
     }
     items.sort_by(|a, b| {
@@ -326,6 +329,22 @@ pub fn list(paths: &Paths, profile_id: &str, kind: &str) -> Result<Vec<ContentIt
         an.cmp(&bn)
     });
     Ok(items)
+}
+
+/// Forgets files that were deleted by hand, so they can be installed again.
+pub fn prune_index(paths: &Paths, profile_id: &str) {
+    let mut index = load_index(paths, profile_id);
+    let instance = paths.instance(profile_id);
+    let before = index.len();
+    index.retain(|file, _| {
+        ["mods", "resourcepacks", "shaderpacks", "datapacks"].iter().any(|dir| {
+            let d = instance.join(dir);
+            d.join(file).exists() || d.join(format!("{file}.disabled")).exists()
+        })
+    });
+    if index.len() != before {
+        let _ = save_index(paths, profile_id, &index);
+    }
 }
 
 pub fn set_enabled(paths: &Paths, profile_id: &str, kind: &str, file: &str, enabled: bool) -> Result<()> {

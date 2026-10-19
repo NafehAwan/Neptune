@@ -52,8 +52,8 @@
   <div class="news" in:fly={{ x: 16, duration: 400, delay: 120 }}>
     <div class="newscard lift">
       <div class="k">What's new</div>
-      <div class="tt">Glade 1.0: new mod menu</div>
-      <div class="ss">Favorites, live HUD previews and a faster title screen.</div>
+      <div class="tt">Glade 1.1: always up to date</div>
+      <div class="ss">Glade is in every Fabric 26.3 profile and checked before each launch.</div>
     </div>
     {#if servers.length}
       <div class="newscard lift">

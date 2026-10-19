@@ -42,6 +42,9 @@ export interface AppInfo {
   discordConfigured: boolean;
   tuffModBundled: boolean;
   tuffMcVersion: string;
+  gladeVersion: string | null;
+  /** Minecraft versions the Glade mod runs on, as a Fabric range like "~26.3". */
+  gladeMinecraft: string;
 }
 
 export interface Account { id: string; name: string; kind: "msa" | "offline" }
@@ -76,7 +79,12 @@ export interface GameExit { profileId: string; code: number; crash: CrashReport 
 
 export type ContentKind = "mod" | "resourcepack" | "shader" | "modpack";
 export interface ContentMeta { projectId: string; versionId: string; title: string; iconUrl: string | null; versionNumber: string }
-export interface ContentItem { file: string; kind: ContentKind; enabled: boolean; size: number; meta: ContentMeta | null }
+export interface ContentItem { file: string; kind: ContentKind; enabled: boolean; size: number; meta: ContentMeta | null; locked?: string | null }
+
+export interface GladeReport { installed: boolean; version: string | null; reason: string | null; fixed: string[] }
+export interface LauncherUpdate { version: string; current: string; notes: string; page: string; canInstall: boolean }
+export interface UpdateStatus { launcher: LauncherUpdate | null; modUpdated: string | null }
+export interface UpdateProgress { stage: "download" | "install"; done: number; total: number }
 export interface ContentUpdate { file: string; kind: ContentKind; title: string; current: string; latest: string }
 
 export interface SearchHit {

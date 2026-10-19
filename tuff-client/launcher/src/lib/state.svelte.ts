@@ -1,6 +1,6 @@
 import { api, isTauri, on } from "./api";
 import { toast } from "./toast.svelte";
-import type { Account, AppInfo, GameExit, LaunchProgress, LogLine, Profile, Settings } from "./types";
+import type { Account, AppInfo, GameExit, GladeReport, LaunchProgress, LauncherUpdate, LogLine, Profile, Settings, UpdateProgress } from "./types";
 
 export type Route = "home" | "library" | "browse" | "servers" | "wardrobe" | "screenshots" | "console" | "settings";
 
@@ -24,7 +24,23 @@ export const app = $state({
   /** Profile the library page should open, set by other pages. */
   focusProfile: null as string | null,
   accountModal: false,
+  /** A newer launcher; the update screen installs it. */
+  update: null as LauncherUpdate | null,
+  updateProgress: null as UpdateProgress | null,
 });
+
+const UPDATE_CHECK_MS = 60 * 60 * 1000;
+
+/** Checks for a newer launcher and Glade mod. Updates can't be turned off. */
+export async function checkForUpdates() {
+  try {
+    const status = await api.checkUpdate();
+    if (status.modUpdated) toast(`Glade mod updated to ${status.modUpdated}. It's used from your next launch.`, "success", 6000);
+    if (status.launcher) app.update = status.launcher;
+  } catch {
+    // offline or no release yet: try again later
+  }
+}
 
 export function selectedProfile(): Profile | null {
   return app.profiles.find((p) => p.id === app.settings?.selectedProfile) ?? app.profiles[0] ?? null;
@@ -96,11 +112,17 @@ export async function init() {
     app.running = s.running ? s.profileId : null;
     if (!s.running) refreshProfiles();
   });
+  await on<UpdateProgress>("update-progress", (p) => (app.updateProgress = p));
+  await on<{ profileId: string; report: GladeReport }>("glade-check", ({ report }) => {
+    for (const fix of report.fixed) toast(fix, "info", 5000);
+  });
   await on<GameExit>("game-exit", (exit) => {
     app.lastExit = exit;
     if (exit.crash) app.crashOpen = true;
   });
   app.ready = true;
+  checkForUpdates();
+  setInterval(checkForUpdates, UPDATE_CHECK_MS);
   // browser preview only: ?crash shows the crash dialog with a sample report
   if (!isTauri && location.search.includes("crash")) {
     app.lastExit = {

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, untrack } from "svelte";
   import { api, pickJava } from "../lib/api";
-  import { LOADERS, loaderName } from "../lib/format";
+  import { LOADERS, gladeRuns, loaderName } from "../lib/format";
   import { profileIconNames } from "../lib/icons";
   import { app, refreshProfiles } from "../lib/state.svelte";
   import { toast } from "../lib/toast.svelte";
@@ -134,6 +134,12 @@
       {/each}
     </div>
   </div>
+  {#if draft.gameVersion}
+    <p class="faint small">
+      {#if gladeRuns(app.info?.gladeMinecraft, draft.loader, draft.gameVersion)}Includes Glade's in-game mod (and Fabric API), checked before every launch.
+      {:else}Glade's in-game mod runs on Fabric {app.info?.tuffMcVersion ?? "26.3"}; this profile plays without it.{/if}
+    </p>
+  {/if}
   {#if versionError}<p class="faint small selectable">{versionError}</p>{/if}
   {#if unsupported}
     <p class="note small">{loaderName(draft.loader)} doesn't support Minecraft {draft.gameVersion} yet. Pick another version or loader.{#if loadersError} <span class="faint selectable">({loadersError})</span>{/if}</p>

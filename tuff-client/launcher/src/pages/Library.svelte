@@ -5,7 +5,7 @@
   import NewProfile from "../components/NewProfile.svelte";
   import ProfileModal from "../components/ProfileModal.svelte";
   import { api, pickFile } from "../lib/api";
-  import { ago, bytes, playTime, loaderName } from "../lib/format";
+  import { ago, bytes, gladeRuns, playTime, loaderName } from "../lib/format";
   import { app, go, play, refreshProfiles, selectProfile } from "../lib/state.svelte";
   import { toast } from "../lib/toast.svelte";
   import type { ContentItem, ContentKind, ContentUpdate, Profile } from "../lib/types";
@@ -180,6 +180,11 @@
                 <span class="chip">{selected.loader === "vanilla" ? "Vanilla" : `${loaderName(selected.loader)} ${selected.loaderVersion ?? "latest"}`}</span>
                 <span class="chip">{selected.gameVersion}</span>
                 <span class="chip">{(selected.memoryMb / 1024).toFixed(1)} GB</span>
+                {#if gladeRuns(app.info?.gladeMinecraft, selected.loader, selected.gameVersion)}
+                  <span class="chip glade" title="Glade's in-game mod is installed and checked before every launch"><Icon name="check" size={11} /> Glade {app.info?.gladeVersion ?? ""}</span>
+                {:else if selected.isTuff}
+                  <span class="chip" title="Glade's in-game mod is built for Minecraft {app.info?.tuffMcVersion}">No Glade in-game on {selected.gameVersion}</span>
+                {/if}
                 {#if selected.isTuff}<span class="chip copper">{selected.preset ? `Glade ${({ performance: "Performance", "performance-plus": "Performance+", "performance-plus-plus": "Performance++", scenic: "Scenic" } as Record<string, string>)[selected.preset] ?? ""}` : "Glade"}</span>{/if}
               </div>
               <p class="faint stat">{playTime(selected.playTimeSecs)} · {ago(selected.lastPlayed)}</p>
@@ -233,11 +238,15 @@
                     <p class="cmeta ellipsis">{item.meta?.versionNumber ?? item.file} · {bytes(item.size)}</p>
                   </div>
                   {#if updates.some((u) => u.file === item.file)}<span class="chip copper">Update</span>{/if}
-                  <label class="switch" title={item.enabled ? "Disable" : "Enable"}>
-                    <input type="checkbox" checked={item.enabled} onchange={() => toggle(item)} />
-                    <span></span>
-                  </label>
-                  <button class="btn ghost small icon" title="Remove" onclick={() => remove(item)}><Icon name="trash" size={12} /></button>
+                  {#if item.locked}
+                    <span class="chip lock" title={`${item.locked}. The launcher keeps it installed and up to date.`}><Icon name="lock" size={11} /> Required</span>
+                  {:else}
+                    <label class="switch" title={item.enabled ? "Disable" : "Enable"}>
+                      <input type="checkbox" checked={item.enabled} onchange={() => toggle(item).catch((e) => toast(e, "error"))} />
+                      <span></span>
+                    </label>
+                    <button class="btn ghost small icon" title="Remove" onclick={() => remove(item).catch((e) => toast(e, "error"))}><Icon name="trash" size={12} /></button>
+                  {/if}
                 </div>
               {/each}
             {/if}
@@ -292,5 +301,8 @@
   .cmeta { font-size: 13px; color: var(--faint); }
   .empty.small { padding: 34px 16px; }
   .del { font-size: 15px; color: var(--muted); }
+  .chip.glade, .chip.lock { display: inline-flex; align-items: center; gap: 4px; }
+  .chip.glade { background: rgba(47, 107, 79, 0.12); color: var(--accent-deep); border-color: rgba(47, 107, 79, 0.3); }
+  .chip.lock { color: var(--accent-deep); }
   .del input { accent-color: var(--danger); }
 </style>

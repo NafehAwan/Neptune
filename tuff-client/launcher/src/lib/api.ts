@@ -86,6 +86,8 @@ export const api = {
   contentToggle: (profileId: string, kind: T.ContentKind, file: string, enabled: boolean) =>
     call<void>("content_toggle", { profileId, kind, file, enabled }),
   contentRemove: (profileId: string, kind: T.ContentKind, file: string) => call<void>("content_remove", { profileId, kind, file }),
+  checkUpdate: () => call<T.UpdateStatus>("check_update"),
+  installUpdate: () => call<void>("install_update"),
   contentUpdates: (profileId: string) => call<T.ContentUpdate[]>("content_updates", { profileId }),
   contentUpdate: (profileId: string, kind: T.ContentKind, file: string) => call<void>("content_update", { profileId, kind, file }),
   importMrpack: (path: string) => call<T.Profile>("import_mrpack", { path }),

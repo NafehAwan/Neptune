@@ -6,6 +6,7 @@
   import Sidebar from "./components/Sidebar.svelte";
   import TitleBar from "./components/TitleBar.svelte";
   import Toasts from "./components/Toasts.svelte";
+  import UpdateScreen from "./components/UpdateScreen.svelte";
   import { app, go, init, play, selectedProfile, type Route } from "./lib/state.svelte";
   import { toast } from "./lib/toast.svelte";
   import Browse from "./pages/Browse.svelte";
@@ -74,6 +75,8 @@
     {/if}
   </main>
   {#if app.crashOpen && app.lastExit?.crash}<CrashModal exit={app.lastExit} onclose={() => (app.crashOpen = false)} />{/if}
+  <!-- required updates wait until Minecraft is closed -->
+  {#if app.update && !app.running && !app.launching && (!import.meta.env.DEV || location.search.includes("update"))}<UpdateScreen update={app.update} />{/if}
   <Toasts />
 </div>
 

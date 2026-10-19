@@ -6,6 +6,10 @@ base {
 	archivesName = 'tuff-client'
 }
 
+// One version for all of Glade: the launcher's, so each release carries a
+// matching launcher and mod (the launcher's updater compares these).
+version = new groovy.json.JsonSlurper().parse(file('../launcher/src-tauri/tauri.conf.json')).version
+
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	implementation "net.fabricmc:fabric-loader:${project.loader_version}"

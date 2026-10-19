@@ -5,6 +5,7 @@
   import { app, refreshProfiles, selectProfile } from "../lib/state.svelte";
   import { toast } from "../lib/toast.svelte";
   import type { GameVersion, Preset, Profile } from "../lib/types";
+  import { gladeRuns } from "../lib/format";
   import Icon from "./Icon.svelte";
   import Modal from "./Modal.svelte";
   import ProfileIcon from "./ProfileIcon.svelte";
@@ -20,6 +21,7 @@
   let version = $state(gladeVersion);
   let unstable = $state(false);
   const shownVersions = $derived(versions.filter((v) => v.stable || unstable || v.version === version));
+  const withGlade = (v: string) => gladeRuns(app.info?.gladeMinecraft, "fabric", v);
 
   onMount(async () => {
     presets = await api.listPresets().catch(() => []);
@@ -86,12 +88,12 @@
         <span>Minecraft</span>
         <select class="input" bind:value={version} disabled={!!busy || !versions.length} title="Minecraft version (Fabric)">
           {#if !versions.length}<option value={version}>{version}</option>{/if}
-          {#each shownVersions as v (v.version)}<option value={v.version}>{v.version}{v.stable ? "" : " (unstable)"}{v.version === gladeVersion ? " · recommended" : ""}</option>{/each}
+          {#each shownVersions as v (v.version)}<option value={v.version}>{v.version}{v.stable ? "" : " (unstable)"}{withGlade(v.version) ? " · Glade" : ""}</option>{/each}
         </select>
       </label>
       <label class="unstable"><input type="checkbox" bind:checked={unstable} disabled={!!busy} /> Unstable</label>
       <p class="vnote">
-        {#if version === gladeVersion}Fabric · includes the Glade mod{:else}Fabric · without the Glade mod (built for {gladeVersion}); mods without a {version} build are skipped{/if}
+        {#if withGlade(version)}Fabric · includes the Glade mod, installed and checked before every launch{:else}Fabric · Glade's in-game mod is built for {gladeVersion}, so {version} gets the mods only; mods without a {version} build are skipped{/if}
       </p>
     </div>
     <button class="btn ghost" onclick={onclose} disabled={!!busy}>Cancel</button>
