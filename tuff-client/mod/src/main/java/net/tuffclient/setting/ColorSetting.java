@@ -11,10 +11,11 @@ public final class ColorSetting extends Setting<Integer> {
 	/** Whether the picker shows an opacity bar. */
 	public final boolean alpha;
 	public boolean chroma;
+	/** With chroma on: the rainbow flows letter by letter (wave) and how fast it moves (0 slow, 1 normal, 2 fast). */
+	public boolean wave = true;
+	public int speed = 1;
+	private static final float[] SPEEDS = {0.4f, 1f, 2.2f};
 	private final int initial;
-	/** Rainbow speed (1 = one loop every 4 seconds) and whether it flows across text; set from the Theme page. */
-	public static float speed = 1;
-	public static boolean wave = true;
 
 	public ColorSetting(String id, String name, int argb, boolean alpha) {
 		super(id, name, alpha ? argb : argb | 0xFF000000);
@@ -31,13 +32,16 @@ public final class ColorSetting extends Setting<Integer> {
 	public int argb(float offset) {
 		if (!chroma) return value;
 		float[] hsv = toHsv(value);
-		float hue = (float) ((System.currentTimeMillis() * (double) speed % 4000.0) / 4000.0) - offset;
+		double factor = SPEEDS[Math.max(0, Math.min(2, speed))];
+		float hue = (float) ((System.currentTimeMillis() * factor % 4000.0) / 4000.0) - (wave ? offset : 0);
 		return fromHsv(hue, Math.max(0.6f, hsv[1]), Math.max(0.7f, hsv[2]), value >>> 24);
 	}
 
 	public void reset() {
 		value = initial;
 		chroma = false;
+		wave = true;
+		speed = 1;
 	}
 
 	@Override
@@ -55,6 +59,8 @@ public final class ColorSetting extends Setting<Integer> {
 		JsonObject json = new JsonObject();
 		json.addProperty("color", String.format("#%08X", value));
 		if (chroma) json.addProperty("chroma", true);
+		if (!wave) json.addProperty("wave", false);
+		if (speed != 1) json.addProperty("speed", speed);
 		return json;
 	}
 
@@ -66,6 +72,8 @@ public final class ColorSetting extends Setting<Integer> {
 			JsonObject o = json.getAsJsonObject();
 			if (o.has("color")) hex = o.get("color").getAsString();
 			chroma = o.has("chroma") && o.get("chroma").getAsBoolean();
+			wave = !o.has("wave") || o.get("wave").getAsBoolean();
+			speed = o.has("speed") ? Math.max(0, Math.min(2, o.get("speed").getAsInt())) : 1;
 		}
 		Integer parsed = parse(hex);
 		if (parsed != null) set(parsed);

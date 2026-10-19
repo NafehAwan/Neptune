@@ -15,7 +15,7 @@ public final class KeystrokesModule extends HudModule {
 	private final BoolSetting showSpace = add(new BoolSetting("space", "Space bar", true));
 	private final ColorSetting keyColor = add(new ColorSetting("key_color", "Key color", 0x9A101210, true));
 	private final ColorSetting keyText = add(new ColorSetting("key_text", "Key text color", Theme.HUD_TEXT, true));
-	private final ColorSetting pressColor = add(new ColorSetting("press_color", "Pressed key color", 0xEB3A7D5E, true));
+	private final ColorSetting pressColor = add(new ColorSetting("press_color", "Pressed key color", 0xEB2F6B4F, true));
 	private final ColorSetting pressedText = add(new ColorSetting("pressed_text", "Pressed text color", Theme.INK, true));
 	private final float[] glow = new float[7];
 	private long last = System.nanoTime();
@@ -58,7 +58,7 @@ public final class KeystrokesModule extends HudModule {
 	}
 
 	private float wave(float x) {
-		return ColorSetting.wave ? (float) (this.x * 2 + x * 0.006) : 0;
+		return (float) (this.x * 2 + x * 0.006);
 	}
 
 	private void key(GuiGraphicsExtractor g, Font font, int i, KeyMapping mapping, String label, int x, int y, int w, int h, float dt) {

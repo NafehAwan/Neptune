@@ -10,6 +10,7 @@ public final class CoordinatesModule extends HudModule {
 	private static final String[] FACING = {"South +Z", "West -X", "North -Z", "East +X"};
 	private final BoolSetting direction = add(new BoolSetting("direction", "Show direction", true));
 	private final BoolSetting showLabel = add(new BoolSetting("show_label", "Show the XYZ label", true));
+	private final net.tuffclient.setting.ColorSetting xyzColor = add(new net.tuffclient.setting.ColorSetting("xyz_color", "XYZ label color", net.tuffclient.gui.Theme.HUD_TEXT, true)).showIf(() -> showLabel.get());
 
 	public CoordinatesModule() {
 		super("coordinates", "Coordinates", "Your position and the direction you're facing.", 0.006, 0.15, true);
@@ -27,7 +28,7 @@ public final class CoordinatesModule extends HudModule {
 		}
 		int pd = pad();
 		box(g, Math.max(font.width(tag) + font.width(xyz), font.width(facing)) + pd * 2, linesHeight(facing.isEmpty() ? 1 : 2));
-		label(g, font, tag, pd, pd);
+		colored(g, font, tag, pd, pd, xyzColor);
 		value(g, font, xyz, pd + font.width(tag), pd);
 		if (!facing.isEmpty()) label(g, font, facing, pd, pd + 10);
 	}

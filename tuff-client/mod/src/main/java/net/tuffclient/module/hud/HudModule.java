@@ -36,7 +36,7 @@ public abstract class HudModule extends Module {
 	public final ColorSetting backgroundColor = styled(new ColorSetting("background_color", "Background color", 0x9A101210, true)).showIf(() -> background.get() && usesTextColors());
 	public final BoolSetting border = styled(new BoolSetting("border", "Border", false));
 	public final ColorSetting borderColor = styled(new ColorSetting("border_color", "Border color", 0x80FFFFFF, true)).showIf(() -> border.get());
-	public final NumberSetting radius = styled(new NumberSetting("radius", "Corner radius", 3, 0, 8, 1)).showIf(() -> background.get() || border.get());
+	public final NumberSetting radius = styled(new NumberSetting("radius", "Corner radius", 0, 0, 8, 1)).showIf(() -> background.get() || border.get());
 	public final NumberSetting padding = styled(new NumberSetting("padding", "Padding", 4, 0, 10, 1));
 
 	/** Size of the last render, in unscaled GUI pixels. */
@@ -113,7 +113,7 @@ public abstract class HudModule extends Module {
 	/** Text in a colour setting; with chroma wave on, each letter is a step along the rainbow. */
 	protected void colored(GuiGraphicsExtractor g, Font font, String s, int x, int y, ColorSetting c) {
 		if (s.isEmpty()) return;
-		if (!c.chroma || !ColorSetting.wave) {
+		if (!c.chroma || !c.wave) {
 			text(g, font, s, x, y, c.argb());
 			return;
 		}
@@ -127,9 +127,22 @@ public abstract class HudModule extends Module {
 		}
 	}
 
-	/** Quick looks for the Style section: Clean (just text), Boxed and Outline. */
+	/** Quick looks for the Style section: Default (the original look), Clean (just text), Boxed and Outline. */
 	public void applyLook(String look) {
 		switch (look) {
+			case "Default" -> {
+				// the original Glade HUD look, colours included
+				for (Setting<?> s : settings()) {
+					if (!isStyle(s) || s == scale) continue;
+					switch (s) {
+						case ColorSetting c -> c.reset();
+						case BoolSetting b -> b.set(b != border);
+						case NumberSetting n -> n.set(n == padding ? 4.0 : 0.0);
+						default -> {
+						}
+					}
+				}
+			}
 			case "Clean" -> {
 				background.set(false);
 				border.set(false);
@@ -149,16 +162,6 @@ public abstract class HudModule extends Module {
 				shadow.set(true);
 			}
 			default -> {
-			}
-		}
-	}
-
-	/** Copies this element's look (colours included) onto another. */
-	public void copyStyleTo(HudModule other) {
-		for (Setting<?> s : settings()) {
-			if (!isStyle(s) || s == scale) continue;
-			for (Setting<?> o : other.settings()) {
-				if (o.id.equals(s.id)) o.fromJson(s.toJson());
 			}
 		}
 	}
