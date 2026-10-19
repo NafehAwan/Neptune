@@ -10,7 +10,7 @@ public final class Input {
 	}
 
 	/** A key press. {@code key} uses the game's key codes (InputConstants). */
-	public record Key(int key, int scancode, int modifiers, boolean isEscape) {
+	public record Key(int key, int modifiers, boolean isEscape) {
 	}
 
 	/** A typed character. */

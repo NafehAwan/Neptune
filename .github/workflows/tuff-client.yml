@@ -42,6 +42,9 @@ jobs:
             ls build/libs/tuff-client-*+$v.jar >/dev/null 2>&1 || { echo "::error::Glade for Minecraft $v didn't build"; failed=1; }
           done
           exit ${failed:-0}
+      - name: Dump the Minecraft APIs Glade uses, per version
+        if: always()
+        run: python3 tools/apidump.py $(grep -oE 'versions\(([^)]*)\)' settings.gradle.kts | grep -oE '[0-9][0-9.]*')
       - uses: actions/upload-artifact@v4
         with:
           name: tuff-mod
@@ -66,23 +69,9 @@ jobs:
           ./gradlew build 2>&1 | tee build.log; status=${PIPESTATUS[0]}
           if [ "$status" -ne 0 ]; then echo "=== COMPILE ERRORS"; grep -E "error:|What went wrong|^> |Could not" -A3 build.log | head -200; exit 1; fi
           ls build/libs
-      - name: Print the 1.8.9 classes Glade uses
+      - name: Dump the 1.8.9 APIs Glade uses
         if: always()
-        run: |
-          JAR=$(find ~/.gradle .gradle -name '*.jar' -path '*1.8.9*' 2>/dev/null | grep -viE 'sources|intermediary|unpicked' | xargs -r ls -S | head -1)
-          echo "JAR $JAR"
-          [ -n "$JAR" ] || exit 0
-          unzip -l "$JAR" | awk '{print $4}' | grep '^net/minecraft/client/' | grep -v '\$' | sed 's/\.class$//' > classes.txt
-          echo "=== CLIENT CLASSES"; cat classes.txt
-          for c in $(grep -iE '/(MinecraftClient|Minecraft|Screen|DrawableHelper|TextRenderer|Tessellator|BufferBuilder|GlStateManager|Window|InGameHud|KeyBinding|GameOptions|ItemRenderer|ClientPlayerEntity|TitleScreen|GameRenderer|Mouse|Keyboard|PlayerListHud|ChatHud|DebugHud|ClientPlayerInteractionManager|Camera|WorldRenderer|HeldItemRenderer)$' classes.txt); do
-            echo "=== $c"; javap -classpath "$JAR" -p "${c//\//.}" | head -150
-          done
-          for c in net/minecraft/entity/player/PlayerEntity net/minecraft/item/ItemStack net/minecraft/entity/LivingEntity net/minecraft/util/math/BlockPos net/minecraft/text/Text; do
-            echo "=== $c"; javap -classpath "$JAR" -p "${c//\//.}" 2>&1 | head -80
-          done
-          echo "=== LEGACY FABRIC API"
-          find ~/.gradle -name 'legacy-fabric-*.jar' | grep -v sources | head -40
-          for j in $(find ~/.gradle -name 'legacy-fabric-*.jar' | grep -v sources | grep -E 'keybind|lifecycle|rendering|command|resource'); do unzip -l "$j" | awk '{print $4}' | grep '/api/.*\.class$'; done
+        run: python3 tools/dump.py
       - uses: actions/upload-artifact@v4
         with:
           name: tuff-mod-legacy

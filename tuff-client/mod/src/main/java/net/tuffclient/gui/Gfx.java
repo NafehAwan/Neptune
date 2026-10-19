@@ -50,6 +50,10 @@ public final class Gfx {
 		g.pose().scale(x, y);
 	}
 
+	public void scale(float s) {
+		scale(s, s);
+	}
+
 	/** Turns by an angle in radians. */
 	public void rotate(float radians) {
 		g.pose().rotate(radians);
@@ -107,6 +111,10 @@ public final class Gfx {
 	}
 
 	public void centeredText(Font font, Component text, int x, int y, int color) {
+		g.centeredText(font, text, x, y, color);
+	}
+
+	public void centeredText(Font font, String text, int x, int y, int color) {
 		g.centeredText(font, text, x, y, color);
 	}
 

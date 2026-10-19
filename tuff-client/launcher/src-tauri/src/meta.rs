@@ -305,6 +305,10 @@ impl Library {
                 size: a.size,
             });
         }
+        // natives-only libraries (Legacy Fabric's LWJGL 2) have no plain jar
+        if self.natives.is_some() {
+            return None;
+        }
         let path = maven_path(&self.name)?;
         let base = self.url.as_deref().unwrap_or(LIBRARIES_URL);
         Some(LibFile {
@@ -541,6 +545,19 @@ mod tests {
     #[test]
     fn library_keys_keep_classifier() {
         let a = Library { name: "org.lwjgl:lwjgl:3.3.3".into(), ..Default::default() };
+        let legacy = Library {
+            name: "org.lwjgl.lwjgl:lwjgl-platform:2.9.4+legacyfabric.17".into(),
+            url: Some("https://maven.legacyfabric.net/".into()),
+            natives: Some(HashMap::from([("linux".to_string(), "natives-linux".to_string())])),
+            ..Default::default()
+        };
+        assert!(legacy.artifact().is_none(), "natives-only library has no plain jar");
+        if os_name() == "linux" {
+            assert_eq!(
+                legacy.native().unwrap().url,
+                "https://maven.legacyfabric.net/org/lwjgl/lwjgl/lwjgl-platform/2.9.4+legacyfabric.17/lwjgl-platform-2.9.4+legacyfabric.17-natives-linux.jar"
+            );
+        }
         let b = Library { name: "org.lwjgl:lwjgl:3.3.3:natives-linux".into(), ..Default::default() };
         assert_ne!(a.key(), b.key());
         assert_eq!(a.key(), "org.lwjgl:lwjgl");

@@ -269,7 +269,7 @@ public final class TuffTitleScreen extends GladeScreen {
 	protected boolean onKey(Input.Key event) {
 		if (pending != null) return true;
 		if (accounts.keyPressed(event)) return true;
-		if (!accounts.isOpen() && TuffClient.menuKey().matches(event)) {
+		if (!accounts.isOpen() && keyMatches(TuffClient.menuKey())) {
 			open(new TuffMenuScreen(this));
 			return true;
 		}

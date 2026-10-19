@@ -54,6 +54,11 @@ public abstract class GladeScreen extends Screen {
 		return super.keyPressed(keyEvent);
 	}
 
+	/** Whether the key just pressed is bound to this key mapping. */
+	protected boolean keyMatches(net.minecraft.client.KeyMapping mapping) {
+		return keyEvent != null && mapping.matches(keyEvent);
+	}
+
 	protected boolean onType(Input.Typed typed) {
 		return super.charTyped(charEvent);
 	}
@@ -102,7 +107,7 @@ public abstract class GladeScreen extends Screen {
 	@Override
 	public final boolean keyPressed(KeyEvent event) {
 		keyEvent = event;
-		return onKey(new Input.Key(event.key(), event.scancode(), event.modifiers(), event.isEscape()));
+		return onKey(new Input.Key(event.key(), event.modifiers(), event.isEscape()));
 	}
 
 	@Override
