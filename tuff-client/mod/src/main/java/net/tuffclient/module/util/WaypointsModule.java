@@ -122,7 +122,7 @@ public final class WaypointsModule extends Module {
 		pt.color = COLORS[list.size() % COLORS.length];
 		list.add(pt);
 		saveWaypoints();
-		p.sendOverlayMessage(Component.literal("Added " + pt.name + " at " + pt.x + " " + pt.y + " " + pt.z));
+		net.tuffclient.compat.Messages.overlay(p, Component.literal("Added " + pt.name + " at " + pt.x + " " + pt.y + " " + pt.z));
 	}
 
 	@Override
@@ -150,10 +150,10 @@ public final class WaypointsModule extends Module {
 	public void render(Gfx g) {
 		Minecraft mc = Minecraft.getInstance();
 		if (mc.player == null || mc.level == null) return;
-		Camera cam = mc.gameRenderer.mainCamera();
-		Vec3 eye = cam.position();
-		Vector3fc f = cam.forwardVector(), up = cam.upVector(), left = cam.leftVector();
-		double tanHalf = Math.tan(Math.toRadians(cam.getFov()) / 2);
+		Camera cam = net.tuffclient.compat.CameraView.main();
+		Vec3 eye = net.tuffclient.compat.CameraView.eye(cam);
+		Vector3fc f = net.tuffclient.compat.CameraView.forward(cam), up = net.tuffclient.compat.CameraView.up(cam), left = net.tuffclient.compat.CameraView.left(cam);
+		double tanHalf = Math.tan(Math.toRadians(net.tuffclient.compat.CameraView.fov(cam)) / 2);
 		int gw = g.guiWidth(), gh = g.guiHeight();
 		Font font = mc.font;
 		double max = maxDistance.get();

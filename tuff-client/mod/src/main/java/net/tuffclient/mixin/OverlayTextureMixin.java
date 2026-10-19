@@ -20,7 +20,7 @@ public abstract class OverlayTextureMixin implements GladeOverlayTexture {
 		NativeImage pixels = texture.getPixels();
 		if (pixels == null) return;
 		for (int y = 0; y < 8; y++) {
-			for (int x = 0; x < 16; x++) pixels.setPixel(x, y, argb);
+			for (int x = 0; x < 16; x++) net.tuffclient.compat.Images.setPixel(pixels, x, y, argb);
 		}
 		texture.upload();
 	}

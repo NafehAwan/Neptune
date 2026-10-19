@@ -10,7 +10,6 @@ import java.util.UUID;
 
 import com.google.gson.JsonParser;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.ClientAsset;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
@@ -27,7 +26,8 @@ import net.tuffclient.setting.ColorSetting;
  */
 public final class CosmeticsModule extends Module {
 	private static final String USERS = "https://raw.githubusercontent.com/NafehAwan/Neptune/master/tuff-client/cosmetics/users.json";
-	public static final ClientAsset.ResourceTexture CAPE = new ClientAsset.ResourceTexture(Identifier.fromNamespaceAndPath(TuffClient.MOD_ID, "entity/cape/glade"));
+	/** The Glade cape texture (textures/entity/cape/glade.png). */
+	public static final Identifier CAPE_TEXTURE = Identifier.fromNamespaceAndPath(TuffClient.MOD_ID, "entity/cape/glade");
 	private final BoolSetting badge = add(new BoolSetting("badge", "Leaf badge next to Glade players", true));
 	private final ColorSetting badgeColor = add(new ColorSetting("badge_color", "Badge color", 0xFF4FC79A, false)).showIf(() -> badge.get());
 	private final BoolSetting cape = add(new BoolSetting("cape", "Glade cape", true));

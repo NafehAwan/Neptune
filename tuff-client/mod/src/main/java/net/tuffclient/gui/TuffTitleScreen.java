@@ -116,11 +116,11 @@ public final class TuffTitleScreen extends GladeScreen {
 		boxes.add(new Box(new Button("single", "Singleplayer", "play", Button.PRIMARY, () -> open(new SelectWorldScreen(this))), bx, BTN_Y, 300, 46));
 		boxes.add(new Box(new Button("multi", "Multiplayer", "globe", Button.FROST, () -> open(new JoinMultiplayerScreen(this))), bx, BTN_Y + 56, 300, 46));
 		boxes.add(new Box(new Button("mods", "Mods", "grid", Button.FROST, this::openMods), bx, BTN_Y + 112, 145, 42));
-		boxes.add(new Box(new Button("options", "Options", "settings", Button.FROST, () -> open(new OptionsScreen(this, minecraft.options))), bx + 155, BTN_Y + 112, 145, 42));
+		boxes.add(new Box(new Button("options", "Options", "settings", Button.FROST, () -> open(net.tuffclient.compat.Screens.options(this))), bx + 155, BTN_Y + 112, 145, 42));
 
 		float right = vw() - 20;
 		boxes.add(new Box(new Button("quit", "Quit game", "logout", Button.ROUND, minecraft::stop), right - 36, 18, 36, 36));
-		boxes.add(new Box(new Button("settings", "Options", "settings", Button.ROUND, () -> open(new OptionsScreen(this, minecraft.options))), right - 80, 18, 36, 36));
+		boxes.add(new Box(new Button("settings", "Options", "settings", Button.ROUND, () -> open(net.tuffclient.compat.Screens.options(this))), right - 80, 18, 36, 36));
 		boxes.add(new Box(new Button("realms", "Realms", "cloud", Button.ROUND, () -> open(new RealmsMainScreen(this))), right - 124, 18, 36, 36));
 	}
 

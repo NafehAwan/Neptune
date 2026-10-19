@@ -336,7 +336,7 @@ public final class Ui {
 	public static float zoom = 1f;
 
 	public static int guiScale() {
-		return mc().getWindow().getGuiScale();
+		return (int) mc().getWindow().getGuiScale();
 	}
 
 	/** Physical pixels per GUI unit, including {@link #zoom}. */

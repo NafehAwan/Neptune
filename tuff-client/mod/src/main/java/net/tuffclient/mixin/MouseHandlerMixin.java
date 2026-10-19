@@ -21,6 +21,6 @@ public abstract class MouseHandlerMixin {
 
 	@Inject(method = "onScroll", at = @At("HEAD"), cancellable = true)
 	private void glade$zoomScroll(long window, double x, double y, CallbackInfo ci) {
-		if (TuffClient.modules() != null && net.minecraft.client.net.tuffclient.Mc.screen() == null && TuffClient.modules().zoom.onScroll(y)) ci.cancel();
+		if (TuffClient.modules() != null && net.tuffclient.Mc.screen() == null && TuffClient.modules().zoom.onScroll(y)) ci.cancel();
 	}
 }
