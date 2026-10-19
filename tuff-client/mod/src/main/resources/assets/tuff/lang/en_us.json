@@ -1,5 +1,7 @@
 {
 	"key.category.tuff.tuff": "Glade",
 	"key.tuff.menu": "Open Glade menu",
-	"key.tuff.zoom": "Zoom"
+	"key.tuff.zoom": "Zoom",
+	"key.tuff.waypoint": "Add waypoint",
+	"key.tuff.freelook": "Freelook"
 }

@@ -38,35 +38,17 @@ jobs:
           for j in $(find ~/.gradle/caches/fabric-loom .gradle/loom-cache -name '*.jar' 2>/dev/null); do
             if unzip -l "$j" 2>/dev/null | grep -q 'net/minecraft/client/Minecraft.class'; then JAR="$j"; break; fi
           done
-          echo "API-CLASSES $(unzip -l "$JAR" | grep -oE 'net/minecraft/client/renderer/(feature|state)/[A-Za-z0-9/$]*\.class|net/minecraft/world/attribute/[A-Za-z0-9/$]*\.class|net/minecraft/core/ClientAsset[A-Za-z0-9$]*\.class' | sort -u | tr '\n' ' ')"
-          dump() { echo "=== $1"; javap -p -cp "$JAR" "$1" 2>&1 | grep -vE 'lambda\$|Compiled from|access\$|^  private [a-zA-Z]' ; }
-          code() { echo "=== CODE $1 $2"; javap -c -p -cp "$JAR" "$1" 2>&1 | awk -v m="$2" 'index($0, m) && /\(/ {p=1} p {print} p && /^$/ {p=0}' | grep -E "invoke|getfield|getstatic|ldc|^  [a-z]" | head -${3:-60}; }
-          for c in net.minecraft.world.entity.Entity net.minecraft.world.level.Level net.minecraft.client.multiplayer.ClientLevel net.minecraft.client.player.LocalPlayer \
-            net.minecraft.world.entity.LivingEntity net.minecraft.world.entity.player.Player net.minecraft.client.Options net.minecraft.client.multiplayer.ClientPacketListener \
-            net.minecraft.client.renderer.GameRenderer net.minecraft.client.renderer.SkyRenderer net.minecraft.client.renderer.state.level.SkyRenderState \
-            net.minecraft.client.renderer.state.level.CameraRenderState net.minecraft.client.renderer.state.level.BlockOutlineRenderState \
-            net.minecraft.client.renderer.OrderedSubmitNodeCollector net.minecraft.client.renderer.entity.player.AvatarRenderer net.minecraft.client.ClientClockManager \
-            net.minecraft.client.multiplayer.chat.GuiMessage net.minecraft.core.ClientAsset 'net.minecraft.core.ClientAsset$ResourceTexture' 'net.minecraft.core.ClientAsset$DownloadedTexture' \
-            'net.minecraft.network.chat.ClickEvent$CopyToClipboard' 'net.minecraft.network.chat.ClickEvent$RunCommand' 'net.minecraft.network.chat.ClickEvent$OpenFile' \
-            'net.minecraft.network.chat.HoverEvent$ShowText' net.minecraft.network.chat.Style net.minecraft.network.chat.FormattedText net.minecraft.network.chat.MutableComponent \
-            net.minecraft.client.renderer.fog.FogData net.minecraft.world.attribute.EnvironmentAttributes net.minecraft.world.attribute.EnvironmentAttributeSystem \
-            net.minecraft.client.gui.Gui net.minecraft.client.gui.screens.DeathScreen net.minecraft.world.level.LightLayer net.minecraft.client.renderer.PostChain \
-            com.mojang.blaze3d.pipeline.RenderTarget net.minecraft.client.renderer.feature.ShapeOutlineFeatureRenderer 'net.minecraft.client.renderer.feature.ShapeOutlineFeatureRenderer$Submit' \
-            net.minecraft.client.multiplayer.PlayerInfo net.minecraft.client.resources.sounds.SimpleSoundInstance net.minecraft.client.Minecraft; do
+          RS=$(find ~/.gradle/caches -name 'blaze3d*.jar' -o -name 'renderpearl*.jar' 2>/dev/null | tr '\n' ':')
+          echo "API-CLASSES $(unzip -l "$JAR" | grep -oE 'com/mojang/blaze3d/(pipeline|systems|textures)/[A-Za-z0-9$]*\.class|net/minecraft/client/renderer/SubmitNode[A-Za-z0-9$]*\.class' | sort -u | tr '\n' ' ')"
+          dump() { echo "=== $1"; javap -p -cp "$JAR:$RS" "$1" 2>&1 | grep -vE 'lambda\$|Compiled from|access\$|^  private [a-zA-Z]' ; }
+          code() { echo "=== CODE $1 $2"; javap -c -p -cp "$JAR:$RS" "$1" 2>&1 | awk -v m="$2" 'index($0, m) && /\(/ {p=1} p {print} p && /^$/ {p=0}' | grep -E "invoke|getfield|getstatic|ldc|^  [a-z]" | head -${3:-60}; }
+          for c in com.mojang.blaze3d.pipeline.TextureTarget com.mojang.blaze3d.systems.RenderSystem com.mojang.renderpearl.api.textures.GpuSampler \
+            net.minecraft.client.renderer.SubmitNodeCollection net.minecraft.client.renderer.SubmitNodeStorage; do
             dump "$c"
           done
-          for e in DebugEntryDayCount DebugEntryBiome DebugEntryLight DebugEntryPosition DebugEntryLookingAt; do
-            echo "=== CODE $e"; javap -c -p -cp "$JAR" "net.minecraft.client.gui.components.debug.$e" 2>&1 | grep -E "invoke|getfield|getstatic|ldc|^  [a-z]" | head -80
-          done
-          code net.minecraft.client.renderer.LevelRenderer submitBlockOutline 80
-          code net.minecraft.client.renderer.fog.FogRenderer setupFog 80
-          code net.minecraft.client.renderer.SkyRenderer extractRenderState 60
-          code net.minecraft.client.renderer.entity.EntityRenderer submitNameDisplay 60
-          code net.minecraft.client.renderer.entity.player.AvatarRenderer shouldShowName 40
-          code net.minecraft.client.renderer.entity.LivingEntityRenderer shouldShowName 60
-          code net.minecraft.client.Camera update 80
-          code net.minecraft.client.MouseHandler turnPlayer 60
-          code net.minecraft.client.gui.Gui extractRenderState 60
+          code net.minecraft.client.renderer.GameRenderer "public void render()" 90
+          code net.minecraft.client.renderer.SubmitNodeCollection submitNameTag 40
+          code net.minecraft.client.gui.render.GuiRenderer render 40
       - uses: actions/upload-artifact@v4
         with:
           name: tuff-mod

@@ -31,24 +31,26 @@ public final class EffectsModule extends HudModule {
 		}
 		if (effects.isEmpty()) {
 			if (preview) {
-				box(g, 90, 22);
-				g.text(font, "Speed II", 24, 3, textColor());
-				g.text(font, "1:30", 24, 12, Theme.HUD_MUTED);
+				int p = pad();
+				box(g, 22 + font.width("Speed II") + p * 2, 22 + p * 2 - 4);
+				text(g, font, "Speed II", p + 20, p + 1, textColor());
+				text(g, font, "1:30", p + 20, p + 10, labelColor());
 			} else {
 				width = 0;
 				height = 0;
 			}
 			return;
 		}
-		int w = 60;
-		for (MobEffectInstance e : effects) w = Math.max(w, 26 + font.width(name(e)));
-		box(g, w, effects.size() * 22);
-		int y = 0;
+		int p = pad();
+		int w = 40;
+		for (MobEffectInstance e : effects) w = Math.max(w, 20 + font.width(name(e)));
+		box(g, w + p * 2, effects.size() * 22 + p * 2 - 4);
+		int y = p - 2;
 		for (MobEffectInstance e : effects) {
-			g.blitSprite(RenderPipelines.GUI_TEXTURED, Hud.getMobEffectSprite(e.getEffect()), 3, y + 2, 18, 18);
-			g.text(font, name(e), 24, y + 3, textColor());
+			g.blitSprite(RenderPipelines.GUI_TEXTURED, Hud.getMobEffectSprite(e.getEffect()), p - 1, y + 2, 18, 18);
+			text(g, font, name(e), p + 20, y + 3, textColor());
 			String time = e.isInfiniteDuration() ? "**:**" : duration(e.getDuration());
-			g.text(font, time, 24, y + 12, e.endsWithin(200) ? Theme.DANGER : Theme.HUD_MUTED);
+			text(g, font, time, p + 20, y + 12, e.endsWithin(200) ? Theme.DANGER : labelColor());
 			y += 22;
 		}
 	}

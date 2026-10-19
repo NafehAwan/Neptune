@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import com.mojang.blaze3d.platform.InputConstants;
@@ -29,8 +30,10 @@ import net.tuffclient.module.Module;
 import net.tuffclient.module.hud.HudModule;
 import net.tuffclient.setting.BoolSetting;
 import net.tuffclient.setting.ChoiceSetting;
+import net.tuffclient.setting.ColorSetting;
 import net.tuffclient.setting.NumberSetting;
 import net.tuffclient.setting.Setting;
+import net.tuffclient.setting.TextSetting;
 
 /**
  * The Glade mod menu, drawn to the Grove Glass mockup: one frosted panel with
@@ -86,8 +89,10 @@ public final class TuffMenuScreen extends Screen {
 			Map.entry("memory", "Memory in use"), Map.entry("hide_scoreboard", "Hide the sidebar scores"),
 			Map.entry("title_screen", "The Glade main menu"));
 	/** List order, as in the mockup; anything else follows. */
-	private static final List<String> ORDER = List.of("zoom", "fullbright", "crosshair", "toggle_sprint", "keystrokes", "fps", "cps",
-			"armor", "coordinates", "ping", "effects", "clock", "server", "speed", "memory", "hide_scoreboard", "title_screen");
+	private static final List<String> ORDER = List.of("zoom", "fullbright", "crosshair", "toggle_sprint", "freelook", "waypoints", "keystrokes", "fps", "cps",
+			"armor", "coordinates", "compass", "durability", "item_counter", "biome_light", "day_time", "session_stats", "ping", "effects", "clock",
+			"server", "speed", "memory", "pack_display", "chat_plus", "screenshot_tools", "clean_f3", "auto_gg", "auto_reconnect", "hit_color",
+			"block_outline", "particles", "custom_sky", "nametags", "cosmetics", "hide_scoreboard", "title_screen");
 
 	// the panel: 940x604, centred, radius 26, padding 26 30
 	private static final float PW = 940, PH = 604, PY = (720 - PH) / 2, PAD_X = 30, PAD_Y = 26;
@@ -113,6 +118,17 @@ public final class TuffMenuScreen extends Screen {
 	private NumberSetting dragging;
 	private float dragX1;
 	private float dragX2;
+	/** What a mouse drag moves (a slider, the colour wheel or a colour bar), in mockup space. */
+	private BiConsumer<Double, Double> drag;
+	/** The colour setting whose picker is open in the drawer. */
+	private ColorSetting openColor;
+	/** Hue, saturation and value being edited, kept so the hue survives greys and black. */
+	private final Map<ColorSetting, float[]> hsv = new HashMap<>();
+	/** The text field being typed into, if any, and the hex field of a colour. */
+	private TextSetting focusedText;
+	private ColorSetting editingHex;
+	private String hexBuffer = "";
+	private double clickY;
 	private float open;
 	private float pageFade = 1;
 	private float dt;
@@ -175,6 +191,20 @@ public final class TuffMenuScreen extends Screen {
 	public void openSettings(Module module) {
 		drawer = module;
 		drawerScroll = 0;
+		openColor = null;
+	}
+
+	/** Opens a module's settings with one colour's picker open (used by tests). */
+	public void openColorPicker(Module module, String settingId) {
+		openSettings(module);
+		for (Setting<?> s : module.settings()) {
+			if (s instanceof ColorSetting c && s.id.equals(settingId)) openColor = c;
+		}
+	}
+
+	/** Scrolls the settings drawer (used by tests); clamped once drawn. */
+	public void scrollDrawer(float amount) {
+		drawerScroll = amount;
 	}
 
 	private ModuleManager modules() {
@@ -544,15 +574,278 @@ public final class TuffMenuScreen extends Screen {
 		g.enableScissor(Math.round(dx), Math.round(top), Math.round(dx + dw), Math.round(bottom));
 		cy -= drawerScroll;
 		cy = toggleRow(g, px, cy, pw, "Enabled", m.isEnabled(), m::toggle, "drawer:" + m.id, a, top, bottom);
+		HudModule hud = m instanceof HudModule h ? h : null;
 		for (Setting<?> setting : m.settings()) {
-			switch (setting) {
-				case BoolSetting b -> cy = toggleRow(g, px, cy, pw, b.name, b.get(), b::toggle, "drawer:" + m.id + b.id, a, top, bottom);
-				case ChoiceSetting c -> cy = choice(g, mouseX, mouseY, px, cy, pw, c, a, top, bottom);
-				case NumberSetting n -> cy = slider(g, px, cy, pw, n, a, top, bottom);
+			if (hud != null && hud.isStyle(setting) || !setting.visible()) continue;
+			cy = setting(g, mouseX, mouseY, px, cy, pw, m, setting, a, top, bottom);
+		}
+		cy = extras(g, mouseX, mouseY, px, cy, pw, m, a, top, bottom);
+		if (hud != null) {
+			cy += 18;
+			Ui.spaced(g, "STYLE", px, cy + 10.5f * 1.005f - 7, Theme.alpha(Theme.MUTED, a), Ui.Font.MONO_10_5, 1.26f);
+			cy += 14;
+			for (Setting<?> setting : m.settings()) {
+				if (!hud.isStyle(setting) || !setting.visible()) continue;
+				cy = setting(g, mouseX, mouseY, px, cy, pw, m, setting, a, top, bottom);
 			}
 		}
 		drawerMax = Math.max(0, cy + drawerScroll - top - (bottom - top));
+		drawerScroll = Math.min(drawerScroll, drawerMax);
 		g.disableScissor();
+	}
+
+	private float setting(GuiGraphicsExtractor g, float mouseX, float mouseY, float px, float cy, float pw, Module m, Setting<?> setting, float a, float top, float bottom) {
+		return switch (setting) {
+			case BoolSetting b -> toggleRow(g, px, cy, pw, b.name, b.get(), b::toggle, "drawer:" + m.id + b.id, a, top, bottom);
+			case ChoiceSetting c -> choice(g, mouseX, mouseY, px, cy, pw, c, a, top, bottom);
+			case NumberSetting n -> slider(g, px, cy, pw, n, a, top, bottom);
+			case ColorSetting c -> colorRow(g, mouseX, mouseY, px, cy, pw, c, a, top, bottom);
+			case TextSetting t -> textRow(g, mouseX, mouseY, px, cy, pw, t, a, top, bottom);
+		};
+	}
+
+	/** Module-specific panels below the settings (the waypoint list). */
+	private float extras(GuiGraphicsExtractor g, float mouseX, float mouseY, float x, float y, float w, Module m, float a, float top, float bottom) {
+		if (m instanceof net.tuffclient.module.util.WaypointsModule wp) return waypointList(g, mouseX, mouseY, x, y, w, wp, a, top, bottom);
+		return y;
+	}
+
+	private float waypointList(GuiGraphicsExtractor g, float mouseX, float mouseY, float x, float y, float w, net.tuffclient.module.util.WaypointsModule wp, float a, float top, float bottom) {
+		y += 18;
+		Ui.spaced(g, "WAYPOINTS HERE", x, y + 10.5f * 1.005f - 7, Theme.alpha(Theme.MUTED, a), Ui.Font.MONO_10_5, 1.26f);
+		y += 18;
+		var list = wp.here();
+		if (list.isEmpty()) {
+			Ui.textAt(g, "None yet. Press " + wp.addKeyName() + " in game to add one.", x, y + 14, Theme.alpha(Theme.MUTED, a), Ui.Font.UI_12_5);
+			return y + 28;
+		}
+		for (var p : list) {
+			boolean over = Theme.inside(mouseX, mouseY, x, y, x + w, y + 40);
+			if (over) Ui.round(g, x - 6, y + 2, w + 12, 36, 10, Theme.alpha(0x59FFFFFF, a));
+			Ui.circle(g, x + 7, y + 20, 6, Theme.alpha(p.color | 0xFF000000, p.visible ? a : a * 0.35f));
+			Ui.textAt(g, Ui.ellipsize(p.name, Ui.Font.UI_13_5_SB, (int) (w - 110)), x + 22, y + 18, Theme.alpha(Theme.TEXT, p.visible ? a : a * 0.5f), Ui.Font.UI_13_5_SB);
+			Ui.textAt(g, p.x + " " + p.y + " " + p.z, x + 22, y + 32, Theme.alpha(Theme.MUTED, a), Ui.Font.MONO_10_5);
+			float ex = x + w - 50, dx2 = x + w - 20;
+			Ui.lucide(g, p.visible ? "eye" : "eye_off", ex, y + 13, 14, Theme.alpha(Theme.mix(Theme.MUTED, Theme.TEXT, over ? 1 : 0), a));
+			Ui.lucide(g, "trash", dx2, y + 13, 14, Theme.alpha(Theme.mix(Theme.MUTED, Theme.DANGER, over ? 1 : 0), a));
+			if (y + 40 > top && y < bottom) {
+				hit(ex - 6, y + 6, ex + 20, y + 34, e -> {
+					click();
+					p.visible = !p.visible;
+					wp.save();
+				});
+				hit(dx2 - 6, y + 6, dx2 + 20, y + 34, e -> {
+					click();
+					wp.remove(p);
+				});
+			}
+			y += 40;
+		}
+		return y;
+	}
+
+	/** Checkerboard behind see-through colours. */
+	private static void checker(GuiGraphicsExtractor g, float x, float y, float w, float h, float a) {
+		int cell = 5;
+		for (int yy = 0; yy * cell < h; yy++) {
+			for (int xx = 0; xx * cell < w; xx++) {
+				int c = (xx + yy) % 2 == 0 ? 0xFFFFFFFF : 0xFFD5D9D3;
+				float x1 = x + xx * cell, y1 = y + yy * cell;
+				fillF(g, x1, y1, Math.min(x + w, x1 + cell), Math.min(y + h, y1 + cell), Theme.alpha(c, a));
+			}
+		}
+	}
+
+	/** A filled rectangle at float coordinates (through the pose, so it doesn't snap). */
+	private static void fillF(GuiGraphicsExtractor g, float x1, float y1, float x2, float y2, int color) {
+		if (x2 <= x1 || y2 <= y1) return;
+		g.pose().pushMatrix();
+		g.pose().translate(x1, y1);
+		g.pose().scale((x2 - x1) / 64f, (y2 - y1) / 64f);
+		g.fill(0, 0, 64, 64, color);
+		g.pose().popMatrix();
+	}
+
+	private float[] hsvOf(ColorSetting c) {
+		float[] state = hsv.get(c);
+		int argb = c.get();
+		if (state == null || ColorSetting.fromHsv(state[0], state[1], state[2], argb >>> 24) != argb) {
+			float[] fresh = ColorSetting.toHsv(argb);
+			// keep the old hue for greys, where hue is meaningless
+			if (state != null && fresh[1] < 0.001f) fresh[0] = state[0];
+			state = fresh;
+			hsv.put(c, state);
+		}
+		return state;
+	}
+
+	private void applyHsv(ColorSetting c, float[] state, int alpha) {
+		c.set(ColorSetting.fromHsv(state[0], state[1], state[2], alpha));
+		hsv.put(c, state);
+	}
+
+	private static final int[] SWATCHES = {0xFFFFFFFF, 0xFF1F2A22, 0xFF2F6B4F, 0xFF3BA57E, 0xFF3D8BD6, 0xFF8A62D6, 0xFFD25A75, 0xFFD0413D, 0xFFC9733E, 0xFFE3B23C};
+
+	/** A colour: label, hex and swatch; click to open the wheel picker under it. */
+	private float colorRow(GuiGraphicsExtractor g, float mouseX, float mouseY, float x, float y, float w, ColorSetting c, float a, float top, float bottom) {
+		boolean open = openColor == c;
+		Ui.textAt(g, c.name, x, Ui.mid(y + 22, 13.5f), Theme.alpha(Theme.TEXT, a), Ui.Font.UI_13_5_SB);
+		float sw = 30, sh = 20, sx = x + w - sw, sy = y + 12;
+		Ui.round(g, sx - 1, sy - 1, sw + 2, sh + 2, 7, Theme.alpha(0x26000000, a));
+		checker(g, sx, sy, sw, sh, a);
+		Ui.round(g, sx, sy, sw, sh, 6, Theme.alpha(c.argb(), a));
+		Ui.outline(g, sx, sy, sw, sh, 6, Theme.alpha(0x33000000, a));
+		String label = c.chroma ? "Chroma" : c.display();
+		Ui.rightAt(g, label, sx - 10, Ui.mid(y + 22, 11.5f), Theme.alpha(Theme.MUTED, a), Ui.Font.MONO_11_5);
+		Ui.lucide(g, "chevron", x + Ui.width(c.name, Ui.Font.UI_13_5_SB) + 6, y + 16, 12, Theme.alpha(Theme.MUTED, a * 0.8f));
+		if (y + 44 > top && y < bottom) hit(x, Math.max(y, top), x + w, Math.min(y + 44, bottom), e -> {
+			click();
+			openColor = open ? null : c;
+			editingHex = null;
+		});
+		float ny = y + 44;
+		if (!open) {
+			Ui.round(g, x, ny - 1, w, 1, 0.5f, Theme.alpha(Theme.alpha(0xFF1F2A22, 0.08f), a));
+			return ny;
+		}
+		return picker(g, mouseX, mouseY, x, ny, w, c, a, top, bottom);
+	}
+
+	/** The colour wheel, brightness and opacity bars, preview with hex, chroma and swatches. */
+	private float picker(GuiGraphicsExtractor g, float mouseX, float mouseY, float x, float y, float w, ColorSetting c, float a, float top, float bottom) {
+		float[] st = hsvOf(c);
+		int alpha = c.get() >>> 24;
+		boolean live = y + 200 > top && y < bottom;
+
+		// wheel: hue around, saturation outwards; tinted grey for brightness
+		float size = 132, R = size / 2, wcx = x + R, wcy = y + R;
+		int grey = Math.round(st[2] * 255);
+		Ui.circle(g, wcx, wcy + 1.5f, R + 1, Theme.alpha(0x22000000, a));
+		Ui.image(g, WHEEL, x, y, size, size, 256, 256, Theme.alpha(0xFF000000 | grey << 16 | grey << 8 | grey, a));
+		double ang = st[0] * Math.PI * 2;
+		float kx = wcx + (float) Math.cos(ang) * st[1] * R, ky = wcy - (float) Math.sin(ang) * st[1] * R;
+		Ui.circle(g, kx, ky + 1, 8, Theme.alpha(0x40000000, a));
+		Ui.circle(g, kx, ky, 7.5f, Theme.alpha(0xFFFFFFFF, a));
+		Ui.circle(g, kx, ky, 5.5f, Theme.alpha(c.get() | 0xFF000000, a));
+		if (live) hit(x, Math.max(y, top), x + size, Math.min(y + size, bottom), e -> {
+			drag = (mx, my) -> {
+				double dx = mx - wcx, dy = my - wcy;
+				float[] s2 = hsvOf(c).clone();
+				s2[0] = (float) (((Math.atan2(-dy, dx) / (Math.PI * 2)) % 1 + 1) % 1);
+				s2[1] = (float) Math.min(1, Math.hypot(dx, dy) / R);
+				c.chroma = false;
+				applyHsv(c, s2, c.get() >>> 24);
+			};
+			drag.accept(clickX, clickY);
+		});
+
+		// right column: preview with hex, chroma, swatches
+		float rx = x + size + 16, rw = w - size - 16;
+		checker(g, rx, y, rw, 34, a);
+		Ui.round(g, rx, y, rw, 34, 9, Theme.alpha(c.argb(), a));
+		Ui.outline(g, rx, y, rw, 34, 9, Theme.alpha(0x33000000, a));
+		boolean editing = editingHex == c;
+		String hex = editing ? hexBuffer + ((System.currentTimeMillis() / 500) % 2 == 0 ? "_" : " ") : c.display();
+		boolean dark = st[2] < 0.6f || alpha < 110 ? false : st[1] < 0.5f;
+		int ink = alpha < 110 ? Theme.TEXT : dark ? Theme.TEXT : 0xFFFFFFFF;
+		Ui.round(g, rx + 6, y + 8, rw - 12, 18, 6, Theme.alpha(editing ? 0xE6FFFFFF : 0x40FFFFFF, a));
+		Ui.centeredAt(g, hex, rx + rw / 2, Ui.mid(y + 17, 11.5f), Theme.alpha(editing ? Theme.TEXT : ink, a), Ui.Font.MONO_11_5);
+		if (live) hit(rx, y, rx + rw, y + 34, e -> {
+			click();
+			editingHex = c;
+			hexBuffer = c.display().substring(1);
+			focusedText = null;
+		});
+
+		float cy = y + 44;
+		float on = anim("chroma:" + c.id + System.identityHashCode(c), c.chroma, 14);
+		Ui.round(g, rx, cy, 30, 18, 9, Theme.alpha(Theme.mix(0xFFE9ECE6, Theme.COPPER, on), a));
+		Ui.circle(g, rx + 9 + 12 * on, cy + 9, 6, Theme.alpha(Theme.mix(Theme.MUTED, 0xFFFFFFFF, on), a));
+		Ui.textAt(g, "Chroma", rx + 38, Ui.mid(cy + 9, 12.5f), Theme.alpha(Theme.TEXT, a), Ui.Font.UI_12_5_M);
+		if (live) hit(rx, cy, rx + rw, cy + 18, e -> {
+			click();
+			c.chroma = !c.chroma;
+		});
+
+		cy += 28;
+		float gap = (rw - 5 * 18) / 4;
+		for (int i = 0; i < SWATCHES.length; i++) {
+			float qx = rx + (i % 5) * (18 + gap), qy = cy + (i / 5) * 24;
+			int color = SWATCHES[i];
+			boolean picked = (c.get() | 0xFF000000) == color;
+			Ui.circle(g, qx + 9, qy + 9, picked ? 9.5f : 9, Theme.alpha(picked ? Theme.COPPER : 0x33000000, a));
+			Ui.circle(g, qx + 9, qy + 9, 8, Theme.alpha(color, a));
+			if (live) hit(qx, qy, qx + 18, qy + 18, e -> {
+				click();
+				c.chroma = false;
+				c.set((color & 0xFFFFFF) | (c.get() & 0xFF000000));
+			});
+		}
+		float resetY = cy + 50;
+		boolean overReset = Theme.inside(mouseX, mouseY, rx, resetY - 4, rx + rw, resetY + 14);
+		Ui.textAt(g, "Reset", rx, Ui.mid(resetY + 5, 12), Theme.alpha(overReset ? Theme.TEXT : Theme.MUTED, a), Ui.Font.UI_12);
+		if (live) hit(rx, resetY - 4, rx + 60, resetY + 14, e -> {
+			click();
+			c.reset();
+			hsv.remove(c);
+		});
+
+		// brightness and opacity bars
+		float by = y + size + 14;
+		bar(g, x, by, w, st[2], 0xFF000000, ColorSetting.fromHsv(st[0], st[1], 1, 255), false, a);
+		if (live) hit(x - 4, by - 4, x + w + 4, by + 16, e -> {
+			drag = (mx, my) -> {
+				float[] s2 = hsvOf(c).clone();
+				s2[2] = (float) Math.max(0, Math.min(1, (mx - x) / w));
+				applyHsv(c, s2, c.get() >>> 24);
+			};
+			drag.accept(clickX, clickY);
+		});
+		float end = by + 12;
+		if (c.alpha) {
+			float oy = by + 22;
+			bar(g, x, oy, w, alpha / 255f, 0, c.get() | 0xFF000000, true, a);
+			if (live) hit(x - 4, oy - 4, x + w + 4, oy + 16, e -> {
+				drag = (mx, my) -> {
+					int na = (int) Math.round(Math.max(0, Math.min(1, (mx - x) / w)) * 255);
+					c.set((c.get() & 0xFFFFFF) | na << 24);
+				};
+				drag.accept(clickX, clickY);
+			});
+			end = oy + 12;
+		}
+		Ui.round(g, x, end + 13, w, 1, 0.5f, Theme.alpha(Theme.alpha(0xFF1F2A22, 0.08f), a));
+		return end + 14;
+	}
+
+	private static final Identifier WHEEL = Identifier.fromNamespaceAndPath(TuffClient.MOD_ID, "textures/gui/color_wheel.png");
+	private static final Identifier RAMP = Identifier.fromNamespaceAndPath(TuffClient.MOD_ID, "textures/gui/ramp.png");
+
+	/** A 12-tall bar fading from {@code from} to {@code to}, with a knob at {@code t}. */
+	private void bar(GuiGraphicsExtractor g, float x, float y, float w, float t, int from, int to, boolean checkered, float a) {
+		if (checkered) checker(g, x, y, w, 12, a);
+		else fillF(g, x, y, x + w, y + 12, Theme.alpha(from, a));
+		Ui.image(g, RAMP, x, y, w, 12, 256, 4, Theme.alpha(to, a));
+		Ui.outline(g, x, y, w, 12, 3, Theme.alpha(0x33000000, a));
+		float kx = x + w * t;
+		Ui.circle(g, kx, y + 6.8f, 8, Theme.alpha(0x40000000, a));
+		Ui.circle(g, kx, y + 6, 7.5f, Theme.alpha(0xFFFFFFFF, a));
+		Ui.circle(g, kx, y + 6, 5, Theme.alpha(Theme.mix(from, to, t) | 0xFF000000, a));
+	}
+
+	/** A text field. */
+	private float textRow(GuiGraphicsExtractor g, float mouseX, float mouseY, float x, float y, float w, TextSetting t, float a, float top, float bottom) {
+		Ui.textAt(g, t.name, x, y + 14 + 13.5f * 1.038f - 7, Theme.alpha(Theme.TEXT, a), Ui.Font.UI_13_5_SB);
+		float fy = y + 30;
+		boolean focused = focusedText == t;
+		Ui.round(g, x, fy, w, 30, 9, Theme.alpha(focused ? 0xF2FFFFFF : 0x99FFFFFF, a), Theme.alpha(focused ? Theme.alpha(Theme.COPPER, 0.6f) : 0x33000000, a), 1);
+		String shown = t.get() + (focused && (System.currentTimeMillis() / 500) % 2 == 0 ? "_" : "");
+		Ui.textAt(g, Ui.ellipsize(shown, Ui.Font.UI_12_5, (int) (w - 20)), x + 10, Ui.mid(fy + 15, 12.5f), Theme.alpha(Theme.TEXT, a), Ui.Font.UI_12_5);
+		if (fy + 30 > top && fy < bottom) hit(x, fy, x + w, fy + 30, e -> {
+			focusedText = t;
+			editingHex = null;
+		});
+		return y + 72;
 	}
 
 	/** A switch row: label on the left, switch on the right, a hairline under it. */
@@ -609,6 +902,7 @@ public final class TuffMenuScreen extends Screen {
 			dragging = n;
 			dragX1 = x;
 			dragX2 = x + w;
+			drag = (mx, my) -> updateSlider(mx);
 			updateSlider(clickX);
 		});
 		return y + 56;
@@ -827,6 +1121,10 @@ public final class TuffMenuScreen extends Screen {
 		float z = zoom();
 		double x = event.x() / z, y = event.y() / z;
 		clickX = x;
+		clickY = y;
+		// a click anywhere ends typing; a click on a field starts it again below
+		focusedText = null;
+		if (editingHex != null) commitHex();
 		for (int i = hits.size() - 1; i >= 0; i--) {
 			Hit h = hits.get(i);
 			if (Theme.inside(x, y, h.x1(), h.y1(), h.x2(), h.y2())) {
@@ -843,8 +1141,8 @@ public final class TuffMenuScreen extends Screen {
 
 	@Override
 	public boolean mouseDragged(MouseButtonEvent event, double dx, double dy) {
-		if (dragging != null) {
-			updateSlider(event.x() / zoom());
+		if (drag != null) {
+			drag.accept(event.x() / zoom(), event.y() / zoom());
 			return true;
 		}
 		return super.mouseDragged(event, dx, dy);
@@ -853,6 +1151,7 @@ public final class TuffMenuScreen extends Screen {
 	@Override
 	public boolean mouseReleased(MouseButtonEvent event) {
 		dragging = null;
+		drag = null;
 		return super.mouseReleased(event);
 	}
 
@@ -868,6 +1167,19 @@ public final class TuffMenuScreen extends Screen {
 
 	@Override
 	public boolean keyPressed(KeyEvent event) {
+		if (focusedText != null) {
+			if (event.isEscape() || event.key() == InputConstants.KEY_RETURN) focusedText = null;
+			else if (event.key() == InputConstants.KEY_BACKSPACE && !focusedText.get().isEmpty()) {
+				focusedText.set(focusedText.get().substring(0, focusedText.get().length() - 1));
+			}
+			return true;
+		}
+		if (editingHex != null) {
+			if (event.isEscape()) editingHex = null;
+			else if (event.key() == InputConstants.KEY_RETURN) commitHex();
+			else if (event.key() == InputConstants.KEY_BACKSPACE && !hexBuffer.isEmpty()) hexBuffer = hexBuffer.substring(0, hexBuffer.length() - 1);
+			return true;
+		}
 		if (event.isEscape()) {
 			if (drawer != null) {
 				drawer = null;
@@ -887,6 +1199,15 @@ public final class TuffMenuScreen extends Screen {
 
 	@Override
 	public boolean charTyped(CharacterEvent event) {
+		if (focusedText != null) {
+			if (event.isAllowedChatCharacter()) focusedText.set(focusedText.get() + event.codepointAsString());
+			return true;
+		}
+		if (editingHex != null) {
+			String ch = event.codepointAsString();
+			if (ch.matches("[0-9a-fA-F]") && hexBuffer.length() < 8) hexBuffer += ch.toUpperCase();
+			return true;
+		}
 		if (page == Page.MODS && drawer == null && event.isAllowedChatCharacter() && query.length() < 32) {
 			if (query.isEmpty() && event.codepointAsString().isBlank()) return true;
 			query += event.codepointAsString();
@@ -894,6 +1215,18 @@ public final class TuffMenuScreen extends Screen {
 			return true;
 		}
 		return super.charTyped(event);
+	}
+
+	private void commitHex() {
+		Integer parsed = ColorSetting.parse(hexBuffer);
+		if (parsed != null && editingHex != null) {
+			// six digits keep the current opacity
+			int value = hexBuffer.length() == 8 ? parsed : (parsed & 0xFFFFFF) | (editingHex.get() & 0xFF000000);
+			editingHex.chroma = false;
+			editingHex.set(value);
+			hsv.remove(editingHex);
+		}
+		editingHex = null;
 	}
 
 	@Override

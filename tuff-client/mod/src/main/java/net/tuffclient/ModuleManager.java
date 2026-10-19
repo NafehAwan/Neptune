@@ -19,7 +19,27 @@ import net.tuffclient.module.hud.MemoryModule;
 import net.tuffclient.module.hud.PingModule;
 import net.tuffclient.module.hud.ServerModule;
 import net.tuffclient.module.hud.SpeedModule;
+import net.tuffclient.module.hud.BiomeLightModule;
+import net.tuffclient.module.hud.CompassModule;
+import net.tuffclient.module.hud.DayTimeModule;
+import net.tuffclient.module.hud.DurabilityModule;
+import net.tuffclient.module.hud.ItemCounterModule;
+import net.tuffclient.module.hud.PackDisplayModule;
+import net.tuffclient.module.hud.SessionStatsModule;
+import net.tuffclient.module.util.AutoGGModule;
+import net.tuffclient.module.util.AutoReconnectModule;
+import net.tuffclient.module.util.ChatPlusModule;
+import net.tuffclient.module.util.CleanF3Module;
 import net.tuffclient.module.util.CrosshairModule;
+import net.tuffclient.module.util.FreelookModule;
+import net.tuffclient.module.util.ScreenshotToolsModule;
+import net.tuffclient.module.util.WaypointsModule;
+import net.tuffclient.module.visual.BlockOutlineModule;
+import net.tuffclient.module.visual.CosmeticsModule;
+import net.tuffclient.module.visual.CustomSkyModule;
+import net.tuffclient.module.visual.HitColorModule;
+import net.tuffclient.module.visual.NametagsModule;
+import net.tuffclient.module.visual.ParticlesModule;
 import net.tuffclient.module.util.FullbrightModule;
 import net.tuffclient.module.util.HideScoreboardModule;
 import net.tuffclient.module.util.InterfaceModule;
@@ -37,6 +57,19 @@ public final class ModuleManager {
 	public final FullbrightModule fullbright = add(new FullbrightModule());
 	public final CrosshairModule crosshair = add(new CrosshairModule());
 	public final HideScoreboardModule hideScoreboard = add(new HideScoreboardModule());
+	public final WaypointsModule waypoints = add(new WaypointsModule());
+	public final FreelookModule freelook = add(new FreelookModule());
+	public final ChatPlusModule chatPlus = add(new ChatPlusModule());
+	public final AutoGGModule autoGG = add(new AutoGGModule());
+	public final AutoReconnectModule autoReconnect = add(new AutoReconnectModule());
+	public final CleanF3Module cleanF3 = add(new CleanF3Module());
+	public final ScreenshotToolsModule screenshotTools = add(new ScreenshotToolsModule());
+	public final HitColorModule hitColor = add(new HitColorModule());
+	public final BlockOutlineModule blockOutline = add(new BlockOutlineModule());
+	public final ParticlesModule particles = add(new ParticlesModule());
+	public final CustomSkyModule customSky = add(new CustomSkyModule());
+	public final NametagsModule nametags = add(new NametagsModule());
+	public final CosmeticsModule cosmetics = add(new CosmeticsModule());
 
 	public ModuleManager() {
 		add(new ToggleSprintModule());
@@ -51,6 +84,13 @@ public final class ModuleManager {
 		add(new ServerModule());
 		add(new SpeedModule());
 		add(new MemoryModule());
+		add(new CompassModule());
+		add(new BiomeLightModule());
+		add(new ItemCounterModule());
+		add(new DurabilityModule());
+		add(new SessionStatsModule());
+		add(new PackDisplayModule());
+		add(new DayTimeModule());
 	}
 
 	private <M extends Module> M add(M module) {
@@ -102,9 +142,13 @@ public final class ModuleManager {
 
 	public void renderHud(GuiGraphicsExtractor g) {
 		Minecraft client = Minecraft.getInstance();
-		if (client.gui.hud.isHidden() || client.player == null) return;
+		if (client.player == null) return;
+		if (cleanF3.isEnabled()) cleanF3.render(g);
+		if (client.gui.hud.isHidden()) return;
+		if (waypoints.isEnabled()) waypoints.render(g);
 		for (HudModule m : hud) {
 			if (m.isEnabled()) renderModule(g, client.font, m, false);
 		}
+		if (screenshotTools.isEnabled()) screenshotTools.render(g);
 	}
 }

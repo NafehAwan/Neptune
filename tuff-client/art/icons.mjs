@@ -25,6 +25,10 @@ const ICONS = {
   sliders: ["sliders-horizontal"], close: ["x"], chevron: ["chevron-down"], check: ["check"],
   plus: ["plus"], up: ["arrow-up"], down: ["arrow-down"],
   user: ["user"], user_plus: ["user-plus"], trash: ["trash-2"], play: ["play"], logout: ["log-out"], cloud: ["cloud"],
+  eye: ["eye"], eye_off: ["eye-off"], compass: ["compass"], biome: ["trees"], backpack: ["backpack"], alert: ["shield-alert"],
+  stats: ["chart-column"], daytime: ["sun-moon"], flag: ["flag"], camera: ["camera"], chat: ["message-square"], trophy: ["trophy"],
+  freelook: ["rotate-3d"], bug: ["bug"], droplet: ["droplet"], box: ["box"], sparkles: ["sparkles"], sky: ["cloud-sun"],
+  tag: ["tag"], award: ["award"], film: ["film"], refresh: ["refresh-cw"],
 };
 const SIZES = [32, 64, 128];
 

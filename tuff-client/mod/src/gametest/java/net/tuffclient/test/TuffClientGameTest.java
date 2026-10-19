@@ -135,6 +135,17 @@ public class TuffClientGameTest implements FabricClientGameTest {
 		context.runOnClient(client -> menu.openSettings(TuffClient.modules().crosshair));
 		context.waitTicks(15);
 		context.takeScreenshot("tuff-menu-drawer");
+		// The colour wheel picker, and the shared HUD style settings.
+		context.runOnClient(client -> menu.openColorPicker(TuffClient.modules().hitColor, "color"));
+		context.waitTicks(15);
+		context.takeScreenshot("glade-color-picker");
+		context.runOnClient(client -> {
+			Module fpsModule = TuffClient.modules().all().stream().filter(m -> m.id.equals("fps")).findFirst().orElseThrow();
+			menu.openSettings(fpsModule);
+			menu.scrollDrawer(260);
+		});
+		context.waitTicks(15);
+		context.takeScreenshot("glade-hud-style");
 		for (TuffMenuScreen.Page page : new TuffMenuScreen.Page[] {TuffMenuScreen.Page.THEME, TuffMenuScreen.Page.PACKS, TuffMenuScreen.Page.SETTINGS}) {
 			context.runOnClient(client -> menu.setPage(page));
 			context.waitTicks(12);
@@ -162,6 +173,52 @@ public class TuffClientGameTest implements FabricClientGameTest {
 			context.waitTicks(15);
 			context.takeScreenshot("tuff-menu-ingame");
 			context.setScreen(() -> null);
+
+			// The new HUD modules, a waypoint ahead, merged chat lines and a clean F3.
+			world.getServer().runCommand("/tp @a 0.5 -60 0.5 0 0");
+			context.waitTicks(10);
+			context.runOnClient(client -> {
+				for (Module m : TuffClient.modules().all()) {
+					if (java.util.List.of("compass", "biome_light", "item_counter", "session_stats", "day_time", "durability").contains(m.id)) m.setEnabled(true);
+				}
+				TuffClient.modules().waypoints.here().clear();
+			});
+			world.getServer().runCommand("/tp @a 0.5 -60 8.5 0 0");
+			context.waitTicks(5);
+			context.runOnClient(client -> TuffClient.modules().waypoints.addHere());
+			world.getServer().runCommand("/tp @a 0.5 -60 0.5 0 0");
+			context.waitTicks(5);
+			context.runOnClient(client -> {
+				client.player.sendSystemMessage(net.minecraft.network.chat.Component.literal("Hello from Glade"));
+				client.player.sendSystemMessage(net.minecraft.network.chat.Component.literal("Hello from Glade"));
+				client.player.sendSystemMessage(net.minecraft.network.chat.Component.literal("Hello from Glade"));
+			});
+			context.waitTicks(20);
+			world.getConnection().waitForChunksRender();
+			context.takeScreenshot("glade-new-hud");
+			int waypoints = context.computeOnClient(client -> TuffClient.modules().waypoints.here().size());
+			if (waypoints != 1) throw new AssertionError("Adding a waypoint failed: " + waypoints);
+
+			context.runOnClient(client -> {
+				TuffClient.modules().cleanF3.setEnabled(true);
+				client.debugEntries.setOverlayVisible(true);
+			});
+			context.waitTicks(10);
+			context.takeScreenshot("glade-clean-f3");
+			context.runOnClient(client -> {
+				client.debugEntries.setOverlayVisible(false);
+				TuffClient.modules().cleanF3.setEnabled(false);
+				TuffClient.modules().customSky.setEnabled(true);
+				TuffClient.modules().blockOutline.setEnabled(true);
+				TuffClient.modules().freelook.update(client, true);
+			});
+			context.waitTicks(15);
+			context.takeScreenshot("glade-freelook-sky");
+			context.runOnClient(client -> {
+				TuffClient.modules().freelook.update(client, false);
+				TuffClient.modules().customSky.setEnabled(false);
+			});
+			context.waitTicks(5);
 
 			// Zoom: a gold block 12 blocks ahead must cover far more pixels while zoomed,
 			// proving the narrower FOV reaches the world projection.

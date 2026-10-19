@@ -12,6 +12,8 @@ public final class KeystrokesModule extends HudModule {
 	private static final int GAP = 2;
 	private final BoolSetting showMouse = add(new BoolSetting("mouse", "Mouse buttons", true));
 	private final BoolSetting showSpace = add(new BoolSetting("space", "Space bar", true));
+	private final net.tuffclient.setting.ColorSetting pressColor = add(new net.tuffclient.setting.ColorSetting("press_color", "Pressed key color", Theme.alpha(Theme.COPPER, 0.92f), true));
+	private final net.tuffclient.setting.ColorSetting pressedText = add(new net.tuffclient.setting.ColorSetting("pressed_text", "Pressed text color", Theme.INK, true));
 	private final float[] glow = new float[7];
 	private long last = System.nanoTime();
 
@@ -40,7 +42,7 @@ public final class KeystrokesModule extends HudModule {
 		}
 		if (showSpace.get()) {
 			key(g, font, 6, client.options.keyJump, "", 0, y, w, 10, dt);
-			g.fill(w / 2 - 10, y + 4, w / 2 + 10, y + 5, glow[6] > 0.5f ? Theme.INK : Theme.HUD_MUTED);
+			g.fill(w / 2 - 10, y + 4, w / 2 + 10, y + 5, glow[6] > 0.5f ? pressedText.argb() : labelColor());
 			y += 10 + GAP;
 		}
 		width = w;
@@ -49,11 +51,14 @@ public final class KeystrokesModule extends HudModule {
 
 	private void key(GuiGraphicsExtractor g, Font font, int i, KeyMapping mapping, String label, int x, int y, int w, int h, float dt) {
 		glow[i] = Theme.approach(glow[i], mapping.isDown() ? 1 : 0, dt, 18);
-		int fill = Theme.mix(background.get() ? 0x9A101210 : 0x00000000, Theme.alpha(Theme.COPPER, 0.92f), glow[i]);
-		g.fill(x, y, x + w, y + h, fill);
+		int fill = Theme.mix(background.get() ? backgroundColor.argb() : 0x00000000, pressColor.argb(), glow[i]);
+		float r = radius.get().floatValue();
+		if (r > 0) net.tuffclient.gui.Ui.round(g, x, y, w, h, Math.min(r, h / 2f), fill);
+		else g.fill(x, y, x + w, y + h, fill);
+		if (border.get()) net.tuffclient.gui.Ui.outline(g, x, y, w, h, Math.max(0.5f, Math.min(r, h / 2f)), borderColor.argb());
 		if (!label.isEmpty()) {
-			int color = Theme.mix(textColor(), Theme.INK, glow[i]);
-			g.text(font, label, x + (w - font.width(label)) / 2, y + (h - 8) / 2, color);
+			int color = Theme.mix(textColor(), pressedText.argb(), glow[i]);
+			text(g, font, label, x + (w - font.width(label)) / 2, y + (h - 8) / 2, color);
 		}
 	}
 }

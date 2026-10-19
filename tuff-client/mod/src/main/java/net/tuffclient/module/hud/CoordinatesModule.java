@@ -4,7 +4,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.player.LocalPlayer;
-import net.tuffclient.gui.Theme;
 import net.tuffclient.setting.BoolSetting;
 
 public final class CoordinatesModule extends HudModule {
@@ -24,10 +23,9 @@ public final class CoordinatesModule extends HudModule {
 			float yaw = p == null ? 0 : p.getYRot();
 			facing = FACING[Math.floorMod(Math.round(yaw / 90f), 4)];
 		}
-		int w = Math.max(font.width(xyz), font.width(facing)) + 8;
-		int h = facing.isEmpty() ? 15 : 25;
-		box(g, w, h);
-		g.text(font, xyz, 4, 4, textColor());
-		if (!facing.isEmpty()) g.text(font, facing, 4, 14, Theme.HUD_MUTED);
+		int p = pad();
+		box(g, Math.max(font.width(xyz), font.width(facing)) + p * 2, linesHeight(facing.isEmpty() ? 1 : 2));
+		text(g, font, xyz, p, p, textColor());
+		if (!facing.isEmpty()) text(g, font, facing, p, p + 10, labelColor());
 	}
 }

@@ -2,7 +2,26 @@
 	"required": true,
 	"package": "net.tuffclient.mixin",
 	"compatibilityLevel": "JAVA_25",
-	"client": ["CameraMixin", "GuiMixin", "MinecraftAccessor", "MinecraftMixin"],
+	"client": [
+		"AbstractClientPlayerMixin",
+		"CameraMixin",
+		"ChatComponentAccessor",
+		"ChatComponentMixin",
+		"DebugScreenOverlayMixin",
+		"EntityRendererMixin",
+		"FogRendererMixin",
+		"GuiMixin",
+		"LevelRendererMixin",
+		"LivingEntityRendererMixin",
+		"MinecraftAccessor",
+		"MinecraftMixin",
+		"MouseHandlerMixin",
+		"MultiPlayerGameModeMixin",
+		"OptionsMixin",
+		"OverlayTextureMixin",
+		"ScreenMixin",
+		"SkyRendererMixin"
+	],
 	"injectors": {
 		"defaultRequire": 1
 	},

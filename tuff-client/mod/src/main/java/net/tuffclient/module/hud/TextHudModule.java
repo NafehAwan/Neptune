@@ -3,15 +3,17 @@ package net.tuffclient.module.hud;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.tuffclient.gui.Theme;
+import net.tuffclient.setting.BoolSetting;
 
 /** A single-line "label value" HUD element. */
 public abstract class TextHudModule extends HudModule {
 	private final String label;
+	protected final BoolSetting showLabel;
 
 	protected TextHudModule(String id, String name, String description, String label, double x, double y, boolean enabled) {
 		super(id, name, description, x, y, enabled);
 		this.label = label;
+		showLabel = label.isEmpty() ? null : add(new BoolSetting("show_label", "Show label", true));
 	}
 
 	/** The value to show, or null to hide (ignored in the HUD editor preview). */
@@ -21,13 +23,18 @@ public abstract class TextHudModule extends HudModule {
 	public void render(GuiGraphicsExtractor g, Font font, boolean preview) {
 		String value = value(Minecraft.getInstance(), preview);
 		if (value == null) {
-			if (!preview) return;
+			if (!preview) {
+				width = 0;
+				height = 0;
+				return;
+			}
 			value = "-";
 		}
-		int labelWidth = label.isEmpty() ? 0 : font.width(label) + 4;
-		int w = labelWidth + font.width(value) + 8;
-		box(g, w, 15);
-		if (!label.isEmpty()) g.text(font, label, 4, 4, Theme.HUD_MUTED);
-		g.text(font, value, 4 + labelWidth, 4, textColor());
+		boolean labelled = showLabel != null && showLabel.get();
+		int p = pad();
+		int labelWidth = labelled ? font.width(label) + 4 : 0;
+		box(g, labelWidth + font.width(value) + p * 2, linesHeight(1));
+		if (labelled) text(g, font, label, p, p, labelColor());
+		text(g, font, value, p + labelWidth, p, textColor());
 	}
 }

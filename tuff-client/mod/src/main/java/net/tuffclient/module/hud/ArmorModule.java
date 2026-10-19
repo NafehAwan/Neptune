@@ -30,11 +30,12 @@ public final class ArmorModule extends HudModule {
 			height = 0;
 			return;
 		}
-		int y = 2, w = 22;
+		int p = Math.max(1, pad() - 2);
+		int y = p, w = 22;
 		boolean any = !stacks.isEmpty();
-		if (background.get()) g.fill(0, 0, width, height, 0x9A101210);
+		box(g, width, height);
 		for (ItemStack stack : stacks) {
-			g.item(stack, 2, y);
+			g.item(stack, p, y);
 			String text;
 			int color = textColor();
 			if (stack.isDamageableItem()) {
@@ -46,17 +47,17 @@ public final class ArmorModule extends HudModule {
 			} else {
 				text = stack.getCount() > 1 ? String.valueOf(stack.getCount()) : "";
 			}
-			g.text(font, text, 21, y + 4, color);
-			w = Math.max(w, 24 + font.width(text));
+			text(g, font, text, p + 19, y + 4, color);
+			w = Math.max(w, p * 2 + 20 + font.width(text));
 			y += 17;
 		}
 		if (!any) {
 			String hint = preview ? "Armor" : "";
-			g.text(font, hint, 4, 4, Theme.HUD_MUTED);
-			w = Math.max(w, font.width(hint) + 8);
-			y = 15;
+			text(g, font, hint, pad(), pad(), labelColor());
+			w = Math.max(w, font.width(hint) + pad() * 2);
+			y = linesHeight(1) - p;
 		}
 		width = w;
-		height = Math.max(15, y + (any ? 1 : 0));
+		height = Math.max(linesHeight(1), y + p - 1);
 	}
 }

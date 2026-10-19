@@ -129,6 +129,43 @@ def shadow_ring(path, size=96, radius=20, blur=7, pad=16, lift=5.6):
     img.save(path)
 
 
+def color_wheel(path, size=256):
+    """Hue around the circle, saturation from the centre out, full brightness.
+    The game tints it grey to show other brightness levels."""
+    import colorsys
+    import math
+    sup = size * 4
+    img = Image.new("RGBA", (size, size))
+    px = img.load()
+    c = (size - 1) / 2
+    for y in range(size):
+        for x in range(size):
+            # 4x4 supersampling for a smooth edge
+            r = g = b = a = 0.0
+            for sy in range(4):
+                for sx in range(4):
+                    dx = (x + (sx + 0.5) / 4 - 0.5 - c) / c
+                    dy = (y + (sy + 0.5) / 4 - 0.5 - c) / c
+                    d = math.hypot(dx, dy)
+                    if d > 1:
+                        continue
+                    hue = (math.atan2(-dy, dx) / (2 * math.pi)) % 1.0
+                    cr, cg, cb = colorsys.hsv_to_rgb(hue, d, 1.0)
+                    r += cr; g += cg; b += cb; a += 1
+            if a:
+                px[x, y] = (round(r / a * 255), round(g / a * 255), round(b / a * 255), round(a / 16 * 255))
+    img.save(path)
+
+
+def ramp(path, width=256):
+    """White, fading in from transparent on the left: tinted for brightness and opacity bars."""
+    img = Image.new("RGBA", (width, 4))
+    for x in range(width):
+        for y in range(4):
+            img.putpixel((x, y), (255, 255, 255, round(x / (width - 1) * 255)))
+    img.save(path)
+
+
 def nine_slice(path, size, border):
     meta = {"gui": {"scaling": {"type": "nine_slice", "width": size, "height": size, "border": border, "stretch_inner": True}}}
     Path(str(path) + ".mcmeta").write_text(json.dumps(meta, indent=2) + "\n")
@@ -149,4 +186,7 @@ if __name__ == "__main__":
     nine_slice(SPRITES / "shadow.png", 96, 32)
     shadow_ring(SPRITES / "shadow_ring.png", size=96, radius=20, blur=7, pad=16)
     nine_slice(SPRITES / "shadow_ring.png", 96, 32)
+    textures = SPRITES.parent
+    color_wheel(textures / "color_wheel.png")
+    ramp(textures / "ramp.png")
     print(f"{len(icons)} icons, shapes written to {SPRITES}")
