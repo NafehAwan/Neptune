@@ -71,6 +71,12 @@ public final class ModuleManager {
 	public final NametagsModule nametags = add(new NametagsModule());
 	public final CosmeticsModule cosmetics = add(new CosmeticsModule());
 	public final net.tuffclient.module.visual.HitSoundsModule hitSounds = add(new net.tuffclient.module.visual.HitSoundsModule());
+	public final net.tuffclient.module.visual.ItemPhysicsModule itemPhysics = add(new net.tuffclient.module.visual.ItemPhysicsModule());
+	public final net.tuffclient.module.visual.OldAnimationsModule oldAnimations = add(new net.tuffclient.module.visual.OldAnimationsModule());
+	public final net.tuffclient.module.visual.LowFireModule lowFire = add(new net.tuffclient.module.visual.LowFireModule());
+	public final net.tuffclient.module.visual.SmallShieldModule smallShield = add(new net.tuffclient.module.visual.SmallShieldModule());
+	public final net.tuffclient.module.visual.HandViewModule handView = add(new net.tuffclient.module.visual.HandViewModule());
+	public final net.tuffclient.module.visual.TimeWeatherModule timeWeather = add(new net.tuffclient.module.visual.TimeWeatherModule());
 
 	public ModuleManager() {
 		add(new ToggleSprintModule());

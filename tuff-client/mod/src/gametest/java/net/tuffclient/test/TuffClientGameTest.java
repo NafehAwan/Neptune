@@ -272,6 +272,39 @@ public class TuffClientGameTest implements FabricClientGameTest {
 			context.waitTicks(2);
 			boolean cleared = context.computeOnClient(client -> !client.player.hasEffect(MobEffects.NIGHT_VISION));
 			if (!lit || !cleared) throw new AssertionError("Fullbright effect state was wrong: on=" + lit + " cleared=" + cleared);
+
+			// New visuals together: evening and rain on our screen only, flat dropped items,
+			// a small shield, a moved main hand and the armor HUD with worn armor.
+			world.getServer().runCommand("/tp @a 0.5 -60 0.5 0 35");
+			world.getServer().runCommand("/item replace entity @a weapon.mainhand with minecraft:diamond_sword");
+			world.getServer().runCommand("/item replace entity @a weapon.offhand with minecraft:shield");
+			world.getServer().runCommand("/item replace entity @a armor.head with minecraft:diamond_helmet[damage=300]");
+			world.getServer().runCommand("/item replace entity @a armor.chest with minecraft:diamond_chestplate");
+			world.getServer().runCommand("/item replace entity @a armor.legs with minecraft:iron_leggings[damage=150]");
+			world.getServer().runCommand("/item replace entity @a armor.feet with minecraft:golden_boots[damage=88]");
+			world.getServer().runCommand("/summon item 0.5 -60 2.5 {Item:{id:\"minecraft:diamond\",count:1},PickupDelay:32767}");
+			world.getServer().runCommand("/summon item 1.3 -60 3.2 {Item:{id:\"minecraft:apple\",count:1},PickupDelay:32767}");
+			context.runOnClient(client -> {
+				var m = TuffClient.modules();
+				m.timeWeather.setEnabled(true);
+				m.timeWeather.hour.set(18.5);
+				m.timeWeather.weather.set(1);
+				m.itemPhysics.setEnabled(true);
+				m.smallShield.setEnabled(true);
+				m.handView.setEnabled(true);
+				m.handView.mainScale.set(80.0);
+				m.handView.mainY.set(-0.2);
+				m.oldAnimations.setEnabled(true);
+				for (var h : m.hud()) if (h.id.equals("armor")) h.setEnabled(true);
+			});
+			context.waitTicks(40);
+			world.getConnection().waitForChunksRender();
+			context.takeScreenshot("glade-visuals");
+			float rain = context.computeOnClient(client -> client.level.getRainLevel(1f));
+			context.runOnClient(client -> TuffClient.modules().timeWeather.weather.set(3));
+			float serverRain = context.computeOnClient(client -> client.level.getRainLevel(1f));
+			context.runOnClient(client -> TuffClient.modules().timeWeather.setEnabled(false));
+			if (rain != 1f || serverRain != 0f) throw new AssertionError("Weather changer was wrong: rain=" + rain + " server=" + serverRain);
 		}
 
 		// Leaving the world lands on the Tuff title screen again; the test
