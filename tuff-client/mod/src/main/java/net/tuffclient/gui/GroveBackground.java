@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.resources.Identifier;
 import net.tuffclient.TuffClient;
 
@@ -40,7 +39,7 @@ public final class GroveBackground {
 	private long last = System.nanoTime();
 
 	/** w/h in GUI units. */
-	public void render(GuiGraphicsExtractor g, int w, int h, boolean animate) {
+	public void render(Gfx g, int w, int h, boolean animate) {
 		step(animate);
 		drawAt(g, w, h, null);
 	}
@@ -51,7 +50,7 @@ public final class GroveBackground {
 	 * behind the glass. Glass shapes are rounded rectangles {x, y, w, h, radius}
 	 * in GUI units; the blurred area follows their rounded corners row by row.
 	 */
-	public void renderWithGlass(GuiGraphicsExtractor g, int w, int h, boolean animate, Runnable blur, List<float[]> glass) {
+	public void renderWithGlass(Gfx g, int w, int h, boolean animate, Runnable blur, List<float[]> glass) {
 		step(animate);
 		drawAt(g, w, h, null);
 		if (glass.isEmpty()) return;
@@ -89,7 +88,7 @@ public final class GroveBackground {
 		if (animate) time += dt;
 	}
 
-	private void drawAt(GuiGraphicsExtractor g, int w, int h, int[] region) {
+	private void drawAt(Gfx g, int w, int h, int[] region) {
 		int gs = Ui.guiScale();
 		if (region == null) {
 			clipOn = false;
@@ -100,10 +99,10 @@ public final class GroveBackground {
 			clipX2 = region[2] * gs;
 			clipY2 = region[3] * gs;
 		}
-		g.pose().pushMatrix();
-		g.pose().scale(1f / gs, 1f / gs);
+		g.push();
+		g.scale(1f / gs, 1f / gs);
 		draw(g, w * gs, h * gs, time);
-		g.pose().popMatrix();
+		g.pop();
 		clipOn = false;
 	}
 
@@ -199,14 +198,14 @@ public final class GroveBackground {
 		return Math.max(0, Math.min(255, Math.round(v)));
 	}
 
-	private static void rect(GuiGraphicsExtractor g, float x, float y, float w, float h, int argb) {
+	private static void rect(Gfx g, float x, float y, float w, float h, int argb) {
 		if (outside(x, y, x + w, y + h)) return;
 		int x1 = Math.round(x), y1 = Math.round(y);
 		int x2 = Math.round(x + w), y2 = Math.round(y + h);
 		if (x2 > x1 && y2 > y1) g.fill(x1, y1, x2, y2, argb);
 	}
 
-	private static void draw(GuiGraphicsExtractor g, int w, int h, float t) {
+	private static void draw(Gfx g, int w, int h, float t) {
 		final float px = Math.max(3, Math.round(w / 320f));
 		java.util.function.DoubleUnaryOperator snapOp = v -> Math.round(v / px) * px;
 
@@ -225,11 +224,11 @@ public final class GroveBackground {
 		for (int i = 0; i < 9; i++) {
 			float angle = t * 0.05f + (float) (Math.PI * 2 / 9) * (i + 1);
 			float a = 0.06f + 0.03f * (float) Math.sin(t * 0.8f + i);
-			g.pose().pushMatrix();
-			g.pose().translate(sx, sy);
-			g.pose().rotate(angle);
+			g.push();
+			g.translate(sx, sy);
+			g.rotate(angle);
 			Ui.image(g, RAY, 0, -h * 0.05f, w * 0.5f, h * 0.1f, 256, 64, Theme.alpha(0xFFFFF0C8, a * 1.6f));
-			g.pose().popMatrix();
+			g.pop();
 		}
 		float halo = h * 0.42f;
 		Ui.image(g, GLOW, sx - halo, sy - halo, halo * 2, halo * 2, 256, 256, Theme.alpha(0xFFFFE8AF, 0.55f + 0.05f * (float) Math.sin(t * 1.3f)));

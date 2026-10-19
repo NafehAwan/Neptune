@@ -1,12 +1,12 @@
 package net.tuffclient.module.util;
 
+import net.tuffclient.gui.Gfx;
 import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
@@ -86,7 +86,7 @@ public final class ScreenshotToolsModule extends Module {
 	}
 
 	/** The card in the corner after a screenshot. */
-	public void render(GuiGraphicsExtractor g) {
+	public void render(Gfx g) {
 		if (!popup.get() || shown == null) return;
 		float t = (System.currentTimeMillis() - shownAt) / 1000f, life = seconds.get().floatValue();
 		if (t > life) {
@@ -101,10 +101,10 @@ public final class ScreenshotToolsModule extends Module {
 		Ui.round(g, x, y, w, h, 6, Theme.alpha(cardColor.argb(), a));
 		Ui.round(g, x, y, 3, h, 1.5f, Theme.alpha(accent.argb(), a));
 		Ui.lucide(g, "camera", x + 10, y + 9, 12, Theme.alpha(accent.argb(), a));
-		g.pose().pushMatrix();
-		g.pose().translate(x + 27, y + 6);
+		g.push();
+		g.translate(x + 27, y + 6);
 		g.text(font, title, 0, 0, Theme.alpha(0xFFFFFFFF, a), false);
 		g.text(font, shown, 0, 11, Theme.alpha(0xFFB8C2B9, a), false);
-		g.pose().popMatrix();
+		g.pop();
 	}
 }

@@ -1,11 +1,11 @@
 package net.tuffclient.module.hud;
 
+import net.tuffclient.gui.Gfx;
 import java.util.HashSet;
 import java.util.Set;
 
 import com.google.gson.JsonObject;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.tuffclient.gui.Theme;
 import net.tuffclient.gui.Ui;
 import net.tuffclient.module.Category;
@@ -73,7 +73,7 @@ public abstract class HudModule extends Module {
 	}
 
 	/** Draws at the origin; the manager has already translated and scaled. */
-	public abstract void render(GuiGraphicsExtractor g, Font font, boolean preview);
+	public abstract void render(Gfx g, Font font, boolean preview);
 
 	public int width() {
 		return width;
@@ -101,17 +101,17 @@ public abstract class HudModule extends Module {
 	}
 
 	/** A value (the number, the name): drawn in Text color, with chroma if it's on. */
-	protected void value(GuiGraphicsExtractor g, Font font, String s, int x, int y) {
+	protected void value(Gfx g, Font font, String s, int x, int y) {
 		colored(g, font, s, x, y, textColor);
 	}
 
 	/** A label (FPS, XYZ, Time): drawn in Label color, with chroma if it's on. */
-	protected void label(GuiGraphicsExtractor g, Font font, String s, int x, int y) {
+	protected void label(Gfx g, Font font, String s, int x, int y) {
 		colored(g, font, s, x, y, labelColor);
 	}
 
 	/** Text in a colour setting; with chroma wave on, each letter is a step along the rainbow. */
-	protected void colored(GuiGraphicsExtractor g, Font font, String s, int x, int y, ColorSetting c) {
+	protected void colored(Gfx g, Font font, String s, int x, int y, ColorSetting c) {
 		if (s.isEmpty()) return;
 		if (!c.chroma || !c.wave) {
 			text(g, font, s, x, y, c.argb());
@@ -167,12 +167,12 @@ public abstract class HudModule extends Module {
 	}
 
 	/** Text in this element's style (with or without a shadow). */
-	protected void text(GuiGraphicsExtractor g, Font font, String s, int x, int y, int color) {
+	protected void text(Gfx g, Font font, String s, int x, int y, int color) {
 		g.text(font, s, x, y, color, shadow.get());
 	}
 
 	/** Sets the element's size and draws its background and border. */
-	protected void box(GuiGraphicsExtractor g, int w, int h) {
+	protected void box(Gfx g, int w, int h) {
 		width = w;
 		height = h;
 		float r = radius.get().floatValue();

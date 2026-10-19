@@ -1,11 +1,11 @@
 package net.tuffclient.module.hud;
 
+import net.tuffclient.gui.Gfx;
 import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.server.packs.repository.Pack;
 import net.minecraft.server.packs.repository.PackRepository;
 import net.tuffclient.gui.Ui;
@@ -41,7 +41,7 @@ public final class PackDisplayModule extends HudModule {
 	}
 
 	@Override
-	public void render(GuiGraphicsExtractor g, Font font, boolean preview) {
+	public void render(Gfx g, Font font, boolean preview) {
 		List<String> list = titles();
 		if (list.isEmpty()) {
 			if (!preview) {

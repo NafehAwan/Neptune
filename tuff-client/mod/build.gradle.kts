@@ -1,3 +1,5 @@
+import java.net.URI
+
 plugins {
     // Applies the right Loom for the Minecraft version
     id("dev.kikugie.loom-back-compat")
@@ -22,7 +24,7 @@ val requiredJava: JavaVersion = when {
 
 /** The newest Fabric API build for a Minecraft version, from Fabric's maven. */
 fun latestFabricApi(mc: String): String {
-    val xml = java.net.URI("https://maven.fabricmc.net/net/fabricmc/fabric-api/fabric-api/maven-metadata.xml").toURL().readText()
+    val xml = URI("https://maven.fabricmc.net/net/fabricmc/fabric-api/fabric-api/maven-metadata.xml").toURL().readText()
     return Regex("<version>([^<]+\\+${Regex.escape(mc)})</version>").findAll(xml).map { it.groupValues[1] }.lastOrNull()
         ?: error("No Fabric API build for Minecraft $mc")
 }

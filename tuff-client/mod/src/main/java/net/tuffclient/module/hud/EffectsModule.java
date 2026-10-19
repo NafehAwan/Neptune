@@ -1,14 +1,13 @@
 package net.tuffclient.module.hud;
 
+import net.tuffclient.gui.Gfx;
 import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.Hud;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.tuffclient.gui.Theme;
@@ -21,7 +20,7 @@ public final class EffectsModule extends HudModule {
 	}
 
 	@Override
-	public void render(GuiGraphicsExtractor g, Font font, boolean preview) {
+	public void render(Gfx g, Font font, boolean preview) {
 		LocalPlayer player = Minecraft.getInstance().player;
 		List<MobEffectInstance> effects = new ArrayList<>();
 		if (player != null) {
@@ -47,7 +46,7 @@ public final class EffectsModule extends HudModule {
 		box(g, w + p * 2, effects.size() * 22 + p * 2 - 4);
 		int y = p - 2;
 		for (MobEffectInstance e : effects) {
-			g.blitSprite(RenderPipelines.GUI_TEXTURED, Hud.getMobEffectSprite(e.getEffect()), p - 1, y + 2, 18, 18);
+			g.sprite(Hud.getMobEffectSprite(e.getEffect()), p - 1, y + 2, 18, 18);
 			value(g, font, name(e), p + 20, y + 3);
 			String time = e.isInfiniteDuration() ? "**:**" : duration(e.getDuration());
 			if (e.endsWithin(200)) text(g, font, time, p + 20, y + 12, Theme.DANGER);

@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.options.SkinCustomizationScreen;
 import net.minecraft.client.input.CharacterEvent;
@@ -71,7 +70,7 @@ public final class AccountMenu {
 	}
 
 	/** Draws the chip at (x, y) and, when open, the menu under it. All in mockup pixels. */
-	public void render(GuiGraphicsExtractor g, float x, float y, float mouseX, float mouseY, float dt, float alpha) {
+	public void render(Gfx g, float x, float y, float mouseX, float mouseY, float dt, float alpha) {
 		hits.clear();
 		openAnim = Theme.approach(openAnim, open ? 1 : 0, dt, 18);
 		addAnim = Theme.approach(addAnim, adding ? 1 : 0, dt, 18);
@@ -104,7 +103,7 @@ public final class AccountMenu {
 		if (openAnim > 0.01f) menu(g, x, 64 - (1 - openAnim) * 8, mouseX, mouseY, current, alpha * openAnim);
 	}
 
-	private void menu(GuiGraphicsExtractor g, float x, float y, float mouseX, float mouseY, Accounts.Account current, float a) {
+	private void menu(Gfx g, float x, float y, float mouseX, float mouseY, Accounts.Account current, float a) {
 		List<Accounts.Account> accounts = Accounts.list();
 		float h = 8 + 112 + 7 + 23.65f + accounts.size() * 46 + 13 + 80 + addAnim * 52 + (message != null ? 26 : 0) + 8;
 		menuX1 = x;
@@ -199,12 +198,12 @@ public final class AccountMenu {
 		}
 	}
 
-	private static void line(GuiGraphicsExtractor g, float x, float y, float w, float a) {
+	private static void line(Gfx g, float x, float y, float w, float a) {
 		Ui.round(g, x, y, w, 1, 0.5f, Theme.alpha(0xB3FFFFFF, a));
 	}
 
 	/** The small chips under the name: 11px semibold, 3px 8px padding. */
-	private float pill(GuiGraphicsExtractor g, float x, float y, String label, float mouseX, float mouseY, float a, Runnable run) {
+	private float pill(Gfx g, float x, float y, String label, float mouseX, float mouseY, float a, Runnable run) {
 		float w = 16 + Ui.width(label, Ui.Font.UI_11_SB), h = 6 + 11 * 1.26f;
 		boolean over = Theme.inside(mouseX, mouseY, x, y, x + w, y + h);
 		Ui.round(g, x, y, w, h, h / 2, Theme.alpha(over ? 0xE6FFFFFF : 0x99FFFFFF, a));
@@ -217,7 +216,7 @@ public final class AccountMenu {
 	}
 
 	/** Action rows: 40 tall, a 28px tinted tile with the icon, then the label. */
-	private float action(GuiGraphicsExtractor g, float mouseX, float mouseY, float x, float y, float w, String icon, String label, boolean on, float a, Runnable run) {
+	private float action(Gfx g, float mouseX, float mouseY, float x, float y, float w, String icon, String label, boolean on, float a, Runnable run) {
 		boolean over = Theme.inside(mouseX, mouseY, x, y, x + w, y + 40);
 		if (over || on) Ui.round(g, x, y, w, 40, 10, Theme.alpha(0x73FFFFFF, a));
 		Ui.round(g, x + 10, y + 6, 28, 28, 8, Theme.alpha(0x1F2F6B4F, a));

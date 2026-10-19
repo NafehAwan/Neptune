@@ -1,8 +1,8 @@
 package net.tuffclient.module.hud;
 
+import net.tuffclient.gui.Gfx;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.player.LocalPlayer;
 import net.tuffclient.TuffClient;
 import net.tuffclient.module.util.WaypointsModule;
@@ -25,7 +25,7 @@ public final class CompassModule extends HudModule {
 	}
 
 	@Override
-	public void render(GuiGraphicsExtractor g, Font font, boolean preview) {
+	public void render(Gfx g, Font font, boolean preview) {
 		LocalPlayer p = Minecraft.getInstance().player;
 		float yaw = p == null ? 180 : ((p.getYRot() % 360) + 360) % 360;
 		int w = barWidth.get().intValue(), pad = pad();

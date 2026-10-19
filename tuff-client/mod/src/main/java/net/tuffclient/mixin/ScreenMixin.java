@@ -15,7 +15,7 @@ public abstract class ScreenMixin {
 	@Inject(method = "extractRenderState", at = @At("TAIL"))
 	private void glade$reconnectCountdown(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
 		if ((Object) this instanceof DisconnectedScreen && TuffClient.modules() != null && TuffClient.modules().autoReconnect.isEnabled()) {
-			TuffClient.modules().autoReconnect.renderOn((Screen) (Object) this, g);
+			TuffClient.modules().autoReconnect.renderOn((Screen) (Object) this, net.tuffclient.gui.Gfx.of(g));
 		}
 	}
 }

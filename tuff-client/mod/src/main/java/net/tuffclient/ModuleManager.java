@@ -1,11 +1,11 @@
 package net.tuffclient;
 
+import net.tuffclient.gui.Gfx;
 import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.tuffclient.module.Module;
 import net.tuffclient.module.hud.ArmorModule;
 import net.tuffclient.module.hud.ClockModule;
@@ -137,17 +137,17 @@ public final class ModuleManager {
 		return new int[] {px, py, w, h};
 	}
 
-	public static void renderModule(GuiGraphicsExtractor g, Font font, HudModule m, boolean preview) {
+	public static void renderModule(Gfx g, Font font, HudModule m, boolean preview) {
 		int[] p = position(m, g.guiWidth(), g.guiHeight());
 		float s = m.scale.get().floatValue();
-		g.pose().pushMatrix();
-		g.pose().translate(p[0], p[1]);
-		g.pose().scale(s);
+		g.push();
+		g.translate(p[0], p[1]);
+		g.scale(s);
 		m.render(g, font, preview);
-		g.pose().popMatrix();
+		g.pop();
 	}
 
-	public void renderHud(GuiGraphicsExtractor g) {
+	public void renderHud(Gfx g) {
 		Minecraft client = Minecraft.getInstance();
 		if (client.player == null) return;
 		if (!client.gui.hud.isHidden()) {

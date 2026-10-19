@@ -82,7 +82,7 @@ public final class TuffClient implements ClientModInitializer {
 
 		HudElementRegistry.addLast(Identifier.fromNamespaceAndPath(MOD_ID, "hud"), (graphics, delta) -> {
 			CpsModule.sample(Minecraft.getInstance());
-			modules.renderHud(graphics);
+			modules.renderHud(net.tuffclient.gui.Gfx.of(graphics));
 		});
 		HudElementRegistry.replaceElement(VanillaHudElements.SCOREBOARD, original -> (graphics, delta) -> {
 			if (!modules.hideScoreboard.isEnabled()) original.extractRenderState(graphics, delta);
@@ -92,7 +92,7 @@ public final class TuffClient implements ClientModInitializer {
 			if (!modules.crosshair.isEnabled()) {
 				original.extractRenderState(graphics, delta);
 			} else if (client.options.getCameraType().isFirstPerson() && !client.gui.hud.isHidden()) {
-				modules.crosshair.render(graphics);
+				modules.crosshair.render(net.tuffclient.gui.Gfx.of(graphics));
 			}
 		});
 		LOGGER.info("Glade loaded with {} modules", modules.all().size());

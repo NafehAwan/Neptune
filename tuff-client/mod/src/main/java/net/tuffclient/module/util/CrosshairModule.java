@@ -1,6 +1,6 @@
 package net.tuffclient.module.util;
 
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.tuffclient.gui.Gfx;
 import net.tuffclient.gui.Theme;
 import net.tuffclient.module.Category;
 import net.tuffclient.module.Module;
@@ -21,7 +21,7 @@ public final class CrosshairModule extends Module {
 		super("crosshair", "Crosshair", "Pick your own crosshair shape and color.", Category.VISUAL, false);
 	}
 
-	public void render(GuiGraphicsExtractor g) {
+	public void render(Gfx g) {
 		int cx = g.guiWidth() / 2, cy = g.guiHeight() / 2;
 		int s = size.get().intValue(), gp = gap.get().intValue();
 		int c = COLORS[color.get()];
@@ -47,7 +47,7 @@ public final class CrosshairModule extends Module {
 		}
 	}
 
-	private void rect(GuiGraphicsExtractor g, int x1, int y1, int x2, int y2, int color) {
+	private void rect(Gfx g, int x1, int y1, int x2, int y2, int color) {
 		if (outline.get()) g.fill(x1 - 1, y1 - 1, x2 + 1, y2 + 1, 0xC0000000);
 		g.fill(x1, y1, x2, y2, color);
 	}

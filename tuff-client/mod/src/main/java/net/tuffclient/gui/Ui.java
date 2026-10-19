@@ -1,8 +1,6 @@
 package net.tuffclient.gui;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FontDescription;
 import net.minecraft.resources.Identifier;
@@ -108,27 +106,27 @@ public final class Ui {
 		WIDTHS.clear();
 	}
 
-	public static void text(GuiGraphicsExtractor g, String s, float x, float y, int color, Font font) {
+	public static void text(Gfx g, String s, float x, float y, int color, Font font) {
 		if ((color >>> 24) < 4 || s.isEmpty()) return;
-		g.pose().pushMatrix();
-		g.pose().translate(x, y);
+		g.push();
+		g.translate(x, y);
 		g.text(mc().font, text(s, font), 0, 0, color, false);
-		g.pose().popMatrix();
+		g.pop();
 	}
 
 	/**
 	 * Text drawn at the game's fixed baseline, 7 units below the anchor, whatever
 	 * the font size: these place text by its baseline instead, like CSS does.
 	 */
-	public static void textAt(GuiGraphicsExtractor g, String s, float x, float baseline, int color, Font font) {
+	public static void textAt(Gfx g, String s, float x, float baseline, int color, Font font) {
 		text(g, s, x, baseline - 7, color, font);
 	}
 
-	public static void centeredAt(GuiGraphicsExtractor g, String s, float cx, float baseline, int color, Font font) {
+	public static void centeredAt(Gfx g, String s, float cx, float baseline, int color, Font font) {
 		text(g, s, cx - width(s, font) / 2f, baseline - 7, color, font);
 	}
 
-	public static void rightAt(GuiGraphicsExtractor g, String s, float rx, float baseline, int color, Font font) {
+	public static void rightAt(Gfx g, String s, float rx, float baseline, int color, Font font) {
 		text(g, s, rx - width(s, font), baseline - 7, color, font);
 	}
 
@@ -148,22 +146,22 @@ public final class Ui {
 	}
 
 	/** Frosted glass, as in the mockups: soft green shadow, translucent white, bright rim and top highlight. */
-	public static void frost(GuiGraphicsExtractor g, float x, float y, float w, float h, float r, int fill, float shadow, float alpha) {
+	public static void frost(Gfx g, float x, float y, float w, float h, float r, int fill, float shadow, float alpha) {
 		if (shadow > 0) shadowOutside(g, x, y, w, h, 26, shadow * alpha);
 		round(g, x, y, w, h, r, Theme.alpha(fill, alpha), Theme.alpha(0xB3FFFFFF, alpha), 1);
 		round(g, x + r * 0.7f, y + 1, w - r * 1.4f, 1, 0.5f, Theme.alpha(0xCCFFFFFF, alpha));
 	}
 
-	public static void centered(GuiGraphicsExtractor g, String s, float cx, float y, int color, Font font) {
+	public static void centered(Gfx g, String s, float cx, float y, int color, Font font) {
 		text(g, s, cx - width(s, font) / 2f, y, color, font);
 	}
 
-	public static void right(GuiGraphicsExtractor g, String s, float rx, float y, int color, Font font) {
+	public static void right(Gfx g, String s, float rx, float y, int color, Font font) {
 		text(g, s, rx - width(s, font), y, color, font);
 	}
 
 	/** Draws text with extra space between letters (for wordmarks). */
-	public static float spaced(GuiGraphicsExtractor g, String s, float x, float y, int color, Font font, float spacing) {
+	public static float spaced(Gfx g, String s, float x, float y, int color, Font font, float spacing) {
 		for (int i = 0; i < s.length(); i++) {
 			String ch = String.valueOf(s.charAt(i));
 			text(g, ch, x, y, color, font);
@@ -189,16 +187,16 @@ public final class Ui {
 	// ------------------------------------------------------------------ shapes
 
 	/** Filled rounded rectangle. Picks the sprite whose corner is closest to 1:1 on screen. */
-	public static void round(GuiGraphicsExtractor g, float x, float y, float w, float h, float r, int argb) {
+	public static void round(Gfx g, float x, float y, float w, float h, float r, int argb) {
 		roundSprite(g, ROUND, x, y, w, h, r, argb);
 	}
 
 	/** Rounded outline only, about one screen pixel wide, like a CSS border. */
-	public static void outline(GuiGraphicsExtractor g, float x, float y, float w, float h, float r, int argb) {
+	public static void outline(Gfx g, float x, float y, float w, float h, float r, int argb) {
 		roundSprite(g, RING, x, y, w, h, r, argb);
 	}
 
-	private static void roundSprite(GuiGraphicsExtractor g, Identifier[] set, float x, float y, float w, float h, float r, int argb) {
+	private static void roundSprite(Gfx g, Identifier[] set, float x, float y, float w, float h, float r, int argb) {
 		if ((argb >>> 24) == 0 || w <= 0 || h <= 0) return;
 		r = Math.max(0.5f, Math.min(r, Math.min(w, h) / 2));
 		float physical = r * scale();
@@ -210,74 +208,74 @@ public final class Ui {
 			}
 		}
 		float s = r / RADII[pick];
-		g.pose().pushMatrix();
-		g.pose().translate(x, y);
-		g.pose().scale(s, s);
-		g.blitSprite(RenderPipelines.GUI_TEXTURED, set[pick], 0, 0, Math.max(2 * RADII[pick], Math.round(w / s)), Math.max(2 * RADII[pick], Math.round(h / s)), argb);
-		g.pose().popMatrix();
+		g.push();
+		g.translate(x, y);
+		g.scale(s, s);
+		g.sprite(set[pick], 0, 0, Math.max(2 * RADII[pick], Math.round(w / s)), Math.max(2 * RADII[pick], Math.round(h / s)), argb);
+		g.pop();
 	}
 
 	/** Rounded rectangle with a border of the given width. */
-	public static void round(GuiGraphicsExtractor g, float x, float y, float w, float h, float r, int fill, int border, float bw) {
+	public static void round(Gfx g, float x, float y, float w, float h, float r, int fill, int border, float bw) {
 		// the fill shows through see-through borders, so the border is only an outline on top
 		round(g, x, y, w, h, r, fill);
 		outline(g, x, y, w, h, r, border);
 	}
 
-	public static void circle(GuiGraphicsExtractor g, float cx, float cy, float radius, int argb) {
+	public static void circle(Gfx g, float cx, float cy, float radius, int argb) {
 		round(g, cx - radius, cy - radius, radius * 2, radius * 2, radius, argb);
 	}
 
 	/** Soft drop shadow around a rectangle. */
-	public static void shadow(GuiGraphicsExtractor g, float x, float y, float w, float h, float spread, float alpha) {
+	public static void shadow(Gfx g, float x, float y, float w, float h, float spread, float alpha) {
 		float s = spread / 16f;
-		g.pose().pushMatrix();
-		g.pose().translate(x - spread, y - spread + spread * 0.35f);
-		g.pose().scale(s, s);
-		g.blitSprite(RenderPipelines.GUI_TEXTURED, SHADOW, 0, 0, Math.round((w + 2 * spread) / s), Math.round((h + 2 * spread) / s), Theme.alpha(0xFF1E3C28, alpha));
-		g.pose().popMatrix();
+		g.push();
+		g.translate(x - spread, y - spread + spread * 0.35f);
+		g.scale(s, s);
+		g.sprite(SHADOW, 0, 0, Math.round((w + 2 * spread) / s), Math.round((h + 2 * spread) / s), Theme.alpha(0xFF1E3C28, alpha));
+		g.pop();
 	}
 
 	/** Soft shadow drawn only outside the rectangle, for see-through panels (like a CSS box-shadow). */
-	public static void shadowOutside(GuiGraphicsExtractor g, float x, float y, float w, float h, float spread, float alpha) {
+	public static void shadowOutside(Gfx g, float x, float y, float w, float h, float spread, float alpha) {
 		float s = spread / 16f;
-		g.pose().pushMatrix();
-		g.pose().translate(x - spread, y - spread + spread * 0.35f);
-		g.pose().scale(s, s);
-		g.blitSprite(RenderPipelines.GUI_TEXTURED, SHADOW_RING, 0, 0, Math.round((w + 2 * spread) / s), Math.round((h + 2 * spread) / s), Theme.alpha(0xFF1E3C28, alpha));
-		g.pose().popMatrix();
+		g.push();
+		g.translate(x - spread, y - spread + spread * 0.35f);
+		g.scale(s, s);
+		g.sprite(SHADOW_RING, 0, 0, Math.round((w + 2 * spread) / s), Math.round((h + 2 * spread) / s), Theme.alpha(0xFF1E3C28, alpha));
+		g.pop();
 	}
 
 	// ------------------------------------------------------------------ icons & images
 
 	/** 12x12 pixel icon, drawn at a whole multiple so it stays crisp. */
-	public static void icon(GuiGraphicsExtractor g, String name, float x, float y, int size, int argb) {
+	public static void icon(Gfx g, String name, float x, float y, int size, int argb) {
 		if ((argb >>> 24) == 0) return;
 		// Pixel icons stay crisp only at whole multiples of their 12px grid, on whole physical pixels.
 		float p = scale();
 		float drawn = Math.max(1, Math.round(size * p / 12f)) * 12 / p;
 		float off = (size - drawn) / 2;
-		g.pose().pushMatrix();
-		g.pose().translate(Math.round((x + off) * p) / p, Math.round((y + off) * p) / p);
-		g.pose().scale(drawn / size, drawn / size);
-		g.blitSprite(RenderPipelines.GUI_TEXTURED, id("icon/" + name), 0, 0, size, size, argb);
-		g.pose().popMatrix();
+		g.push();
+		g.translate(Math.round((x + off) * p) / p, Math.round((y + off) * p) / p);
+		g.scale(drawn / size, drawn / size);
+		g.sprite(id("icon/" + name), 0, 0, size, size, argb);
+		g.pop();
 	}
 
 	/** Draws a whole texture into a float rectangle. */
-	public static void image(GuiGraphicsExtractor g, Identifier texture, float x, float y, float w, float h, int texW, int texH, int argb) {
+	public static void image(Gfx g, Identifier texture, float x, float y, float w, float h, int texW, int texH, int argb) {
 		if ((argb >>> 24) == 0) return;
-		g.pose().pushMatrix();
-		g.pose().translate(x, y);
-		g.pose().scale(w / texW, h / texH);
-		g.blit(RenderPipelines.GUI_TEXTURED, texture, 0, 0, 0f, 0f, texW, texH, texW, texH, texW, texH, argb);
-		g.pose().popMatrix();
+		g.push();
+		g.translate(x, y);
+		g.scale(w / texW, h / texH);
+		g.texture(texture, 0, 0, 0f, 0f, texW, texH, texW, texH, texW, texH, argb);
+		g.pop();
 	}
 
 	// ------------------------------------------------------------------ widgets
 
 	/** Animated switch, 22x12. */
-	public static void toggle(GuiGraphicsExtractor g, float x, float y, float anim, float alpha) {
+	public static void toggle(Gfx g, float x, float y, float anim, float alpha) {
 		int track = Theme.mix(Theme.OFF, Theme.COPPER, anim);
 		round(g, x, y, 22, 12, 6, Theme.alpha(track, alpha));
 		float knob = x + 2 + 10 * anim;
@@ -286,13 +284,13 @@ public final class Ui {
 	}
 
 	/** Accent pill button with a soft highlight. */
-	public static void accentButton(GuiGraphicsExtractor g, float x, float y, float w, float h, float hover, float alpha) {
+	public static void accentButton(Gfx g, float x, float y, float w, float h, float hover, float alpha) {
 		round(g, x, y, w, h, Math.min(7, h / 2), Theme.alpha(Theme.mix(Theme.COPPER, Theme.COPPER_HI, hover * 0.6f), alpha));
 		round(g, x + 1, y + 1, w - 2, h / 2f - 1, Math.min(6, h / 2), Theme.alpha(0x22FFFFFF, alpha));
 	}
 
 	/** Frosted glass button. */
-	public static void glassButton(GuiGraphicsExtractor g, float x, float y, float w, float h, float hover, float alpha) {
+	public static void glassButton(Gfx g, float x, float y, float w, float h, float hover, float alpha) {
 		int fill = Theme.mix(0x9CFFFFFF, 0xEBFFFFFF, hover);
 		int border = Theme.mix(Theme.GLASS_RIM, Theme.alpha(Theme.COPPER, 0.45f), hover);
 		round(g, x, y, w, h, Math.min(7, h / 2), Theme.alpha(fill, alpha), Theme.alpha(border, alpha), 1);
@@ -302,7 +300,7 @@ public final class Ui {
 	 * A frosted glass panel: soft green-tinted shadow, translucent white body
 	 * and a bright rim with a highlight along the top edge.
 	 */
-	public static void glass(GuiGraphicsExtractor g, float x, float y, float w, float h, float r, int fill, float alpha) {
+	public static void glass(Gfx g, float x, float y, float w, float h, float r, int fill, float alpha) {
 		shadow(g, x, y, w, h, 16, 0.16f * alpha);
 		round(g, x, y, w, h, r, Theme.alpha(fill, alpha), Theme.alpha(Theme.GLASS_RIM, alpha), 1);
 		round(g, x + r * 0.6f, y + 1, w - r * 1.2f, 1, 0.5f, Theme.alpha(0x99FFFFFF, alpha));
@@ -311,7 +309,7 @@ public final class Ui {
 	private static final int[] LUCIDE_SIZES = {32, 64, 128};
 
 	/** Draws a smooth Lucide line icon, picking the sprite size closest to its on-screen size. */
-	public static void lucide(GuiGraphicsExtractor g, String name, float x, float y, float size, int argb) {
+	public static void lucide(Gfx g, String name, float x, float y, float size, int argb) {
 		if ((argb >>> 24) == 0) return;
 		float physical = size * scale();
 		int pick = LUCIDE_SIZES[LUCIDE_SIZES.length - 1];
@@ -321,15 +319,15 @@ public final class Ui {
 				break;
 			}
 		}
-		g.pose().pushMatrix();
-		g.pose().translate(x, y);
-		g.pose().scale(size / pick, size / pick);
-		g.blitSprite(RenderPipelines.GUI_TEXTURED, id("lucide/" + pick + "/" + name), 0, 0, pick, pick, argb);
-		g.pose().popMatrix();
+		g.push();
+		g.translate(x, y);
+		g.scale(size / pick, size / pick);
+		g.sprite(id("lucide/" + pick + "/" + name), 0, 0, pick, pick, argb);
+		g.pop();
 	}
 
 	/** A small pill switch like the one on Lunar-style mod cards. */
-	public static void pillSwitch(GuiGraphicsExtractor g, float x, float y, float anim, float alpha) {
+	public static void pillSwitch(Gfx g, float x, float y, float anim, float alpha) {
 		int track = Theme.mix(Theme.OFF, Theme.COPPER, anim);
 		round(g, x, y, 20, 10, 5, Theme.alpha(track, alpha));
 		circle(g, x + 5 + 10 * anim, y + 5, 3.5f, Theme.alpha(0xFFFFFFFF, alpha));

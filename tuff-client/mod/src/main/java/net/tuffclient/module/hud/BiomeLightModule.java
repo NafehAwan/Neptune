@@ -1,8 +1,8 @@
 package net.tuffclient.module.hud;
 
+import net.tuffclient.gui.Gfx;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
@@ -23,7 +23,7 @@ public final class BiomeLightModule extends HudModule {
 	}
 
 	@Override
-	public void render(GuiGraphicsExtractor g, Font font, boolean preview) {
+	public void render(Gfx g, Font font, boolean preview) {
 		Minecraft mc = Minecraft.getInstance();
 		ClientLevel level = mc.level;
 		Entity camera = mc.getCameraEntity();

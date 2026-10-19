@@ -1,11 +1,11 @@
 package net.tuffclient.module.util;
 
+import net.tuffclient.gui.Gfx;
 import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.LightLayer;
@@ -43,7 +43,7 @@ public final class CleanF3Module extends Module {
 	/** Whether an F3 chart is open (then the vanilla screen shows); set by DebugScreenOverlayMixin. */
 	public static boolean charts;
 
-	public void render(GuiGraphicsExtractor g) {
+	public void render(Gfx g) {
 		Minecraft mc = Minecraft.getInstance();
 		Entity cam = mc.getCameraEntity();
 		if (cam == null || mc.level == null || !mc.debugEntries.isOverlayVisible() || charts) return;

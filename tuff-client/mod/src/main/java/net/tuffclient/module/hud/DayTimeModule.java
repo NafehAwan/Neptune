@@ -1,11 +1,11 @@
 package net.tuffclient.module.hud;
 
+import net.tuffclient.gui.Gfx;
 import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.tuffclient.setting.BoolSetting;
 
 /** The in-game day, the time of day and how long until night (or day). */
@@ -20,7 +20,7 @@ public final class DayTimeModule extends HudModule {
 	}
 
 	@Override
-	public void render(GuiGraphicsExtractor g, Font font, boolean preview) {
+	public void render(Gfx g, Font font, boolean preview) {
 		Minecraft mc = Minecraft.getInstance();
 		long t = mc.level == null ? 30000 : mc.level.getOverworldClockTime();
 		long tod = Math.floorMod(t, 24000L);

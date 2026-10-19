@@ -141,13 +141,14 @@ public final class TuffTitleScreen extends Screen {
 	}
 
 	@Override
-	public void extractBackground(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
+	public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+		Gfx g = Gfx.of(graphics);
 		// the glass blurs what's behind it, like the mockup's backdrop-filter
 		float z = zoom(), lift = (1 - stage(0)) * 8;
 		List<float[]> glass = new ArrayList<>();
 		glass.add(new float[] {(vw() / 2 - CARD_W / 2) * z, (CARD_Y + lift) * z, CARD_W * z, CARD_H * z, 28 * z});
 		accounts.glass(glass, z);
-		background.renderWithGlass(g, width, height, animate(), () -> extractBlurredBackground(g), glass);
+		background.renderWithGlass(g, width, height, animate(), () -> extractBlurredBackground(graphics), glass);
 	}
 
 	private float stage(float delay) {
@@ -156,7 +157,8 @@ public final class TuffTitleScreen extends Screen {
 	}
 
 	@Override
-	public void extractRenderState(GuiGraphicsExtractor g, int guiMouseX, int guiMouseY, float partialTick) {
+	public void extractRenderState(GuiGraphicsExtractor graphics, int guiMouseX, int guiMouseY, float partialTick) {
+		Gfx g = Gfx.of(graphics);
 		long now = System.nanoTime();
 		float dt = Math.min(0.1f, (now - last) / 1e9f);
 		last = now;
@@ -173,8 +175,8 @@ public final class TuffTitleScreen extends Screen {
 		float mx = menuOpen ? -1000 : mouseX, my = menuOpen ? -1000 : mouseY;
 
 		Ui.zoom = z;
-		g.pose().pushMatrix();
-		g.pose().scale(z, z);
+		g.push();
+		g.scale(z, z);
 
 		float cx = vw() / 2;
 		float a = stage(0);
@@ -227,19 +229,19 @@ public final class TuffTitleScreen extends Screen {
 		// account chip and its menu go on top of everything
 		accounts.render(g, 20, 18, mouseX, mouseY, dt, stage(0.05f));
 
-		g.pose().popMatrix();
+		g.pop();
 		Ui.zoom = 1f;
 	}
 
 	/** Icon and label centred together, 8px apart, like the mockup's buttons. */
-	private void label(GuiGraphicsExtractor g, Box b, float y, Button btn, int color, Ui.Font font, float px) {
+	private void label(Gfx g, Box b, float y, Button btn, int color, Ui.Font font, float px) {
 		float total = 15 + 8 + Ui.width(btn.label(), font);
 		float x = b.x() + (b.w() - total) / 2;
 		Ui.lucide(g, btn.icon(), x, y + (b.h() - 15) / 2, 15, color);
 		Ui.textAt(g, btn.label(), x + 23, Ui.mid(y + b.h() / 2, px), color, font);
 	}
 
-	private void tooltip(GuiGraphicsExtractor g, String tip, Box b) {
+	private void tooltip(Gfx g, String tip, Box b) {
 		float tw = Ui.width(tip, Ui.Font.UI_12_5_M) + 20;
 		float tx = Math.min(vw() - tw - 8, b.x() + b.w() / 2 - tw / 2), ty = b.y() + b.h() + 8;
 		Ui.round(g, tx, ty, tw, 26, 8, 0xF2FFFFFF, Theme.alpha(0xFF1F2A22, 0.08f), 1);

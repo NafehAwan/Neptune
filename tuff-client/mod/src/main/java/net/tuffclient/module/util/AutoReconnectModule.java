@@ -1,7 +1,7 @@
 package net.tuffclient.module.util;
 
+import net.tuffclient.gui.Gfx;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.gui.screens.DisconnectedScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -57,7 +57,7 @@ public final class AutoReconnectModule extends Module {
 	}
 
 	/** The countdown line on the disconnected screen. */
-	public void renderOn(Screen screen, GuiGraphicsExtractor g) {
+	public void renderOn(Screen screen, Gfx g) {
 		if (screen != countingOn || last == null) return;
 		var font = Minecraft.getInstance().font;
 		String text;

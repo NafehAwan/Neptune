@@ -26,14 +26,16 @@ public final class HudEditorScreen extends Screen {
 	}
 
 	@Override
-	public void extractBackground(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
+	public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+		Gfx g = Gfx.of(graphics);
 		g.fill(0, 0, width, height, minecraft.player == null ? 0xFF2A3A30 : 0x50000000);
 		g.fill(width / 2, 0, width / 2 + 1, height, 0x18FFFFFF);
 		g.fill(0, height / 2, width, height / 2 + 1, 0x18FFFFFF);
 	}
 
 	@Override
-	public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
+	public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+		Gfx g = Gfx.of(graphics);
 		CpsModule.sample(minecraft);
 		HudModule hovered = dragging != null ? dragging : at(mouseX, mouseY);
 		for (HudModule m : TuffClient.modules().hud()) {

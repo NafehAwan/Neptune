@@ -2,8 +2,6 @@ package net.tuffclient.gui;
 
 import java.util.Arrays;
 
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
 import org.joml.Matrix3x2f;
 
@@ -55,7 +53,7 @@ public final class SkinHead {
 	 * Draws a head centred on (cx, cy) filling a box of {@code size} GUI units.
 	 * Angles are in degrees, like the launcher's.
 	 */
-	public static void draw(GuiGraphicsExtractor g, Identifier skin, float cx, float cy, float size, float yawDeg, float pitchDeg, float alpha) {
+	public static void draw(Gfx g, Identifier skin, float cx, float cy, float size, float yawDeg, float pitchDeg, float alpha) {
 		if (alpha <= 0.01f) return;
 		// the default skin's outer layer is empty: no blocks to sort or draw
 		boolean voxels = !skin.equals(net.tuffclient.account.SkinTextures.STEVE);
@@ -146,10 +144,10 @@ public final class SkinHead {
 	}
 
 	/** One textured parallelogram: {@code n} texels square from (tu, tv), spanned by the screen vectors u and v per texel. */
-	private static void quad(GuiGraphicsExtractor g, Identifier skin, float ox, float oy, float[] u, float[] v, int tu, int tv, int n, int color) {
-		g.pose().pushMatrix();
-		g.pose().mul(FACE.set(u[0], u[1], v[0], v[1], ox, oy));
-		g.blit(RenderPipelines.GUI_TEXTURED, skin, 0, 0, tu, tv, n, n, n, n, 64, 64, color);
-		g.pose().popMatrix();
+	private static void quad(Gfx g, Identifier skin, float ox, float oy, float[] u, float[] v, int tu, int tv, int n, int color) {
+		g.push();
+		g.mul(FACE.set(u[0], u[1], v[0], v[1], ox, oy));
+		g.texture(skin, 0, 0, tu, tv, n, n, n, n, 64, 64, color);
+		g.pop();
 	}
 }

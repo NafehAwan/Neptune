@@ -1,9 +1,9 @@
 package net.tuffclient.module.hud;
 
+import net.tuffclient.gui.Gfx;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.tuffclient.gui.Theme;
 import net.tuffclient.setting.BoolSetting;
 import net.tuffclient.setting.ColorSetting;
@@ -25,7 +25,7 @@ public final class KeystrokesModule extends HudModule {
 	}
 
 	@Override
-	public void render(GuiGraphicsExtractor g, Font font, boolean preview) {
+	public void render(Gfx g, Font font, boolean preview) {
 		Minecraft client = Minecraft.getInstance();
 		long now = System.nanoTime();
 		float dt = Math.min(0.1f, (now - last) / 1e9f);
@@ -61,7 +61,7 @@ public final class KeystrokesModule extends HudModule {
 		return (float) (this.x * 2 + x * 0.006);
 	}
 
-	private void key(GuiGraphicsExtractor g, Font font, int i, KeyMapping mapping, String label, int x, int y, int w, int h, float dt) {
+	private void key(Gfx g, Font font, int i, KeyMapping mapping, String label, int x, int y, int w, int h, float dt) {
 		glow[i] = Theme.approach(glow[i], mapping.isDown() ? 1 : 0, dt, 18);
 		// in chroma wave mode each key sits a step further along the rainbow
 		float shift = wave(x + w / 2f);

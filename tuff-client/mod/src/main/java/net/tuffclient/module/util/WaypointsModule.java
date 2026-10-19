@@ -1,5 +1,6 @@
 package net.tuffclient.module.util;
 
+import net.tuffclient.gui.Gfx;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -16,7 +17,6 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.phys.Vec3;
@@ -147,7 +147,7 @@ public final class WaypointsModule extends Module {
 	}
 
 	/** Draws every visible waypoint at its spot on screen. */
-	public void render(GuiGraphicsExtractor g) {
+	public void render(Gfx g) {
 		Minecraft mc = Minecraft.getInstance();
 		if (mc.player == null || mc.level == null) return;
 		Camera cam = mc.gameRenderer.mainCamera();
@@ -170,12 +170,12 @@ public final class WaypointsModule extends Module {
 			if (sx < -50 || sx > gw + 50 || sy < -50 || sy > gh + 50) continue;
 			float s = size.get().floatValue();
 			// a diamond marker
-			g.pose().pushMatrix();
-			g.pose().translate(sx, sy);
-			g.pose().rotate((float) Math.toRadians(45));
+			g.push();
+			g.translate(sx, sy);
+			g.rotate((float) Math.toRadians(45));
 			Ui.round(g, -s / 2 - 1, -s / 2 - 1, s + 2, s + 2, 1.5f, 0xCC000000);
 			Ui.round(g, -s / 2, -s / 2, s, s, 1, pt.color | 0xFF000000);
-			g.pose().popMatrix();
+			g.pop();
 			String label = (names.get() ? pt.name : "") + (distance.get() ? (names.get() ? "  " : "") + Math.round(dist) + "m" : "");
 			if (label.isEmpty()) continue;
 			int lw = font.width(label);

@@ -291,12 +291,13 @@ public final class TuffMenuScreen extends Screen {
 	// ------------------------------------------------------------------ rendering
 
 	@Override
-	public void extractBackground(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
+	public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+		Gfx g = Gfx.of(graphics);
 		if (minecraft.level == null) background.render(g, width, height, modules().titleScreen.animate.get());
 		if (modules().ui.blur.get()) {
 			// the forest has to sit in its own layer for the blur to reach it
 			g.nextStratum();
-			extractBlurredBackground(g);
+			extractBlurredBackground(graphics);
 			g.nextStratum();
 			g.fill(0, 0, width, height, 0x0FFFFFFF);
 		} else {
@@ -305,7 +306,8 @@ public final class TuffMenuScreen extends Screen {
 	}
 
 	@Override
-	public void extractRenderState(GuiGraphicsExtractor g, int guiMouseX, int guiMouseY, float partialTick) {
+	public void extractRenderState(GuiGraphicsExtractor graphics, int guiMouseX, int guiMouseY, float partialTick) {
+		Gfx g = Gfx.of(graphics);
 		float z = zoom();
 		float mouseX = guiMouseX / z, mouseY = guiMouseY / z;
 		long now = System.nanoTime();
@@ -320,11 +322,11 @@ public final class TuffMenuScreen extends Screen {
 
 		float s = 0.97f + 0.03f * open;
 		Ui.zoom = z;
-		g.pose().pushMatrix();
-		g.pose().scale(z, z);
-		g.pose().translate(vw() / 2f, 360);
-		g.pose().scale(s, s);
-		g.pose().translate(-vw() / 2f, -360);
+		g.push();
+		g.scale(z, z);
+		g.translate(vw() / 2f, 360);
+		g.scale(s, s);
+		g.translate(-vw() / 2f, -360);
 		float a = open;
 
 		float x = px(), y = PY;
@@ -344,12 +346,12 @@ public final class TuffMenuScreen extends Screen {
 		if (drawerAnim > 0.01f && drawer != null) drawer(g, mouseX, mouseY, x, y, a);
 		else if (drawerAnim > 0.01f) drawerAnim = 0;
 
-		g.pose().popMatrix();
+		g.pop();
 		Ui.zoom = 1f;
 	}
 
 	/** Leaf, page title in Fraunces italic, then (on Mods) the filter chips and search. */
-	private void header(GuiGraphicsExtractor g, float mouseX, float mouseY, float x, float y, float a) {
+	private void header(Gfx g, float mouseX, float mouseY, float x, float y, float a) {
 		float cy = y + PAD_Y + 17;
 		float lx = x + PAD_X;
 		Ui.image(g, EMBLEM, lx, cy - 16, 32, 32, 512, 512, Theme.alpha(0xFFFFFFFF, a));
@@ -417,7 +419,7 @@ public final class TuffMenuScreen extends Screen {
 	}
 
 	/** Bottom row: how many mods are on, and buttons for the other pages and the HUD editor. */
-	private void footer(GuiGraphicsExtractor g, float mouseX, float mouseY, float x, float y, float w, float a) {
+	private void footer(Gfx g, float mouseX, float mouseY, float x, float y, float w, float a) {
 		Ui.round(g, x, y - 12, w, 1, 0.5f, Theme.alpha(0x99FFFFFF, a));
 		long on = modules().visible().stream().filter(Module::isEnabled).count();
 		Ui.textAt(g, on + " of " + modules().visible().size() + " on", x, Ui.mid(y + 16, 11.5f), Theme.alpha(Theme.MUTED, a), Ui.Font.MONO_11_5);
@@ -486,7 +488,7 @@ public final class TuffMenuScreen extends Screen {
 		return i < 0 ? ORDER.size() : i;
 	}
 
-	private void mods(GuiGraphicsExtractor g, float mouseX, float mouseY, float x, float y, float w, float h, float a) {
+	private void mods(Gfx g, float mouseX, float mouseY, float x, float y, float w, float h, float a) {
 		List<Module> list = filtered(tab, query);
 		float cw = (w - GUTTER) / 2;
 		int rows = (list.size() + 1) / 2;
@@ -514,7 +516,7 @@ public final class TuffMenuScreen extends Screen {
 	}
 
 	/** One mod: 66 tall, a 40px icon tile, name and blurb, a heart and gear on hover, and the switch. */
-	private void row(GuiGraphicsExtractor g, float mouseX, float mouseY, Module m, float x, float y, float w, float a, boolean inView, float clipTop, float clipBottom) {
+	private void row(Gfx g, float mouseX, float mouseY, Module m, float x, float y, float w, float a, boolean inView, float clipTop, float clipBottom) {
 		boolean over = inView && Theme.inside(mouseX, mouseY, x, y, x + w, y + ROW);
 		float hv = anim("row:" + m.id, over, 14);
 		float on = anim("on:" + m.id, m.isEnabled(), 12);
@@ -567,7 +569,7 @@ public final class TuffMenuScreen extends Screen {
 
 	// ------------------------------------------------------------------ settings drawer
 
-	private void drawer(GuiGraphicsExtractor g, float mouseX, float mouseY, float x, float y, float a) {
+	private void drawer(Gfx g, float mouseX, float mouseY, float x, float y, float a) {
 		Module m = drawer;
 		float ease = 1 - (1 - drawerAnim) * (1 - drawerAnim);
 		float dw = 320;
@@ -619,7 +621,7 @@ public final class TuffMenuScreen extends Screen {
 		g.disableScissor();
 	}
 
-	private float setting(GuiGraphicsExtractor g, float mouseX, float mouseY, float px, float cy, float pw, Module m, Setting<?> setting, float a, float top, float bottom) {
+	private float setting(Gfx g, float mouseX, float mouseY, float px, float cy, float pw, Module m, Setting<?> setting, float a, float top, float bottom) {
 		return switch (setting) {
 			case BoolSetting b -> toggleRow(g, px, cy, pw, b.name, b.get(), b::toggle, "drawer:" + m.id + b.id, a, top, bottom);
 			case ChoiceSetting c -> choice(g, mouseX, mouseY, px, cy, pw, c, a, top, bottom);
@@ -630,7 +632,7 @@ public final class TuffMenuScreen extends Screen {
 	}
 
 	/** One-click looks for this HUD element (each module keeps its own). */
-	private float looks(GuiGraphicsExtractor g, float mouseX, float mouseY, float x, float y, float w, HudModule hud, float a, float top, float bottom) {
+	private float looks(Gfx g, float mouseX, float mouseY, float x, float y, float w, HudModule hud, float a, float top, float bottom) {
 		Ui.textAt(g, "Quick look", x, y + 14 + 13.5f * 1.038f - 7, Theme.alpha(Theme.TEXT, a), Ui.Font.UI_13_5_SB);
 		float cx = x, cy = y + 32;
 		for (String look : new String[] {"Default", "Clean", "Boxed", "Outline"}) {
@@ -650,12 +652,12 @@ public final class TuffMenuScreen extends Screen {
 	}
 
 	/** Module-specific panels below the settings (the waypoint list). */
-	private float extras(GuiGraphicsExtractor g, float mouseX, float mouseY, float x, float y, float w, Module m, float a, float top, float bottom) {
+	private float extras(Gfx g, float mouseX, float mouseY, float x, float y, float w, Module m, float a, float top, float bottom) {
 		if (m instanceof net.tuffclient.module.util.WaypointsModule wp) return waypointList(g, mouseX, mouseY, x, y, w, wp, a, top, bottom);
 		return y;
 	}
 
-	private float waypointList(GuiGraphicsExtractor g, float mouseX, float mouseY, float x, float y, float w, net.tuffclient.module.util.WaypointsModule wp, float a, float top, float bottom) {
+	private float waypointList(Gfx g, float mouseX, float mouseY, float x, float y, float w, net.tuffclient.module.util.WaypointsModule wp, float a, float top, float bottom) {
 		y += 18;
 		Ui.spaced(g, "WAYPOINTS HERE", x, y + 10.5f * 1.005f - 7, Theme.alpha(Theme.MUTED, a), Ui.Font.MONO_10_5, 1.26f);
 		y += 18;
@@ -690,7 +692,7 @@ public final class TuffMenuScreen extends Screen {
 	}
 
 	/** Checkerboard behind see-through colours. */
-	private static void checker(GuiGraphicsExtractor g, float x, float y, float w, float h, float a) {
+	private static void checker(Gfx g, float x, float y, float w, float h, float a) {
 		int cell = 5;
 		for (int yy = 0; yy * cell < h; yy++) {
 			for (int xx = 0; xx * cell < w; xx++) {
@@ -702,13 +704,13 @@ public final class TuffMenuScreen extends Screen {
 	}
 
 	/** A filled rectangle at float coordinates (through the pose, so it doesn't snap). */
-	private static void fillF(GuiGraphicsExtractor g, float x1, float y1, float x2, float y2, int color) {
+	private static void fillF(Gfx g, float x1, float y1, float x2, float y2, int color) {
 		if (x2 <= x1 || y2 <= y1) return;
-		g.pose().pushMatrix();
-		g.pose().translate(x1, y1);
-		g.pose().scale((x2 - x1) / 64f, (y2 - y1) / 64f);
+		g.push();
+		g.translate(x1, y1);
+		g.scale((x2 - x1) / 64f, (y2 - y1) / 64f);
 		g.fill(0, 0, 64, 64, color);
-		g.pose().popMatrix();
+		g.pop();
 	}
 
 	private float[] hsvOf(ColorSetting c) {
@@ -732,7 +734,7 @@ public final class TuffMenuScreen extends Screen {
 	private static final int[] SWATCHES = {0xFFFFFFFF, 0xFF1F2A22, 0xFF2F6B4F, 0xFF3BA57E, 0xFF3D8BD6, 0xFF8A62D6, 0xFFD25A75, 0xFFD0413D, 0xFFC9733E, 0xFFE3B23C};
 
 	/** A colour: label, hex and swatch; click to open the wheel picker under it. */
-	private float colorRow(GuiGraphicsExtractor g, float mouseX, float mouseY, float x, float y, float w, ColorSetting c, float a, float top, float bottom) {
+	private float colorRow(Gfx g, float mouseX, float mouseY, float x, float y, float w, ColorSetting c, float a, float top, float bottom) {
 		boolean open = openColor == c;
 		Ui.textAt(g, c.name, x, Ui.mid(y + 22, 13.5f), Theme.alpha(Theme.TEXT, a), Ui.Font.UI_13_5_SB);
 		float sw = 30, sh = 20, sx = x + w - sw, sy = y + 12;
@@ -757,7 +759,7 @@ public final class TuffMenuScreen extends Screen {
 	}
 
 	/** The colour wheel, brightness and opacity bars, preview with hex, chroma and swatches. */
-	private float picker(GuiGraphicsExtractor g, float mouseX, float mouseY, float x, float y, float w, ColorSetting c, float a, float top, float bottom) {
+	private float picker(Gfx g, float mouseX, float mouseY, float x, float y, float w, ColorSetting c, float a, float top, float bottom) {
 		float[] st = hsvOf(c);
 		int alpha = c.get() >>> 24;
 		boolean live = y + 200 > top && y < bottom;
@@ -892,7 +894,7 @@ public final class TuffMenuScreen extends Screen {
 	private static final Identifier RAMP = Identifier.fromNamespaceAndPath(TuffClient.MOD_ID, "textures/gui/ramp.png");
 
 	/** A 12-tall bar fading from {@code from} to {@code to}, with a knob at {@code t}. */
-	private void bar(GuiGraphicsExtractor g, float x, float y, float w, float t, int from, int to, boolean checkered, float a) {
+	private void bar(Gfx g, float x, float y, float w, float t, int from, int to, boolean checkered, float a) {
 		if (checkered) checker(g, x, y, w, 12, a);
 		else fillF(g, x, y, x + w, y + 12, Theme.alpha(from, a));
 		Ui.image(g, RAMP, x, y, w, 12, 256, 4, Theme.alpha(to, a));
@@ -904,7 +906,7 @@ public final class TuffMenuScreen extends Screen {
 	}
 
 	/** A text field. */
-	private float textRow(GuiGraphicsExtractor g, float mouseX, float mouseY, float x, float y, float w, TextSetting t, float a, float top, float bottom) {
+	private float textRow(Gfx g, float mouseX, float mouseY, float x, float y, float w, TextSetting t, float a, float top, float bottom) {
 		Ui.textAt(g, t.name, x, y + 14 + 13.5f * 1.038f - 7, Theme.alpha(Theme.TEXT, a), Ui.Font.UI_13_5_SB);
 		float fy = y + 30;
 		boolean focused = focusedText == t;
@@ -919,7 +921,7 @@ public final class TuffMenuScreen extends Screen {
 	}
 
 	/** A switch row: label on the left, switch on the right, a hairline under it. */
-	private float toggleRow(GuiGraphicsExtractor g, float x, float y, float w, String label, boolean value, Runnable toggle, String key, float a, float top, float bottom) {
+	private float toggleRow(Gfx g, float x, float y, float w, String label, boolean value, Runnable toggle, String key, float a, float top, float bottom) {
 		float on = anim("tog:" + key + label, value, 14);
 		Ui.textAt(g, label, x, Ui.mid(y + 22, 13.5f), Theme.alpha(Theme.TEXT, a), Ui.Font.UI_13_5_SB);
 		float sx = x + w - 34, sy = y + 12;
@@ -933,7 +935,7 @@ public final class TuffMenuScreen extends Screen {
 		return y + 44;
 	}
 
-	private float choice(GuiGraphicsExtractor g, float mouseX, float mouseY, float x, float y, float w, ChoiceSetting c, float a, float top, float bottom) {
+	private float choice(Gfx g, float mouseX, float mouseY, float x, float y, float w, ChoiceSetting c, float a, float top, float bottom) {
 		Ui.textAt(g, c.name, x, y + 14 + 13.5f * 1.038f - 7, Theme.alpha(Theme.TEXT, a), Ui.Font.UI_13_5_SB);
 		float cx = x, cy = y + 32;
 		for (int i = 0; i < c.options.length; i++) {
@@ -959,7 +961,7 @@ public final class TuffMenuScreen extends Screen {
 		return cy + 28 + 14;
 	}
 
-	private float slider(GuiGraphicsExtractor g, float x, float y, float w, NumberSetting n, float a, float top, float bottom) {
+	private float slider(Gfx g, float x, float y, float w, NumberSetting n, float a, float top, float bottom) {
 		Ui.textAt(g, n.name, x, y + 14 + 13.5f * 1.038f - 7, Theme.alpha(Theme.TEXT, a), Ui.Font.UI_13_5_SB);
 		Ui.rightAt(g, n.display(), x + w, y + 14 + 11.5f * 1.005f - 7, Theme.alpha(Theme.COPPER, a), Ui.Font.MONO_11_5);
 		float ty = y + 38, frac = (float) n.fraction();
@@ -1003,7 +1005,7 @@ public final class TuffMenuScreen extends Screen {
 	// ------------------------------------------------------------------ theme and settings pages
 
 	/** A settings row in the list style: title, hint, and a switch or a button on the right. */
-	private float optionRow(GuiGraphicsExtractor g, float mouseX, float mouseY, float x, float y, float w, String label, String hint, Boolean value, String button, Runnable action, float a) {
+	private float optionRow(Gfx g, float mouseX, float mouseY, float x, float y, float w, String label, String hint, Boolean value, String button, Runnable action, float a) {
 		boolean over = Theme.inside(mouseX, mouseY, x, y, x + w, y + ROW);
 		float hv = anim("opt:" + label, over, 14);
 		if (hv > 0.01f) Ui.round(g, x - 8, y + 4, w + 16, ROW - 8, 12, Theme.alpha(0x40FFFFFF, hv * a));
@@ -1032,7 +1034,7 @@ public final class TuffMenuScreen extends Screen {
 		return y + ROW;
 	}
 
-	private void theme(GuiGraphicsExtractor g, float mouseX, float mouseY, float x, float y, float w, float a) {
+	private void theme(Gfx g, float mouseX, float mouseY, float x, float y, float w, float a) {
 		Ui.spaced(g, "ACCENT", x, y + 10.5f * 1.005f - 7, Theme.alpha(Theme.MUTED, a), Ui.Font.MONO_10_5, 1.26f);
 		Theme.Accent[] accents = Theme.Accent.values();
 		float sw = (w - 10 * (accents.length - 1)) / accents.length, sy = y + 22;
@@ -1058,7 +1060,7 @@ public final class TuffMenuScreen extends Screen {
 		optionRow(g, mouseX, mouseY, x, cy, w, "Menu animations", "Smooth transitions, hovers and scrolling.", modules().ui.animations.get(), null, modules().ui.animations::toggle, a);
 	}
 
-	private void settings(GuiGraphicsExtractor g, float mouseX, float mouseY, float x, float y, float w, float a) {
+	private void settings(Gfx g, float mouseX, float mouseY, float x, float y, float w, float a) {
 		var title = modules().titleScreen;
 		float cy = y - 10;
 		cy = optionRow(g, mouseX, mouseY, x, cy, w, "Glade title screen", "Use the Glade main menu instead of the vanilla one.", title.isEnabled(), null, title::toggle, a);
@@ -1092,7 +1094,7 @@ public final class TuffMenuScreen extends Screen {
 		packsDirty = false;
 	}
 
-	private void packs(GuiGraphicsExtractor g, float mouseX, float mouseY, float x, float y, float w, float h, float a) {
+	private void packs(Gfx g, float mouseX, float mouseY, float x, float y, float w, float h, float a) {
 		if (enabledPacks == null) loadPacks();
 		PackRepository repo = minecraft.getResourcePackRepository();
 		float colW = (w - GUTTER) / 2, listTop = y + 22, bottom = y + h - 50;
@@ -1133,7 +1135,7 @@ public final class TuffMenuScreen extends Screen {
 		});
 	}
 
-	private void packRow(GuiGraphicsExtractor g, float mouseX, float mouseY, PackRepository repo, String id, float x, float y, float w, boolean enabled, int index, float a, float top, float bottom) {
+	private void packRow(Gfx g, float mouseX, float mouseY, PackRepository repo, String id, float x, float y, float w, boolean enabled, int index, float a, float top, float bottom) {
 		if (y + 58 < top || y > bottom) return;
 		Pack pack = repo.getPack(id);
 		String title = pack == null ? id : pack.getTitle().getString();
@@ -1174,7 +1176,7 @@ public final class TuffMenuScreen extends Screen {
 		}
 	}
 
-	private void iconButton(GuiGraphicsExtractor g, float mouseX, float mouseY, String icon, float x, float y, float a, float top, float bottom, Runnable action) {
+	private void iconButton(Gfx g, float mouseX, float mouseY, String icon, float x, float y, float a, float top, float bottom, Runnable action) {
 		boolean over = Theme.inside(mouseX, mouseY, x, y, x + 24, y + 24) && mouseY >= top && mouseY < bottom;
 		if (over) Ui.round(g, x, y, 24, 24, 8, Theme.alpha(0xB3FFFFFF, a));
 		Ui.lucide(g, icon, x + 5, y + 5, 14, Theme.alpha(over ? Theme.COPPER : Theme.MUTED, a));

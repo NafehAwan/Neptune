@@ -1,11 +1,11 @@
 package net.tuffclient.module.hud;
 
+import net.tuffclient.gui.Gfx;
 import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -90,7 +90,7 @@ public final class SessionStatsModule extends HudModule {
 	}
 
 	@Override
-	public void render(GuiGraphicsExtractor g, Font font, boolean preview) {
+	public void render(Gfx g, Font font, boolean preview) {
 		List<String[]> lines = new ArrayList<>();
 		long secs = ticks / 20;
 		if (showTime.get()) lines.add(new String[] {"Time ", secs >= 3600 ? secs / 3600 + "h " + secs / 60 % 60 + "m" : secs / 60 + "m " + secs % 60 + "s"});

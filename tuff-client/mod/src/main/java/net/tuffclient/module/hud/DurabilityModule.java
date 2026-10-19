@@ -1,11 +1,11 @@
 package net.tuffclient.module.hud;
 
+import net.tuffclient.gui.Gfx;
 import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.sounds.SoundEvents;
@@ -56,7 +56,7 @@ public final class DurabilityModule extends HudModule {
 	}
 
 	@Override
-	public void render(GuiGraphicsExtractor g, Font font, boolean preview) {
+	public void render(Gfx g, Font font, boolean preview) {
 		List<Low> list = low(Minecraft.getInstance().player);
 		if (list.isEmpty() && preview) list = List.of(new Low(new ItemStack(Items.DIAMOND_CHESTPLATE), 7));
 		if (list.isEmpty()) {

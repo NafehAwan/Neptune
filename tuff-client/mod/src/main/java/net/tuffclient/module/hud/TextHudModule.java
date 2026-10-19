@@ -1,8 +1,8 @@
 package net.tuffclient.module.hud;
 
+import net.tuffclient.gui.Gfx;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.tuffclient.setting.BoolSetting;
 
 /** A single-line "label value" HUD element. */
@@ -20,7 +20,7 @@ public abstract class TextHudModule extends HudModule {
 	protected abstract String value(Minecraft client, boolean preview);
 
 	@Override
-	public void render(GuiGraphicsExtractor g, Font font, boolean preview) {
+	public void render(Gfx g, Font font, boolean preview) {
 		String value = value(Minecraft.getInstance(), preview);
 		if (value == null) {
 			if (!preview) {
