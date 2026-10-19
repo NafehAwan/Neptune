@@ -27,10 +27,21 @@ jobs:
           java-version: '25'
           distribution: 'temurin'
       - uses: gradle/actions/setup-gradle@v4
-      - name: Build
+      - name: Build every Minecraft version
+        env:
+          # Versions that must build; the others are still being ported.
+          READY: "26.3"
         run: |
-          set -o pipefail
-          ./gradlew build 2>&1 | tee build.log || { echo "=== COMPILE ERRORS"; grep -E "error:" -A3 build.log | head -120; exit 1; }
+          ./gradlew buildAndCollect --continue 2>&1 | tee build.log; status=${PIPESTATUS[0]}
+          echo "=== BUILT"; ls build/libs || true
+          if [ "$status" -ne 0 ]; then
+            echo "=== COMPILE ERRORS"
+            grep -E "error:|warning: \[|What went wrong|^> |Could not|Exception" -A3 build.log | head -400
+          fi
+          for v in $READY; do
+            ls build/libs/tuff-client-*+$v.jar >/dev/null 2>&1 || { echo "::error::Glade for Minecraft $v didn't build"; failed=1; }
+          done
+          exit ${failed:-0}
       - uses: actions/upload-artifact@v4
         with:
           name: tuff-mod
@@ -57,7 +68,7 @@ jobs:
       - name: Run client game test
         # Same setup as Fabric API's own client tests: Mesa's software Vulkan driver.
         run: |
-          timeout 15m xvfb-run -a -s "-screen 0 1920x1080x24 +extension GLX +render -noreset" ./gradlew runClientGameTest --stacktrace
+          timeout 15m xvfb-run -a -s "-screen 0 1920x1080x24 +extension GLX +render -noreset" ./gradlew :26.3:runClientGameTest --stacktrace
       - name: Print screenshot previews
         if: always()
         run: |
@@ -83,7 +94,7 @@ jobs:
         with:
           name: tuff-mod-screenshots
           path: |
-            tuff-client/mod/build/run/**/screenshots
+            tuff-client/mod/**/run/**/screenshots
             tuff-client/mod/run/**/screenshots
           if-no-files-found: warn
       - uses: actions/upload-artifact@v4
@@ -91,9 +102,9 @@ jobs:
         with:
           name: tuff-mod-test-logs
           path: |
-            tuff-client/mod/build/run/**/logs
+            tuff-client/mod/**/run/**/logs
             tuff-client/mod/run/**/logs
-            tuff-client/mod/build/run/**/crash-reports
+            tuff-client/mod/**/run/**/crash-reports
             tuff-client/mod/run/**/crash-reports
           if-no-files-found: ignore
 
@@ -137,7 +148,7 @@ jobs:
           path: tuff-client/launcher/mod-build
       - name: Bundle the mod
         run: |
-          JAR=$(ls mod-build/tuff-client-*.jar 2>/dev/null | grep -vE 'sources|dev' | head -1 || true)
+          JAR=$(ls mod-build/tuff-client-*+26.3.jar 2>/dev/null | head -1 || true)
           # a launcher without the Glade mod would start the game without Glade
           if [ -z "$JAR" ]; then echo "::error::The Glade mod jar is missing"; exit 1; fi
           cp "$JAR" src-tauri/resources/tuff-mod.jar; echo "bundled $JAR"
@@ -200,7 +211,7 @@ jobs:
           if gh release view "v$V" >/dev/null 2>&1; then echo "v$V is already released; bump the version to publish an update"; exit 0; fi
           mkdir -p out
           cp "$(ls dist/deb/*.deb | head -1)" "out/glade_${V}_amd64.deb"
-          cp "$(ls dist/mod/tuff-client-*.jar | grep -vE 'sources|dev' | head -1)" out/glade-mod.jar
+          cp "$(ls dist/mod/tuff-client-*+26.3.jar | head -1)" out/glade-mod.jar
           MOD_V=$(unzip -p out/glade-mod.jar fabric.mod.json | jq -r .version)
           MC=$(unzip -p out/glade-mod.jar fabric.mod.json | jq -r .depends.minecraft)
           [ "$MOD_V" = "$V" ] || { echo "::error::mod version $MOD_V doesn't match $V"; exit 1; }

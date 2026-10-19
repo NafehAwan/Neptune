@@ -1,0 +1,19 @@
+# Per-version settings for the Glade mod (see settings.gradle.kts for the list).
+# mod.mc_compat goes into fabric.mod.json; deps.fabric_api can be left out to
+# use the newest Fabric API build for that Minecraft version.
+mod.id = "tuff"
+deps.fabric_loader = "0.19.5"
+loomx.loom_version = "1.18-SNAPSHOT"
+
+["1.21.11"]
+mod.mc_compat = "1.21.11"
+
+["26.1"]
+mod.mc_compat = "~26.1"
+
+["26.2"]
+mod.mc_compat = "~26.2"
+
+["26.3"]
+mod.mc_compat = "~26.3"
+deps.fabric_api = "0.162.0+26.3"
