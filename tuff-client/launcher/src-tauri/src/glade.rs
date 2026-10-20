@@ -424,7 +424,7 @@ mod tests {
         jar(&dir, "c.jar", r#"{"id":"tuff","version":"1.3.0","depends":{"minecraft":">=1.21 <=1.21.1"}}"#);
         jar(&dir, "other.jar", r#"{"id":"sodium","version":"9","depends":{"minecraft":"*"}}"#);
         let paths = Paths { root: dir.join("home") };
-        let builds = find_builds(&[dir.clone()], &paths);
+        let builds = find_builds(std::slice::from_ref(&dir), &paths);
         assert_eq!(builds.0.len(), 3);
         assert_eq!(builds.for_version("1.21").unwrap().info.version, "1.3.0");
         assert_eq!(builds.for_version("26.3").unwrap().info.version, "1.2.0");
@@ -521,7 +521,7 @@ mod tests {
         jar(&paths.file("glade"), "glade-mod.jar", r#"{"id":"tuff","version":"1.1.0","depends":{"minecraft":"~26.3"}}"#);
         // newer than the bundled build: stays
         jar(&downloads, "glade-1.21.11.jar", r#"{"id":"tuff","version":"1.4.0","depends":{"minecraft":"1.21.11"}}"#);
-        let builds = prune_old(&paths, find_builds(&[bundled.clone()], &paths));
+        let builds = prune_old(&paths, find_builds(std::slice::from_ref(&bundled), &paths));
         assert!(!downloads.join("glade-26.3.jar").exists());
         assert!(!paths.file("glade").join("glade-mod.jar").exists());
         assert!(downloads.join("glade-1.21.11.jar").exists());

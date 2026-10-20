@@ -133,10 +133,25 @@ async fn start(http: &reqwest::Client, paths: &Paths, loader: Loader, game_versi
     match found {
         Ok(Some(line)) => Ok(line),
         Ok(None) => anyhow::bail!(
-            "the game exited before opening its window ({}). Last lines:\n{}",
+            "the game exited before opening its window ({}). Last lines:\n{}{}",
             crash.map(|c| c.title).unwrap_or_default(),
-            tail.into_iter().collect::<Vec<_>>().join("\n")
+            tail.into_iter().collect::<Vec<_>>().join("\n"),
+            crash_report_head(&game_dir)
         ),
         Err(_) => anyhow::bail!("timed out. Last lines:\n{}", tail.into_iter().collect::<Vec<_>>().join("\n")),
+    }
+}
+
+/// The start of the newest crash report (the error and where it happened),
+/// which the last lines of the log don't show.
+fn crash_report_head(game_dir: &std::path::Path) -> String {
+    let newest = std::fs::read_dir(game_dir.join("crash-reports"))
+        .into_iter()
+        .flatten()
+        .flatten()
+        .max_by_key(|e| e.metadata().and_then(|m| m.modified()).ok());
+    match newest.and_then(|e| std::fs::read_to_string(e.path()).ok()) {
+        Some(text) => format!("\nCrash report:\n{}", text.lines().take(60).collect::<Vec<_>>().join("\n")),
+        None => String::new(),
     }
 }

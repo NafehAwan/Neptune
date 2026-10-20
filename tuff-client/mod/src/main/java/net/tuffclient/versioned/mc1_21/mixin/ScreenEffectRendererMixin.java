@@ -1,4 +1,4 @@
-// glade: minecraft <1.21.5
+// glade: minecraft <1.21.4
 package net.tuffclient.mixin;
 
 import com.mojang.blaze3d.vertex.PoseStack;
