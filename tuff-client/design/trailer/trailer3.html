@@ -203,12 +203,14 @@ function montage(t) {
   // caption on one side, the client on the other
   const tx = left ? 150 : W - 150, align = left ? "left" : "right";
   txt(String(i + 1).padStart(2, "0") + " / 10", tx - dir * (1 - p) * 120, 330, "800 30px Jakarta", GREEN, p, align, 6);
-  txt(big, tx - dir * (1 - p) * 200, 440, "600 italic 120px Fraunces", INK, p, align);
+  // captions shrink to stay clear of the client shot beside them
+  x.font = "600 italic 110px Fraunces"; const fit = Math.min(110, 110 * 720 / x.measureText(big).width);
+  txt(big, tx - dir * (1 - p) * 200, 440, `600 italic ${fit.toFixed(0)}px Fraunces`, INK, p, align);
   txt(small, tx - dir * (1 - p) * 260, 540, "500 46px Jakarta", MUTED, seg(lt, 0.05, 0.2), align);
-  const cx = left ? W - 560 : 560, cy = H / 2 + 10;
+  const cx = left ? W - 520 : 520, cy = H / 2 + 10;
   x.save(); x.translate(cx + dir * (1 - p) * 500, cy); x.rotate(dir * (1 - p) * 0.05 - dir * 0.012); x.scale(0.94 + lt * 0.08, 0.94 + lt * 0.08);
   if (shot) {
-    const w = 900, h = 506; glass(-w / 2 - 14, -h / 2 - 14, w + 28, h + 28, 26, p);
+    const w = 820, h = 461; glass(-w / 2 - 14, -h / 2 - 14, w + 28, h + 28, 26, p);
     x.save(); x.globalAlpha *= p; rr(-w / 2, -h / 2, w, h, 16); x.clip(); x.drawImage(SHOTS[shot], -w / 2, -h / 2, w, h); x.restore();
   } else art(i, lt, 0, 0);
   x.restore();
