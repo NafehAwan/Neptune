@@ -9,6 +9,11 @@ import net.tuffclient.setting.BoolSetting;
 import net.tuffclient.setting.ColorSetting;
 
 public final class KeystrokesModule extends HudModule {
+	@Override
+	protected boolean boxedByDefault() {
+		return true;
+	}
+
 	private static final int KEY = 20;
 	private static final int GAP = 2;
 	private final BoolSetting showMouse = add(new BoolSetting("mouse", "Mouse buttons", true));
@@ -66,7 +71,7 @@ public final class KeystrokesModule extends HudModule {
 		// in chroma wave mode each key sits a step further along the rainbow
 		float shift = wave(x + w / 2f);
 		int fill = Theme.mix(background.get() ? keyColor.argb(shift) : 0x00000000, pressColor.argb(shift), glow[i]);
-		float r = radius.get().floatValue();
+		float r = cornerRadius();
 		if (r > 0) net.tuffclient.gui.Ui.round(g, x, y, w, h, Math.min(r, h / 2f), fill);
 		else g.fill(x, y, x + w, y + h, fill);
 		if (border.get()) net.tuffclient.gui.Ui.outline(g, x, y, w, h, Math.max(0.5f, Math.min(r, h / 2f)), borderColor.argb());

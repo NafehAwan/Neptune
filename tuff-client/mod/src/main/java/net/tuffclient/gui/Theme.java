@@ -61,7 +61,7 @@ public final class Theme {
 	public static final int ICON_OFF = 0xFFA3ADA5;
 
 	/** HUD text over the world. */
-	public static final int HUD_TEXT = 0xFFF2F1EC;
+	public static final int HUD_TEXT = 0xFFFFFFFF;
 	public static final int HUD_MUTED = 0xFFB4BBB3;
 
 	/** Accent colours; reassigned by {@link #apply}. Forest is the default. */

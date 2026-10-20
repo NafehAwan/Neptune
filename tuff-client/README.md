@@ -185,8 +185,9 @@ or removed.
   Day & Time (day count, clock, time until night). Every HUD module has the
   same Style settings, set on each module by itself: text and label colors
   (any color from the wheel, or chroma), text shadow, background on or off and
-  its color, border and its color, corner radius, padding, scale and a quick
-  look (Default, Clean, Boxed, Outline).
+  its color, border and its color, background shape (sharp, rounded or smooth
+  corners), padding, scale and a quick look (Default, Clean, Boxed, Outline).
+  By default HUD modules are white text with a shadow and no background.
 - **Utility**: Zoom (hold C; smooth, snappy or linear curve, speed, scroll to
   zoom further, optional cinematic camera), Freelook (hold Left Alt), Waypoints
   (B adds one where you stand, a death waypoint is added where you die; on

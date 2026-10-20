@@ -11,6 +11,7 @@ import net.tuffclient.gui.Ui;
 import net.tuffclient.module.Category;
 import net.tuffclient.module.Module;
 import net.tuffclient.setting.BoolSetting;
+import net.tuffclient.setting.ChoiceSetting;
 import net.tuffclient.setting.ColorSetting;
 import net.tuffclient.setting.NumberSetting;
 import net.tuffclient.setting.Setting;
@@ -29,14 +30,14 @@ public abstract class HudModule extends Module {
 	public final double defaultX;
 	public final double defaultY;
 	public final NumberSetting scale = styled(new NumberSetting("scale", "Scale", 1.0, 0.5, 2.0, 0.1));
-	public final ColorSetting textColor = styled(new ColorSetting("text_color", "Text color", Theme.HUD_TEXT, true)).showIf(() -> usesTextColors());
-	public final ColorSetting labelColor = styled(new ColorSetting("label_color", "Label color", Theme.HUD_MUTED, true)).showIf(() -> usesTextColors());
+	public final ColorSetting textColor = styled(new ColorSetting("text_color", "Text color", 0xFFFFFFFF, true)).showIf(() -> usesTextColors());
+	public final ColorSetting labelColor = styled(new ColorSetting("label_color", "Label color", 0xFFFFFFFF, true)).showIf(() -> usesTextColors());
 	public final BoolSetting shadow = styled(new BoolSetting("shadow", "Text shadow", true));
-	public final BoolSetting background = styled(new BoolSetting("background", "Background", true));
+	public final BoolSetting background = styled(new BoolSetting("background", "Background", boxedByDefault()));
 	public final ColorSetting backgroundColor = styled(new ColorSetting("background_color", "Background color", 0x9A101210, true)).showIf(() -> background.get() && usesTextColors());
 	public final BoolSetting border = styled(new BoolSetting("border", "Border", false));
 	public final ColorSetting borderColor = styled(new ColorSetting("border_color", "Border color", 0x80FFFFFF, true)).showIf(() -> border.get());
-	public final NumberSetting radius = styled(new NumberSetting("radius", "Corner radius", 0, 0, 8, 1)).showIf(() -> background.get() || border.get());
+	public final ChoiceSetting shape = styled(new ChoiceSetting("shape", "Background shape", 1, "Sharp", "Rounded", "Smooth")).showIf(() -> background.get() || border.get());
 	public final NumberSetting padding = styled(new NumberSetting("padding", "Padding", 4, 0, 10, 1));
 
 	/** Size of the last render, in unscaled GUI pixels. */
@@ -54,6 +55,20 @@ public abstract class HudModule extends Module {
 	private <S extends Setting<?>> S styled(S setting) {
 		style.add(setting);
 		return add(setting);
+	}
+
+	/** Plain text by default; Keystrokes keeps its key boxes. */
+	protected boolean boxedByDefault() {
+		return false;
+	}
+
+	/** Corner radius for the background shape: sharp, rounded or smooth (fully round ends, capped at half the height by the caller). */
+	public float cornerRadius() {
+		return switch (shape.get()) {
+			case 0 -> 0f;
+			case 2 -> 6f;
+			default -> 2.5f;
+		};
 	}
 
 	/** Keystrokes has its own key colours, so it hides the shared text and background colours. */
@@ -131,17 +146,15 @@ public abstract class HudModule extends Module {
 	public void applyLook(String look) {
 		switch (look) {
 			case "Default" -> {
-				// the original Glade HUD look, colours included
+				// Glade's default look: white text with a shadow, no box, no rainbow
 				for (Setting<?> s : settings()) {
-					if (!isStyle(s) || s == scale) continue;
-					switch (s) {
-						case ColorSetting c -> c.reset();
-						case BoolSetting b -> b.set(b != border);
-						case NumberSetting n -> n.set(n == padding ? 4.0 : 0.0);
-						default -> {
-						}
-					}
+					if (isStyle(s) && s instanceof ColorSetting c) c.reset();
 				}
+				shadow.set(true);
+				background.set(boxedByDefault());
+				border.set(false);
+				shape.set(1);
+				padding.set(4.0);
 			}
 			case "Clean" -> {
 				background.set(false);
@@ -152,13 +165,13 @@ public abstract class HudModule extends Module {
 				background.set(true);
 				backgroundColor.set(0x9A101210);
 				border.set(false);
-				radius.set(3.0);
+				shape.set(1);
 			}
 			case "Outline" -> {
 				background.set(false);
 				border.set(true);
 				borderColor.set(0xB3FFFFFF);
-				radius.set(3.0);
+				shape.set(1);
 				shadow.set(true);
 			}
 			default -> {
@@ -175,7 +188,7 @@ public abstract class HudModule extends Module {
 	protected void box(Gfx g, int w, int h) {
 		width = w;
 		height = h;
-		float r = radius.get().floatValue();
+		float r = Math.min(cornerRadius(), h / 2f);
 		if (background.get()) {
 			if (r > 0) Ui.round(g, 0, 0, w, h, r, backgroundColor.argb());
 			else g.fill(0, 0, w, h, backgroundColor.argb());

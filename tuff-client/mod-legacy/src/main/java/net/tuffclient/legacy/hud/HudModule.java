@@ -8,6 +8,7 @@ import net.tuffclient.legacy.gui.Draw;
 import net.tuffclient.legacy.module.Category;
 import net.tuffclient.legacy.module.Module;
 import net.tuffclient.legacy.setting.BoolSetting;
+import net.tuffclient.legacy.setting.ChoiceSetting;
 import net.tuffclient.legacy.setting.ColorSetting;
 import net.tuffclient.legacy.setting.NumberSetting;
 
@@ -18,10 +19,11 @@ public abstract class HudModule extends Module {
 	private final double defaultX, defaultY;
 	public final NumberSetting scale = add(new NumberSetting("scale", "Size", 1, 0.5, 2.5, 0.05));
 	public final ColorSetting text = add(new ColorSetting("text", "Text color", 0xFFFFFFFF));
-	public final ColorSetting label = add(new ColorSetting("label", "Label color", 0xFFB8C2B9));
+	public final ColorSetting label = add(new ColorSetting("label", "Label color", 0xFFFFFFFF));
 	public final BoolSetting shadow = add(new BoolSetting("shadow", "Text shadow", true));
-	public final BoolSetting background = add(new BoolSetting("background", "Background", true));
+	public final BoolSetting background = add(new BoolSetting("background", "Background", false));
 	public final ColorSetting backgroundColor = add(new ColorSetting("background_color", "Background color", 0x66000000));
+	public final ChoiceSetting shape = add(new ChoiceSetting("shape", "Background shape", 1, "Sharp", "Rounded", "Smooth"));
 
 	protected HudModule(String id, String name, String description, double x, double y, boolean enabled) {
 		super(id, name, description, Category.HUD, enabled);
@@ -65,7 +67,10 @@ public abstract class HudModule extends Module {
 		GlStateManager.pushMatrix();
 		GlStateManager.translate(b[0], b[1], 0);
 		GlStateManager.scale(scale.get().floatValue(), scale.get().floatValue(), 1);
-		if (showBackground()) Draw.round(0, 0, width(), height(), 3, backgroundColor.argb());
+		if (showBackground()) {
+			float r = shape.get() == 0 ? 0 : shape.get() == 2 ? height() / 2f : 2.5f;
+			Draw.round(0, 0, width(), height(), r, backgroundColor.argb());
+		}
 		draw(preview);
 		GlStateManager.popMatrix();
 	}
