@@ -25,6 +25,7 @@ public final class GladeLegacy implements ClientModInitializer {
 		modules = new ModuleManager();
 		Config.load(modules);
 		LOGGER.info("Glade loaded for Minecraft 1.8 with {} modules", modules.all().size());
+		HookCheck.runIfAsked();
 	}
 
 	/** End of every client tick (MinecraftClientMixin). */

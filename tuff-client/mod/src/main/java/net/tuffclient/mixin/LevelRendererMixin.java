@@ -1,3 +1,4 @@
+// glade: minecraft >=26.2
 package net.tuffclient.mixin;
 
 import net.minecraft.client.renderer.LevelRenderer;

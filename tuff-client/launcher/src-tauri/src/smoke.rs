@@ -59,7 +59,8 @@ async fn start(http: &reqwest::Client, paths: &Paths, loader: Loader, game_versi
     let game_dir = paths.instance(&profile.id);
     std::fs::create_dir_all(&game_dir)?;
     // With GLADE_JARS set, Fabric profiles get the matching Glade build, and the
-    // game has to log that Glade loaded.
+    // game has to log that Glade loaded and that every one of its hooks fits
+    // this Minecraft version (-Dglade.audit loads every class Glade patches).
     let mut want_glade = false;
     if let Some(dir) = std::env::var_os("GLADE_JARS") {
         let builds = crate::glade::find_builds(&[std::path::PathBuf::from(dir)], paths);
@@ -83,7 +84,7 @@ async fn start(http: &reqwest::Client, paths: &Paths, loader: Loader, game_versi
         libraries_dir: &libraries,
         session: &session,
         memory_mb: 2048,
-        extra_jvm_args: "",
+        extra_jvm_args: if want_glade { "-Dglade.audit=true" } else { "" },
         resolution: None,
         server: None,
         launcher_version: "smoke",
@@ -115,7 +116,7 @@ async fn start(http: &reqwest::Client, paths: &Paths, loader: Loader, game_versi
     let mut tail = std::collections::VecDeque::new();
     let found = tokio::time::timeout(Duration::from_secs(300), async {
         while let Some(line) = rx.recv().await {
-            let done = if want_glade { line.contains("Glade loaded") } else { STARTED.iter().any(|m| line.contains(m)) };
+            let done = if want_glade { line.contains("Glade hooks OK") } else { STARTED.iter().any(|m| line.contains(m)) };
             if done {
                 return Some(line);
             }

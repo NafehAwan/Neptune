@@ -12,5 +12,6 @@ public final class BlockOutlineModule extends Module {
 
 	public BlockOutlineModule() {
 		super("block_outline", "Block Outline", "Color and thickness of the outline on the block you look at.", Category.VISUAL, false);
+		requires("LevelRendererMixin");
 	}
 }

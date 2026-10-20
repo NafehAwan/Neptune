@@ -67,5 +67,6 @@ public final class TuffClient implements ClientModInitializer {
 
 		Platform.registerHud(modules);
 		LOGGER.info("Glade loaded with {} modules", modules.all().size());
+		HookCheck.runIfAsked();
 	}
 }
