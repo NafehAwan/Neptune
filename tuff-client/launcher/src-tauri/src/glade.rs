@@ -194,6 +194,32 @@ pub fn find_builds(bundled: &[PathBuf], paths: &Paths) -> Builds {
     )
 }
 
+/// Deletes Glade builds the updater downloaded (and launcher 1.1.0's
+/// glade-mod.jar) once a build at least as new exists for the same Minecraft
+/// versions. Bundled builds are never touched. Returns the builds left.
+pub fn prune_old(paths: &Paths, builds: Builds) -> Builds {
+    let downloads = downloads_dir(paths);
+    let old_single = paths.file("glade").join("glade-mod.jar");
+    let removable = |b: &Build| b.path.starts_with(&downloads) || b.path == old_single;
+    let mut keep = Vec::new();
+    for b in &builds.0 {
+        let range = b.info.minecraft.as_deref();
+        // the build to keep for this range: the newest, a bundled one on a tie
+        let best = builds
+            .0
+            .iter()
+            .filter(|o| o.info.minecraft.as_deref() == range)
+            .max_by(|x, y| compare_versions(&x.info.version, &y.info.version).then(removable(y).cmp(&removable(x))))
+            .expect("b itself is in the list");
+        if std::ptr::eq(best, b) || !removable(b) {
+            keep.push(b.clone());
+        } else {
+            let _ = std::fs::remove_file(&b.path);
+        }
+    }
+    Builds(keep)
+}
+
 /// Glade runs on Fabric, on the Minecraft versions it has a build for.
 pub fn applies(profile: &Profile, builds: &Builds) -> bool {
     profile.loader == Loader::Fabric && builds.for_version(&profile.game_version).is_some()
@@ -477,6 +503,31 @@ mod tests {
         assert!(report.installed, "{report:?}");
         assert!(paths.instance("p").join("mods").join(FILE).is_file());
         assert!(!report.fixed.iter().any(|f| f.contains("API")), "{:?}", report.fixed);
+        let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn prunes_outdated_downloads() {
+        let root = std::env::temp_dir().join(format!("glade-prune-{}", uuid::Uuid::new_v4()));
+        let paths = Paths { root: root.clone() };
+        let bundled = root.join("bundled");
+        let downloads = downloads_dir(&paths);
+        std::fs::create_dir_all(&bundled).unwrap();
+        std::fs::create_dir_all(&downloads).unwrap();
+        jar(&bundled, "glade-26.3.jar", r#"{"id":"tuff","version":"1.3.1","depends":{"minecraft":"~26.3"}}"#);
+        jar(&bundled, "glade-1.21.11.jar", r#"{"id":"tuff","version":"1.3.1","depends":{"minecraft":"1.21.11"}}"#);
+        // older than the bundled build: goes
+        jar(&downloads, "glade-26.3.jar", r#"{"id":"tuff","version":"1.3.0","depends":{"minecraft":"~26.3"}}"#);
+        jar(&paths.file("glade"), "glade-mod.jar", r#"{"id":"tuff","version":"1.1.0","depends":{"minecraft":"~26.3"}}"#);
+        // newer than the bundled build: stays
+        jar(&downloads, "glade-1.21.11.jar", r#"{"id":"tuff","version":"1.4.0","depends":{"minecraft":"1.21.11"}}"#);
+        let builds = prune_old(&paths, find_builds(&[bundled.clone()], &paths));
+        assert!(!downloads.join("glade-26.3.jar").exists());
+        assert!(!paths.file("glade").join("glade-mod.jar").exists());
+        assert!(downloads.join("glade-1.21.11.jar").exists());
+        assert!(bundled.join("glade-1.21.11.jar").exists(), "bundled builds are never deleted");
+        assert_eq!(builds.for_version("1.21.11").unwrap().info.version, "1.4.0");
+        assert_eq!(builds.for_version("26.3").unwrap().info.version, "1.3.1");
         let _ = std::fs::remove_dir_all(root);
     }
 }

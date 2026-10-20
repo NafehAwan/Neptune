@@ -118,7 +118,7 @@ fn bundled_mods(app: &AppHandle) -> Vec<PathBuf> {
 
 /// Every Glade mod build: bundled with the launcher, or newer ones the updater downloaded.
 fn glade_builds(app: &AppHandle, paths: &Paths) -> glade::Builds {
-    glade::find_builds(&bundled_mods(app), paths)
+    glade::prune_old(paths, glade::find_builds(&bundled_mods(app), paths))
 }
 
 // ---------------------------------------------------------------- app info

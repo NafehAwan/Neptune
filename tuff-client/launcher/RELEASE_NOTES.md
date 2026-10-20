@@ -3,3 +3,4 @@ Glade 1.3.1
 - Block Outline, Low Fire, Zoom and Freelook now work on every 1.21 version.
 - Every Glade update is now tested by starting each supported Minecraft version and checking that all of Glade's game changes fit it.
 - Microsoft sign-in is built in: add your Microsoft account from the account menu, no setup needed.
+- Updating removes the old Tuff Client app and old Glade mod downloads. Your profiles, worlds and downloaded Minecraft versions stay, so nothing has to download again except the new Glade mod.

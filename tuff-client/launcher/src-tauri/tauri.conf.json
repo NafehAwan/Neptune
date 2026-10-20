@@ -49,7 +49,9 @@
     "linux": {
       "deb": {
         "section": "games",
-        "depends": []
+        "depends": [],
+        "conflicts": ["tuff-client"],
+        "replaces": ["tuff-client"]
       }
     }
   }
