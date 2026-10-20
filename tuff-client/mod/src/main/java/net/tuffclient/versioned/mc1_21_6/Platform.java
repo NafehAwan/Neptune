@@ -28,7 +28,7 @@ public final class Platform {
 				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.menu", InputConstants.KEY_RSHIFT, category)),
 				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.zoom", InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), category)),
 				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.waypoint", InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), category)),
-				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.freelook", InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), category)),
+				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.freelook", InputConstants.KEY_F4, category)),
 		};
 	}
 
@@ -47,7 +47,7 @@ public final class Platform {
 			modules.renderHud(Gfx.of(graphics));
 		});
 		HudElementRegistry.replaceElement(VanillaHudElements.SCOREBOARD, original -> (graphics, delta) -> {
-			if (!modules.hideScoreboard.isEnabled()) original.render(graphics, delta);
+			if (!modules.scoreboard.hidden()) original.render(graphics, delta);
 		});
 		HudElementRegistry.replaceElement(VanillaHudElements.CROSSHAIR, original -> (graphics, delta) -> {
 			Minecraft client = Minecraft.getInstance();

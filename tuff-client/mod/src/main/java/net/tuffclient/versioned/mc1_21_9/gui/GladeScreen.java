@@ -108,7 +108,7 @@ public abstract class GladeScreen extends Screen {
 	@Override
 	public final boolean keyPressed(KeyEvent event) {
 		keyEvent = event;
-		return onKey(new Input.Key(event.key(), event.modifiers(), event.isEscape()));
+		return onKey(new Input.Key(event.key(), event.modifiers(), event.isEscape(), com.mojang.blaze3d.platform.InputConstants.getKey(event)));
 	}
 
 	@Override

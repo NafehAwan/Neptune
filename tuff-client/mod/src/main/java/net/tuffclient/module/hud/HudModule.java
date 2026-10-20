@@ -39,6 +39,10 @@ public abstract class HudModule extends Module {
 	public final ColorSetting borderColor = styled(new ColorSetting("border_color", "Border color", 0x80FFFFFF, true)).showIf(() -> border.get());
 	public final ChoiceSetting shape = styled(new ChoiceSetting("shape", "Background shape", 1, "Sharp", "Rounded", "Smooth")).showIf(() -> background.get() || border.get());
 	public final NumberSetting padding = styled(new NumberSetting("padding", "Padding", 4, 0, 10, 1));
+	/** Minecraft's own font, or its small unicode one (minecraft:uniform). */
+	public final ChoiceSetting textFont = styled(new ChoiceSetting("font", "Font", 0, "Default", "Small"));
+
+	private static final net.minecraft.resources.Identifier SMALL = net.minecraft.resources.Identifier.withDefaultNamespace("uniform");
 
 	/** Size of the last render, in unscaled GUI pixels. */
 	protected int width = 40;
@@ -137,7 +141,7 @@ public abstract class HudModule extends Module {
 			int cp = s.codePointAt(i);
 			String ch = new String(Character.toChars(cp));
 			text(g, font, ch, cx, y, c.argb((float) (this.x * 2 + cx * 0.006)));
-			cx += font.width(ch);
+			cx += width(font, ch);
 			i += Character.charCount(cp);
 		}
 	}
@@ -155,6 +159,7 @@ public abstract class HudModule extends Module {
 				border.set(false);
 				shape.set(1);
 				padding.set(4.0);
+				textFont.set(0);
 			}
 			case "Clean" -> {
 				background.set(false);
@@ -181,7 +186,17 @@ public abstract class HudModule extends Module {
 
 	/** Text in this element's style (with or without a shadow). */
 	protected void text(Gfx g, Font font, String s, int x, int y, int color) {
-		g.text(font, s, x, y, color, shadow.get());
+		if (textFont.get() == 1) g.text(font, small(s), x, y, color, shadow.get());
+		else g.text(font, s, x, y, color, shadow.get());
+	}
+
+	private static net.minecraft.network.chat.Component small(String s) {
+		return net.minecraft.network.chat.Component.literal(s).withStyle(st -> net.tuffclient.gui.Fonts.withFont(st, SMALL));
+	}
+
+	/** Width of text in this element's font. */
+	protected int width(Font font, String s) {
+		return textFont.get() == 1 ? font.width(small(s)) : font.width(s);
 	}
 
 	/** Sets the element's size and draws its background and border. */

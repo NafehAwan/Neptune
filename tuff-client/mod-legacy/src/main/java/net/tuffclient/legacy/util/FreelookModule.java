@@ -13,7 +13,7 @@ public final class FreelookModule extends Module {
 	public float yaw, pitch;
 
 	public FreelookModule() {
-		super("freelook", "Freelook", "Hold your freelook key (set it in Controls) to look around while moving straight.", Category.UTILITY, true);
+		super("freelook", "Freelook", "Hold F4 (change it in Controls) to look around while moving straight.", Category.UTILITY, true);
 	}
 
 	public boolean active() {

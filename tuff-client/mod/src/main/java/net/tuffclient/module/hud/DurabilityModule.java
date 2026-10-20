@@ -67,7 +67,7 @@ public final class DurabilityModule extends HudModule {
 		float t = pulse.get() ? (float) (0.55 + 0.45 * Math.sin(System.currentTimeMillis() / 160.0)) : 1;
 		int color = Math.round((warnColor.argb() >>> 24) * t) << 24 | (warnColor.argb() & 0xFFFFFF);
 		int p = Math.max(1, pad() - 2), w = 0;
-		for (Low l : list) w = Math.max(w, 20 + font.width(label(l)));
+		for (Low l : list) w = Math.max(w, 20 + width(font, label(l)));
 		box(g, w + p * 2, list.size() * 17 - 1 + p * 2);
 		int y = p;
 		for (Low l : list) {

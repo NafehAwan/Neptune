@@ -41,7 +41,7 @@ import net.tuffclient.module.visual.HitColorModule;
 import net.tuffclient.module.visual.NametagsModule;
 import net.tuffclient.module.visual.ParticlesModule;
 import net.tuffclient.module.util.FullbrightModule;
-import net.tuffclient.module.util.HideScoreboardModule;
+import net.tuffclient.module.visual.ScoreboardModule;
 import net.tuffclient.module.util.InterfaceModule;
 import net.tuffclient.module.util.TitleScreenModule;
 import net.tuffclient.module.util.ToggleSprintModule;
@@ -56,7 +56,8 @@ public final class ModuleManager {
 	public final ZoomModule zoom = add(new ZoomModule());
 	public final FullbrightModule fullbright = add(new FullbrightModule());
 	public final CrosshairModule crosshair = add(new CrosshairModule());
-	public final HideScoreboardModule hideScoreboard = add(new HideScoreboardModule());
+	public final ScoreboardModule scoreboard = add(new ScoreboardModule());
+	public final net.tuffclient.module.visual.MenuBackgroundModule menuBackground = add(new net.tuffclient.module.visual.MenuBackgroundModule());
 	public final WaypointsModule waypoints = add(new WaypointsModule());
 	public final FreelookModule freelook = add(new FreelookModule());
 	public final ChatPlusModule chatPlus = add(new ChatPlusModule());

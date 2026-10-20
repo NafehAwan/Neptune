@@ -47,6 +47,7 @@ public final class WaypointsModule extends Module {
 		public boolean death;
 	}
 
+	public final net.tuffclient.setting.KeybindSetting key = add(new net.tuffclient.setting.KeybindSetting("key", "Add waypoint key", net.tuffclient.TuffClient::waypointKey));
 	private final BoolSetting names = add(new BoolSetting("names", "Show names", true));
 	private final BoolSetting distance = add(new BoolSetting("distance", "Show distance", true));
 	private final BoolSetting deaths = add(new BoolSetting("deaths", "Add a waypoint where you die", true));
@@ -60,7 +61,7 @@ public final class WaypointsModule extends Module {
 	private boolean wasDead;
 
 	public WaypointsModule() {
-		super("waypoints", "Waypoints", "Save places and see them on screen with their distance. Bind a key in Controls to add one where you stand.", Category.UTILITY, true);
+		super("waypoints", "Waypoints", "Save places and see them on screen with their distance. Set a key in its settings to add one where you stand.", Category.UTILITY, true);
 	}
 
 	private Map<String, List<Point>> all() {

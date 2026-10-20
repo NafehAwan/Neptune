@@ -43,7 +43,7 @@ public final class CompassModule extends HudModule {
 			if (d % 45 == 0) {
 				String label = POINTS[d / 45];
 				var source = label.length() == 1 ? textColor : labelColor;
-				text(g, font, label, x - font.width(label) / 2, pad, fadeColor(source.argb(x * 0.004f), fade));
+				text(g, font, label, x - width(font, label) / 2, pad, fadeColor(source.argb(x * 0.004f), fade));
 			} else if (ticks.get()) {
 				g.fill(x, pad + 2, x + 1, pad + 6, fadeColor(labelColor(), fade));
 			}
@@ -65,7 +65,7 @@ public final class CompassModule extends HudModule {
 		g.fill(mid, 0, mid + 1, pad + 8, marker.argb());
 		if (degrees.get()) {
 			String deg = Math.round(yaw) % 360 + "°";
-			value(g, font, deg, mid - font.width(deg) / 2, pad + 11);
+			value(g, font, deg, mid - width(font, deg) / 2, pad + 11);
 		}
 	}
 

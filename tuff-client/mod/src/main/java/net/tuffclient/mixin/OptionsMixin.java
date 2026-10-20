@@ -13,6 +13,8 @@ public abstract class OptionsMixin {
 	@Inject(method = "getBackgroundOpacity", at = @At("RETURN"), cancellable = true)
 	private void glade$nametagBackground(float fallback, CallbackInfoReturnable<Float> cir) {
 		var m = TuffClient.modules() == null ? null : TuffClient.modules().nametags;
-		if (m != null && m.isEnabled()) cir.setReturnValue(m.background.get().floatValue() / 100f);
+		// nametags ask with a 25% default; the scoreboard, subtitles and others ask
+		// with their own, so they keep the game's background
+		if (m != null && m.isEnabled() && fallback == 0.25f) cir.setReturnValue(m.background.get().floatValue() / 100f);
 	}
 }

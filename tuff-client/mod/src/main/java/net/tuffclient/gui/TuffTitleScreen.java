@@ -98,6 +98,11 @@ public final class TuffTitleScreen extends GladeScreen {
 		return Ui.mockup(height);
 	}
 
+	/** How far the 720-tall layout is moved down to sit in the middle of the (slightly taller) screen. */
+	private float oy() {
+		return (height / zoom() - H) / 2;
+	}
+
 	/** Width of the mockup space for this window (1280 at 16:9). */
 	private float vw() {
 		return width / zoom();
@@ -143,6 +148,7 @@ public final class TuffTitleScreen extends GladeScreen {
 		List<float[]> glass = new ArrayList<>();
 		glass.add(new float[] {(vw() / 2 - CARD_W / 2) * z, (CARD_Y + lift) * z, CARD_W * z, CARD_H * z, 28 * z});
 		accounts.glass(glass, z);
+		for (float[] shape : glass) shape[1] += oy() * z;
 		background.renderWithGlass(g, width, height, animate(), () -> blurBehind(g), glass);
 	}
 
@@ -164,13 +170,14 @@ public final class TuffTitleScreen extends GladeScreen {
 		}
 		float z = zoom();
 		if (boxes.isEmpty() || Math.abs(boxes.getLast().x() + 36 - (vw() - 20)) > 0.5f) layout();
-		float mouseX = guiMouseX / z, mouseY = guiMouseY / z;
+		float mouseX = guiMouseX / z, mouseY = guiMouseY / z - oy();
 		boolean menuOpen = accounts.isOpen() || pending != null;
 		float mx = menuOpen ? -1000 : mouseX, my = menuOpen ? -1000 : mouseY;
 
 		Ui.zoom = z;
 		g.push();
 		g.scale(z, z);
+		g.translate(0, oy());
 
 		float cx = vw() / 2;
 		float a = stage(0);
@@ -217,8 +224,8 @@ public final class TuffTitleScreen extends GladeScreen {
 
 		// footer
 		float fa = stage(0.4f);
-		Ui.textAt(g, version, 20, H - 19, Theme.alpha(0xD9FFFFFF, fa), Ui.Font.MONO_11_5);
-		Ui.rightAt(g, "Not an official Minecraft product", vw() - 20, H - 19, Theme.alpha(0xD9FFFFFF, fa), Ui.Font.UI_11_5);
+		Ui.textAt(g, version, 20, H + oy() - 19, Theme.alpha(0xD9FFFFFF, fa), Ui.Font.MONO_11_5);
+		Ui.rightAt(g, "Not an official Minecraft product", vw() - 20, H + oy() - 19, Theme.alpha(0xD9FFFFFF, fa), Ui.Font.UI_11_5);
 
 		// account chip and its menu go on top of everything
 		accounts.render(g, 20, 18, mouseX, mouseY, dt, stage(0.05f));
@@ -252,7 +259,7 @@ public final class TuffTitleScreen extends GladeScreen {
 		if (pending != null) return true;
 		if (event.button() == 0) {
 			float z = zoom();
-			double x = event.x() / z, y = event.y() / z;
+			double x = event.x() / z, y = event.y() / z - oy();
 			if (accounts.mouseClicked(x, y)) return true;
 			for (Box b : boxes) {
 				if (Theme.inside(x, y, b.x(), b.y(), b.x() + b.w(), b.y() + b.h())) {

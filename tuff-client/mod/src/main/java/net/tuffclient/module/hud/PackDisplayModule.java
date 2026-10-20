@@ -53,7 +53,7 @@ public final class PackDisplayModule extends HudModule {
 		}
 		list = list.subList(0, Math.min(list.size(), count.get().intValue()));
 		int p = pad(), iw = icon.get() ? 12 : 0, w = 0;
-		for (String s : list) w = Math.max(w, font.width(s));
+		for (String s : list) w = Math.max(w, width(font, s));
 		box(g, iw + w + p * 2, linesHeight(list.size()));
 		if (icon.get()) Ui.lucide(g, "package", p, p - 1, 9, labelColor());
 		int y = p;

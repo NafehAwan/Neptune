@@ -63,10 +63,16 @@ public final class SimpleModules {
 		}
 	}
 
-	/** Hides the scoreboard on the right of the screen (see InGameHudMixin). */
+	/** The scoreboard on the right of the screen (see InGameHudMixin). */
 	public static final class HideScoreboard extends Module {
+		public final net.tuffclient.legacy.setting.BoolSetting hide = add(new net.tuffclient.legacy.setting.BoolSetting("hide", "Hide the scoreboard", true));
+
 		public HideScoreboard() {
-			super("hide_scoreboard", "Hide Scoreboard", "Hides the scoreboard on the side of the screen.", Category.VISUAL, false);
+			super("hide_scoreboard", "Scoreboard", "Hide the scoreboard on the side of the screen.", Category.VISUAL, false);
+		}
+
+		public boolean hidden() {
+			return isEnabled() && hide.get();
 		}
 	}
 }

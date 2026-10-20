@@ -10,6 +10,7 @@ import net.tuffclient.setting.NumberSetting;
 
 /** Hold the zoom key (C by default) to zoom in smoothly. */
 public final class ZoomModule extends Module {
+	public final net.tuffclient.setting.KeybindSetting key = add(new net.tuffclient.setting.KeybindSetting("key", "Zoom key", net.tuffclient.TuffClient::zoomKey));
 	public final NumberSetting factor = add(new NumberSetting("factor", "Zoom level", 4, 1.5, 12, 0.5));
 	public final BoolSetting smooth = add(new BoolSetting("smooth", "Smooth zoom", true));
 	public final ChoiceSetting curve = add(new ChoiceSetting("curve", "Zoom curve", 0, "Smooth", "Snappy", "Linear")).showIf(() -> smooth.get());
@@ -24,7 +25,7 @@ public final class ZoomModule extends Module {
 	private long last = System.nanoTime();
 
 	public ZoomModule() {
-		super("zoom", "Zoom", "Hold your zoom key (set it in Controls) to zoom in. Set how far in its settings.", Category.UTILITY, true);
+		super("zoom", "Zoom", "Hold your zoom key to zoom in. Set the key and how far in its settings.", Category.UTILITY, true);
 	}
 
 	public void setHeld(boolean held) {

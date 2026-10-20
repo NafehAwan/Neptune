@@ -30,7 +30,7 @@ public final class EffectsModule extends HudModule {
 		if (effects.isEmpty()) {
 			if (preview) {
 				int p = pad();
-				box(g, 22 + font.width("Speed II") + p * 2, 22 + p * 2 - 4);
+				box(g, 22 + width(font, "Speed II") + p * 2, 22 + p * 2 - 4);
 				value(g, font, "Speed II", p + 20, p + 1);
 				label(g, font, "1:30", p + 20, p + 10);
 			} else {
@@ -41,7 +41,7 @@ public final class EffectsModule extends HudModule {
 		}
 		int p = pad();
 		int w = 40;
-		for (MobEffectInstance e : effects) w = Math.max(w, 20 + font.width(name(e)));
+		for (MobEffectInstance e : effects) w = Math.max(w, 20 + width(font, name(e)));
 		box(g, w + p * 2, effects.size() * 22 + p * 2 - 4);
 		int y = p - 2;
 		for (MobEffectInstance e : effects) {

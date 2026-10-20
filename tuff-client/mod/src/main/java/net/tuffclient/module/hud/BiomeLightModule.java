@@ -41,14 +41,14 @@ public final class BiomeLightModule extends HudModule {
 		if (sky.get()) lines.add(new String[] {"Sky ", String.valueOf(skyLight)});
 		if (lines.isEmpty()) lines.add(new String[] {"", "-"});
 		int p = pad(), w = 0;
-		for (String[] l : lines) w = Math.max(w, font.width(l[0]) + font.width(l[1]));
+		for (String[] l : lines) w = Math.max(w, width(font, l[0]) + width(font, l[1]));
 		box(g, w + p * 2, linesHeight(lines.size()));
 		int y = p;
 		for (String[] l : lines) {
 			label(g, font, l[0], p, y);
 			boolean danger = warn.get() && l[0].equals("Light ") && block == 0;
-			if (danger) text(g, font, l[1], p + font.width(l[0]), y, warnColor.argb());
-			else value(g, font, l[1], p + font.width(l[0]), y);
+			if (danger) text(g, font, l[1], p + width(font, l[0]), y, warnColor.argb());
+			else value(g, font, l[1], p + width(font, l[0]), y);
 			y += 10;
 		}
 	}

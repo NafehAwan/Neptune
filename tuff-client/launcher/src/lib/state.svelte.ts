@@ -52,7 +52,7 @@ export async function createPresetProfile(preset: string, gameVersion: string) {
   }
 }
 
-const UPDATE_CHECK_MS = 15 * 60 * 1000;
+const UPDATE_CHECK_MS = 5 * 60 * 1000;
 
 /** Checks for a newer launcher and Glade mod. Updates can't be turned off. */
 let lastCheck = 0;
@@ -71,9 +71,9 @@ export async function checkForUpdates(manual = false) {
   }
 }
 
-/** When the window comes back into focus, check again if it's been a few minutes. */
+/** Whenever you come back to the launcher, check again (at most every 20 s). */
 function checkOnFocus() {
-  if (Date.now() - lastCheck > 5 * 60 * 1000) checkForUpdates();
+  if (Date.now() - lastCheck > 20 * 1000) checkForUpdates();
 }
 
 export function selectedProfile(): Profile | null {

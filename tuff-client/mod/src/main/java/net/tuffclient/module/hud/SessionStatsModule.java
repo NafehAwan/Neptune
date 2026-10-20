@@ -100,12 +100,12 @@ public final class SessionStatsModule extends HudModule {
 		if (showDistance.get()) lines.add(new String[] {"Walked ", distance >= 1000 ? String.format("%.2f km", distance / 1000) : Math.round(distance) + " m"});
 		if (lines.isEmpty()) lines.add(new String[] {"", "-"});
 		int p = pad(), w = 0;
-		for (String[] l : lines) w = Math.max(w, font.width(l[0]) + font.width(l[1]));
+		for (String[] l : lines) w = Math.max(w, width(font, l[0]) + width(font, l[1]));
 		box(g, w + p * 2, linesHeight(lines.size()));
 		int y = p;
 		for (String[] l : lines) {
 			label(g, font, l[0], p, y);
-			value(g, font, l[1], p + font.width(l[0]), y);
+			value(g, font, l[1], p + width(font, l[0]), y);
 			y += 10;
 		}
 	}

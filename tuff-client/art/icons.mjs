@@ -31,7 +31,8 @@ const ICONS = {
   tag: ["tag"], award: ["award"], film: ["film"], refresh: ["refresh-cw"],
   bell: ["bell"], sword: ["sword"], flame: ["flame"], shield: ["shield"], hand: ["hand"],
 };
-const SIZES = [32, 64, 128];
+// every common on-screen size, so icons are drawn 1:1 (scaled sprites look broken up)
+const SIZES = [12, 14, 16, 18, 20, 22, 24, 28, 32, 36, 40, 48, 56, 64, 80, 96, 128];
 
 const browser = await chromium.launch();
 const page = await browser.newPage();

@@ -10,7 +10,8 @@ public final class Input {
 	}
 
 	/** A key press. {@code key} uses the game's key codes (InputConstants). */
-	public record Key(int key, int modifiers, boolean isEscape) {
+	/** bound: the key as the game's key bindings name it (for binding it to a module). */
+	public record Key(int key, int modifiers, boolean isEscape, com.mojang.blaze3d.platform.InputConstants.Key bound) {
 	}
 
 	/** A typed character. */

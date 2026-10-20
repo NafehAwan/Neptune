@@ -11,6 +11,7 @@ import net.tuffclient.setting.BoolSetting;
  * where you walk. The camera moves to third person while held.
  */
 public final class FreelookModule extends Module {
+	public final net.tuffclient.setting.KeybindSetting key = add(new net.tuffclient.setting.KeybindSetting("key", "Freelook key", net.tuffclient.TuffClient::freelookKey));
 	private final BoolSetting toggle = add(new BoolSetting("toggle", "Press to toggle instead of hold", false));
 	private final BoolSetting invert = add(new BoolSetting("invert", "Invert up and down", false));
 	private final BoolSetting thirdPerson = add(new BoolSetting("third_person", "Switch to third person", true));
@@ -21,7 +22,7 @@ public final class FreelookModule extends Module {
 	private float pitch;
 
 	public FreelookModule() {
-		super("freelook", "Freelook", "Hold your freelook key (set it in Controls) to look around without turning your character.", Category.UTILITY, true);
+		super("freelook", "Freelook", "Hold F4 (or your own key, set in its settings) to look around without turning your character.", Category.UTILITY, true);
 	}
 
 	public boolean active() {

@@ -27,6 +27,7 @@ import net.tuffclient.module.hud.HudModule;
 import net.tuffclient.setting.BoolSetting;
 import net.tuffclient.setting.ChoiceSetting;
 import net.tuffclient.setting.ColorSetting;
+import net.tuffclient.setting.KeybindSetting;
 import net.tuffclient.setting.NumberSetting;
 import net.tuffclient.setting.Setting;
 import net.tuffclient.setting.TextSetting;
@@ -72,7 +73,7 @@ public final class TuffMenuScreen extends GladeScreen {
 			Map.entry("effects", "potion"), Map.entry("clock", "clock"), Map.entry("server", "globe"),
 			Map.entry("speed", "bolt"), Map.entry("memory", "chip"), Map.entry("zoom", "zoom"),
 			Map.entry("fullbright", "sun"), Map.entry("toggle_sprint", "sprint"), Map.entry("crosshair", "crosshair"),
-			Map.entry("hide_scoreboard", "scoreboard"), Map.entry("title_screen", "image"),
+			Map.entry("scoreboard", "scoreboard"), Map.entry("menu_background", "eye_off"), Map.entry("title_screen", "image"),
 			Map.entry("compass", "compass"), Map.entry("biome_light", "biome"), Map.entry("item_counter", "backpack"),
 			Map.entry("durability", "alert"), Map.entry("session_stats", "stats"), Map.entry("pack_display", "package"),
 			Map.entry("day_time", "daytime"), Map.entry("waypoints", "flag"), Map.entry("screenshot_tools", "camera"),
@@ -91,7 +92,7 @@ public final class TuffMenuScreen extends GladeScreen {
 			Map.entry("coordinates", "Position and facing"), Map.entry("ping", "Server latency"),
 			Map.entry("effects", "Active effects"), Map.entry("clock", "Real-world time"),
 			Map.entry("server", "Server address"), Map.entry("speed", "Movement speed"),
-			Map.entry("memory", "Memory in use"), Map.entry("hide_scoreboard", "Hide the sidebar scores"),
+			Map.entry("memory", "Memory in use"), Map.entry("scoreboard", "Hide it or its background"), Map.entry("menu_background", "No dark tint in inventories"),
 			Map.entry("title_screen", "The Glade main menu"),
 			Map.entry("compass", "Heading strip at the top"), Map.entry("biome_light", "Biome and light level"),
 			Map.entry("item_counter", "Arrows, totems, pearls"), Map.entry("durability", "Warns before things break"),
@@ -112,10 +113,12 @@ public final class TuffMenuScreen extends GladeScreen {
 			"armor", "coordinates", "compass", "durability", "item_counter", "biome_light", "day_time", "session_stats", "ping", "effects", "clock",
 			"server", "speed", "memory", "pack_display", "chat_plus", "screenshot_tools", "clean_f3", "auto_gg", "auto_reconnect", "hit_color",
 			"block_outline", "particles", "hit_sounds", "custom_sky", "time_weather", "item_physics", "old_animations", "hand_view", "small_shield",
-			"low_fire", "nametags", "cosmetics", "hide_scoreboard", "title_screen");
+			"low_fire", "nametags", "cosmetics", "scoreboard", "menu_background", "title_screen");
 
 	// the panel: 940x604, centred, radius 26, padding 26 30
-	private static final float PW = 940, PH = 604, PY = (720 - PH) / 2, PAD_X = 30, PAD_Y = 26;
+	private static final float PW = 940, PH = 604, PAD_X = 30, PAD_Y = 26;
+	/** The layout is 820 tall (the panel is about three quarters of the screen), centred. */
+	private static final float DESIGN_H = 820;
 	private static final float ROW = 66, GUTTER = 26, FOOT = 44;
 
 	private final Screen parent;
@@ -273,11 +276,20 @@ public final class TuffMenuScreen extends GladeScreen {
 
 	/** GUI units per mockup pixel. */
 	private float zoom() {
-		return Ui.mockup(height);
+		return Ui.zoomFor(height, DESIGN_H);
 	}
 
 	private float vw() {
 		return width / zoom();
+	}
+
+	private float vh() {
+		return height / zoom();
+	}
+
+	/** Top of the panel, centred in the layout. */
+	private float py() {
+		return (vh() - PH) / 2;
 	}
 
 	private float px() {
@@ -318,12 +330,12 @@ public final class TuffMenuScreen extends GladeScreen {
 		Ui.zoom = z;
 		g.push();
 		g.scale(z, z);
-		g.translate(vw() / 2f, 360);
+		g.translate(vw() / 2f, vh() / 2f);
 		g.scale(s, s);
-		g.translate(-vw() / 2f, -360);
+		g.translate(-vw() / 2f, -vh() / 2f);
 		float a = open;
 
-		float x = px(), y = PY;
+		float x = px(), y = py();
 		Ui.frost(g, x, y, PW, PH, 26, 0x85FFFFFF, 0.18f, a);
 		hit(x, y, x + PW, y + PH, e -> { });
 
@@ -622,6 +634,7 @@ public final class TuffMenuScreen extends GladeScreen {
 			case NumberSetting n -> slider(g, px, cy, pw, n, a, top, bottom);
 			case ColorSetting c -> colorRow(g, mouseX, mouseY, px, cy, pw, c, a, top, bottom);
 			case TextSetting t -> textRow(g, mouseX, mouseY, px, cy, pw, t, a, top, bottom);
+			case KeybindSetting k -> keyRow(g, mouseX, mouseY, px, cy, pw, k, a, top, bottom);
 		};
 	}
 
@@ -929,6 +942,26 @@ public final class TuffMenuScreen extends GladeScreen {
 		return y + 44;
 	}
 
+	/** The key setting waiting for a key press (or a mouse button), if any. */
+	private KeybindSetting listening;
+
+	private float keyRow(Gfx g, float mouseX, float mouseY, float x, float y, float w, KeybindSetting k, float a, float top, float bottom) {
+		Ui.textAt(g, k.name, x, Ui.mid(y + 22, 13.5f), Theme.alpha(Theme.TEXT, a), Ui.Font.UI_13_5_SB);
+		boolean waiting = listening == k;
+		String label = waiting ? "Press a key…" : k.display();
+		float pw = Math.max(64, 14 + Ui.width(label, Ui.Font.UI_12_5_M) + 14), bx = x + w - pw, by = y + 8;
+		boolean over = Theme.inside(mouseX, mouseY, bx, by, bx + pw, by + 28);
+		float act = anim("key:" + k.id, waiting, 16);
+		Ui.round(g, bx, by, pw, 28, 14, Theme.alpha(Theme.mix(over ? 0xFFE6EBE4 : 0xFFEFF1EC, Theme.COPPER, act), a));
+		Ui.textAt(g, label, bx + (pw - Ui.width(label, Ui.Font.UI_12_5_M)) / 2, Ui.mid(by + 14, 12.5f), Theme.alpha(Theme.mix(Theme.TEXT, Theme.INK, act), a), Ui.Font.UI_12_5_M);
+		Ui.round(g, x, y + 44 - 1, w, 1, 0.5f, Theme.alpha(Theme.alpha(0xFF1F2A22, 0.08f), a));
+		if (y + 44 > top && y < bottom) hit(bx, Math.max(by, top), bx + pw, Math.min(by + 28, bottom), e -> {
+			click();
+			listening = waiting ? null : k;
+		});
+		return y + 44;
+	}
+
 	private float choice(Gfx g, float mouseX, float mouseY, float x, float y, float w, ChoiceSetting c, float a, float top, float bottom) {
 		Ui.textAt(g, c.name, x, y + 14 + 13.5f * 1.038f - 7, Theme.alpha(Theme.TEXT, a), Ui.Font.UI_13_5_SB);
 		float cx = x, cy = y + 32;
@@ -1184,6 +1217,12 @@ public final class TuffMenuScreen extends GladeScreen {
 
 	@Override
 	protected boolean onClick(Input.Click event, boolean doubleClick) {
+		if (listening != null) {
+			// mouse buttons 3-5 can be keys too; a left or right click cancels
+			if (event.button() >= 2) listening.bind(com.mojang.blaze3d.platform.InputConstants.Type.MOUSE.getOrCreate(event.button()));
+			listening = null;
+			return true;
+		}
 		float z = zoom();
 		double x = event.x() / z, y = event.y() / z;
 		clickX = x;
@@ -1198,7 +1237,7 @@ public final class TuffMenuScreen extends GladeScreen {
 				return true;
 			}
 		}
-		if (!Theme.inside(x, y, px(), PY, px() + PW, PY + PH)) {
+		if (!Theme.inside(x, y, px(), py(), px() + PW, py() + PH)) {
 			onClose();
 			return true;
 		}
@@ -1233,6 +1272,13 @@ public final class TuffMenuScreen extends GladeScreen {
 
 	@Override
 	protected boolean onKey(Input.Key event) {
+		if (listening != null) {
+			// Esc clears the key; any other key becomes the module's key
+			if (event.isEscape()) listening.unbind();
+			else listening.bind(event.bound());
+			listening = null;
+			return true;
+		}
 		if (focusedText != null) {
 			if (event.isEscape() || event.key() == InputConstants.KEY_RETURN) focusedText = null;
 			else if (event.key() == InputConstants.KEY_BACKSPACE && !focusedText.get().isEmpty()) {

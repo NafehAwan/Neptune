@@ -27,9 +27,9 @@ public final class CoordinatesModule extends HudModule {
 			facing = FACING[Math.floorMod(Math.round(yaw / 90f), 4)];
 		}
 		int pd = pad();
-		box(g, Math.max(font.width(tag) + font.width(xyz), font.width(facing)) + pd * 2, linesHeight(facing.isEmpty() ? 1 : 2));
+		box(g, Math.max(width(font, tag) + width(font, xyz), width(font, facing)) + pd * 2, linesHeight(facing.isEmpty() ? 1 : 2));
 		colored(g, font, tag, pd, pd, xyzColor);
-		value(g, font, xyz, pd + font.width(tag), pd);
+		value(g, font, xyz, pd + width(font, tag), pd);
 		if (!facing.isEmpty()) label(g, font, facing, pd, pd + 10);
 	}
 }

@@ -66,7 +66,7 @@ public final class ItemCounterModule extends HudModule {
 		}
 		if (icons.isEmpty()) {
 			if (preview) {
-				box(g, font.width("Items") + pad() * 2, linesHeight(1));
+				box(g, width(font, "Items") + pad() * 2, linesHeight(1));
 				label(g, font, "Items", pad(), pad());
 			} else {
 				width = 0;
@@ -77,7 +77,7 @@ public final class ItemCounterModule extends HudModule {
 		int p = Math.max(1, pad() - 2);
 		boolean row = layout.get() == 1;
 		int cell = 0;
-		for (String c : counts) cell = Math.max(cell, 19 + font.width(c));
+		for (String c : counts) cell = Math.max(cell, 19 + width(font, c));
 		int w = row ? icons.size() * (cell + 4) - 4 : cell, h = row ? 16 : icons.size() * 17 - 1;
 		box(g, w + p * 2, h + p * 2);
 		for (int i = 0; i < icons.size(); i++) {

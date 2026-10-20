@@ -47,21 +47,24 @@ public final class GladeLegacy implements ClientModInitializer {
 
 	private static boolean keysChecked;
 
-	/** Zoom and Freelook used to come bound (C, Left Alt); now you pick them. Clears the old bindings once. */
+	/** Zoom starts unbound (it was C) and Freelook is F4 (it was Left Alt, then unbound). Moves players over once. */
 	private static void unbindOldDefaultsOnce(MinecraftClient client) {
 		if (keysChecked) return;
 		keysChecked = true;
-		java.io.File marker = net.fabricmc.loader.api.FabricLoader.getInstance().getConfigDir().resolve("tuff").resolve("keys-unbound-1.8").toFile();
-		if (marker.exists()) return;
-		Keys.ZOOM.setCode(0);
-		Keys.FREELOOK.setCode(0);
+		java.io.File dir = net.fabricmc.loader.api.FabricLoader.getInstance().getConfigDir().resolve("tuff").toFile();
+		java.io.File v1 = new java.io.File(dir, "keys-unbound-1.8"), v2 = new java.io.File(dir, "keys-f4-1.8");
+		if (v2.exists()) return;
+		boolean fromOld = !v1.exists();
+		if (fromOld) Keys.ZOOM.setCode(0);
+		if (fromOld || Keys.FREELOOK.getCode() == 0) Keys.FREELOOK.setCode(org.lwjgl.input.Keyboard.KEY_F4);
 		net.minecraft.client.option.KeyBinding.updateKeysByCode();
 		client.options.save();
 		try {
-			marker.getParentFile().mkdirs();
-			marker.createNewFile();
+			dir.mkdirs();
+			v1.createNewFile();
+			v2.createNewFile();
 		} catch (java.io.IOException e) {
-			LOGGER.warn("Couldn't remember that Glade's keys were cleared", e);
+			LOGGER.warn("Couldn't remember Glade's key change", e);
 		}
 	}
 }

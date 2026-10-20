@@ -143,7 +143,21 @@ public final class Ui {
 	 * 1280x720; screens drawn in that space look the same at any window size.
 	 */
 	public static float mockup(int guiHeight) {
-		return guiHeight / 720f;
+		return zoomFor(guiHeight, 720f);
+	}
+
+	/**
+	 * GUI units per layout pixel for a screen laid out designHeight tall. The
+	 * screen pixels per layout pixel are rounded down to a quarter step (1,
+	 * 1.25, 1.5 ...), the steps Glade's fonts are made for, so text, corners
+	 * and icons land exactly on screen pixels. The layout is then a little
+	 * taller than designHeight; screens centre themselves in it.
+	 */
+	public static float zoomFor(int guiHeight, float designHeight) {
+		int gs = Math.max(1, guiScale());
+		float p = guiHeight * gs / designHeight;
+		if (p >= 1) p = (float) Math.floor(p * 4 + 1e-3) / 4f;
+		return p / gs;
 	}
 
 	/** Frosted glass, as in the mockups: soft green shadow, translucent white, bright rim and top highlight. */
@@ -304,22 +318,24 @@ public final class Ui {
 		round(g, x + r * 0.6f, y + 1, w - r * 1.2f, 1, 0.5f, Theme.alpha(0x99FFFFFF, alpha));
 	}
 
-	private static final int[] LUCIDE_SIZES = {32, 64, 128};
+	private static final int[] LUCIDE_SIZES = {12, 14, 16, 18, 20, 22, 24, 28, 32, 36, 40, 48, 56, 64, 80, 96, 128};
 
-	/** Draws a smooth Lucide line icon, picking the sprite size closest to its on-screen size. */
+	/**
+	 * Draws a Lucide line icon with the sprite closest to its on-screen size,
+	 * one texel per screen pixel (centred in the box), so it stays crisp.
+	 */
 	public static void lucide(Gfx g, String name, float x, float y, float size, int argb) {
 		if ((argb >>> 24) == 0) return;
-		float physical = size * scale();
-		int pick = LUCIDE_SIZES[LUCIDE_SIZES.length - 1];
+		float scale = scale(), physical = size * scale;
+		int pick = LUCIDE_SIZES[0];
 		for (int s : LUCIDE_SIZES) {
-			if (s >= physical * 0.85f) {
-				pick = s;
-				break;
-			}
+			if (Math.abs(s - physical) < Math.abs(pick - physical)) pick = s;
 		}
+		// past the largest sprite, scale it up instead
+		float s = Math.max(1f / scale, size / LUCIDE_SIZES[LUCIDE_SIZES.length - 1]), drawn = pick * s;
 		g.push();
-		g.translate(x, y);
-		g.scale(size / pick, size / pick);
+		g.translate(x + (size - drawn) / 2, y + (size - drawn) / 2);
+		g.scale(s, s);
 		g.sprite(id("lucide/" + pick + "/" + name), 0, 0, pick, pick, argb);
 		g.pop();
 	}

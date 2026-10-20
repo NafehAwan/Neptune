@@ -5,7 +5,7 @@ import java.util.function.BooleanSupplier;
 import com.google.gson.JsonElement;
 
 /** A user-editable module option, shown in the module's settings panel. */
-public abstract sealed class Setting<T> permits BoolSetting, ChoiceSetting, ColorSetting, NumberSetting, TextSetting {
+public abstract sealed class Setting<T> permits BoolSetting, ChoiceSetting, ColorSetting, KeybindSetting, NumberSetting, TextSetting {
 	public final String id;
 	public final String name;
 	protected T value;

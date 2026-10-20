@@ -103,7 +103,7 @@ public abstract class GladeScreen extends Screen {
 	public final boolean keyPressed(int key, int scancode, int modifiers) {
 		this.lastKey = key;
 		this.scancode = scancode;
-		return onKey(new Input.Key(key, modifiers, key == InputConstants.KEY_ESCAPE));
+		return onKey(new Input.Key(key, modifiers, key == InputConstants.KEY_ESCAPE, InputConstants.getKey(key, scancode)));
 	}
 
 	@Override

@@ -77,7 +77,7 @@ public final class KeystrokesModule extends HudModule {
 		if (border.get()) net.tuffclient.gui.Ui.outline(g, x, y, w, h, Math.max(0.5f, Math.min(r, h / 2f)), borderColor.argb());
 		if (!label.isEmpty()) {
 			int color = Theme.mix(keyText.argb(shift), pressedText.argb(shift), glow[i]);
-			text(g, font, label, x + (w - font.width(label)) / 2, y + (h - 8) / 2, color);
+			text(g, font, label, x + (w - width(font, label)) / 2, y + (h - 8) / 2, color);
 		}
 	}
 }

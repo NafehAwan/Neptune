@@ -74,25 +74,30 @@ public final class TuffClient implements ClientModInitializer {
 	private static boolean keysChecked;
 
 	/**
-	 * Glade used to bind Zoom (C), Waypoint (B) and Freelook (Left Alt) for you;
-	 * now they start unbound and you pick them in Controls. Clears the old
-	 * bindings once, after the options have loaded.
+	 * Key defaults changed: Zoom and Waypoint start unbound (they used to be C
+	 * and B) and Freelook is F4 (it used to be Left Alt, then unbound). Moves
+	 * existing players over once, after the options have loaded.
 	 */
 	private static void unbindOldDefaultsOnce(net.minecraft.client.Minecraft client) {
 		if (keysChecked) return;
 		keysChecked = true;
-		java.nio.file.Path marker = net.fabricmc.loader.api.FabricLoader.getInstance().getConfigDir().resolve("tuff").resolve("keys-unbound");
-		if (java.nio.file.Files.exists(marker)) return;
+		java.nio.file.Path dir = net.fabricmc.loader.api.FabricLoader.getInstance().getConfigDir().resolve("tuff");
+		java.nio.file.Path v1 = dir.resolve("keys-unbound"), v2 = dir.resolve("keys-f4");
+		if (java.nio.file.Files.exists(v2)) return;
 		try {
-			for (KeyMapping key : new KeyMapping[] {zoomKey, waypointKey, freelookKey}) {
-				key.setKey(com.mojang.blaze3d.platform.InputConstants.UNKNOWN);
+			boolean fromOld = !java.nio.file.Files.exists(v1);
+			if (fromOld) {
+				zoomKey.setKey(com.mojang.blaze3d.platform.InputConstants.UNKNOWN);
+				waypointKey.setKey(com.mojang.blaze3d.platform.InputConstants.UNKNOWN);
 			}
+			if (fromOld || freelookKey.isUnbound()) freelookKey.setKey(freelookKey.getDefaultKey());
 			KeyMapping.resetMapping();
 			client.options.save();
-			java.nio.file.Files.createDirectories(marker.getParent());
-			java.nio.file.Files.writeString(marker, "Glade's zoom, waypoint and freelook keys start unbound.\n");
+			java.nio.file.Files.createDirectories(dir);
+			java.nio.file.Files.writeString(v1, "Glade's zoom and waypoint keys start unbound.\n");
+			java.nio.file.Files.writeString(v2, "Glade's freelook key defaults to F4.\n");
 		} catch (Exception e) {
-			LOGGER.warn("Couldn't clear Glade's old key bindings", e);
+			LOGGER.warn("Couldn't update Glade's key bindings", e);
 		}
 	}
 }

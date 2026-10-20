@@ -187,7 +187,9 @@ or removed.
   (any color from the wheel, or chroma), text shadow, background on or off and
   its color, border and its color, background shape (sharp, rounded or smooth
   corners), padding, scale and a quick look (Default, Clean, Boxed, Outline).
-  By default HUD modules are white text with a shadow and no background.
+  By default HUD modules are white text with a shadow and no background. Each
+  can use the Default or Small (unicode) font, and text modules pick a format
+  ("FPS 60", "FPS: 60", "60 FPS", "[FPS 60]", "[60 FPS]").
 - **Utility**: Zoom (hold your zoom key; smooth, snappy or linear curve, speed, scroll to
   zoom further, optional cinematic camera), Freelook (hold your freelook key), Waypoints
   (its key adds one where you stand, a death waypoint is added where you die; on
@@ -195,7 +197,10 @@ or removed.
   (a card after F2 and chat buttons to open, show in folder, copy the path or
   delete), Chat+ (timestamps, merged repeats, click to copy, your name
   highlighted, mention sound), Clean F3 (only the lines you pick), Auto GG,
-  Auto Reconnect, Toggle Sprint, Hide Scoreboard.
+  Auto Reconnect, Toggle Sprint, Scoreboard (hide it or its background), Menu
+  Background (no dark tint behind inventories, optionally no blur behind menus).
+  Modules with a key (Zoom, Freelook on F4, Waypoints) set it right in their
+  settings: click the key, then press a key or a side mouse button.
 - **Visual**: Fullbright, Crosshair, Hit Color (the damage flash), Block
   Outline (color and thickness), Particles (crits and sparkles on every hit,
   multiplier), Custom Sky (sky and fog tint), Nametags (your own in third

@@ -108,7 +108,7 @@ public final class ArmorModule extends HudModule {
 		int p = Math.max(1, pad() - 2);
 		if (layout.get() == 1) {
 			int w = 0;
-			for (Row r : rows) w += 16 + (r.label().isEmpty() ? 0 : 2 + font.width(r.label())) + 6;
+			for (Row r : rows) w += 16 + (r.label().isEmpty() ? 0 : 2 + width(font, r.label())) + 6;
 			box(g, w - 6 + p * 2, 16 + p * 2);
 			int x = p;
 			for (Row r : rows) {
@@ -116,19 +116,19 @@ public final class ArmorModule extends HudModule {
 				x += 16;
 				if (!r.label().isEmpty()) {
 					text(g, font, r.label(), x + 2, p + 4, r.color());
-					x += 2 + font.width(r.label());
+					x += 2 + width(font, r.label());
 				}
 				x += 6;
 			}
 			return;
 		}
 		int tw = 0;
-		for (Row r : rows) tw = Math.max(tw, font.width(r.label()));
+		for (Row r : rows) tw = Math.max(tw, width(font, r.label()));
 		int gap = tw > 0 ? 3 : 0;
 		box(g, tw + gap + 16 + p * 2, rows.size() * 17 - 1 + p * 2);
 		int y = p;
 		for (Row r : rows) {
-			int lw = font.width(r.label());
+			int lw = width(font, r.label());
 			if (numbersLeft.get()) {
 				text(g, font, r.label(), p + tw - lw, y + 4, r.color());
 				g.item(r.stack(), p + tw + gap, y);

@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class GuiHudMixin {
 	@Inject(method = "renderScoreboardSidebar(Lnet/minecraft/client/gui/GuiGraphics;Lnet/minecraft/client/DeltaTracker;)V", at = @At("HEAD"), cancellable = true)
 	private void glade$hideScoreboard(GuiGraphics graphics, DeltaTracker delta, CallbackInfo ci) {
-		if (TuffClient.modules() != null && TuffClient.modules().hideScoreboard.isEnabled()) ci.cancel();
+		if (TuffClient.modules() != null && TuffClient.modules().scoreboard.hidden()) ci.cancel();
 	}
 
 	@Inject(method = "renderCrosshair", at = @At("HEAD"), cancellable = true)

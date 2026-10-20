@@ -29,7 +29,7 @@ public final class Platform {
 				KeyMappingHelper.registerKeyMapping(new KeyMapping("key.tuff.menu", SDLScancode.SDL_SCANCODE_RSHIFT, category)),
 				KeyMappingHelper.registerKeyMapping(new KeyMapping("key.tuff.zoom", InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), category)),
 				KeyMappingHelper.registerKeyMapping(new KeyMapping("key.tuff.waypoint", InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), category)),
-				KeyMappingHelper.registerKeyMapping(new KeyMapping("key.tuff.freelook", InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), category)),
+				KeyMappingHelper.registerKeyMapping(new KeyMapping("key.tuff.freelook", SDLScancode.SDL_SCANCODE_F4, category)),
 		};
 	}
 
@@ -48,7 +48,7 @@ public final class Platform {
 			modules.renderHud(Gfx.of(graphics));
 		});
 		HudElementRegistry.replaceElement(VanillaHudElements.SCOREBOARD, original -> (graphics, delta) -> {
-			if (!modules.hideScoreboard.isEnabled()) original.extractRenderState(graphics, delta);
+			if (!modules.scoreboard.hidden()) original.extractRenderState(graphics, delta);
 		});
 		HudElementRegistry.replaceElement(VanillaHudElements.CROSSHAIR, original -> (graphics, delta) -> {
 			Minecraft client = Minecraft.getInstance();

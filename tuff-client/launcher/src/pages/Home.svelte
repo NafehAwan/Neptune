@@ -55,8 +55,8 @@
   <div class="news" in:fly={{ x: 16, duration: 400, delay: 120 }}>
     <div class="newscard lift">
       <div class="k">What's new</div>
-      <div class="tt">Glade 1.3.2: sharper menus, your own keys</div>
-      <div class="ss">Crisper text in game, and zoom, freelook and waypoint keys you pick yourself in Controls.</div>
+      <div class="tt">Glade 1.4.0: crisper menu, keys in settings</div>
+      <div class="ss">Set keys right in module settings, new Scoreboard and Menu Background modules, HUD fonts and formats.</div>
     </div>
     {#if servers.length}
       <div class="newscard lift">

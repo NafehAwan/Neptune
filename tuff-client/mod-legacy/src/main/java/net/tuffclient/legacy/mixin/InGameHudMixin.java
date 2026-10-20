@@ -19,6 +19,6 @@ public abstract class InGameHudMixin {
 
 	@Inject(method = "renderScoreboardObjective", at = @At("HEAD"), cancellable = true)
 	private void glade$hideScoreboard(ScoreboardObjective objective, Window window, CallbackInfo ci) {
-		if (GladeLegacy.modules() != null && GladeLegacy.modules().hideScoreboard.isEnabled()) ci.cancel();
+		if (GladeLegacy.modules() != null && GladeLegacy.modules().hideScoreboard.hidden()) ci.cancel();
 	}
 }
