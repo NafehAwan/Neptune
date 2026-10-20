@@ -276,7 +276,7 @@ public final class TuffMenuScreen extends GladeScreen {
 
 	/** GUI units per mockup pixel. */
 	private float zoom() {
-		return Ui.zoomFor(height, DESIGN_H);
+		return Ui.zoomFor(height, DESIGN_H, PH + 30);
 	}
 
 	private float vw() {

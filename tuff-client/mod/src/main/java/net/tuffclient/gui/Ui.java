@@ -143,7 +143,7 @@ public final class Ui {
 	 * 1280x720; screens drawn in that space look the same at any window size.
 	 */
 	public static float mockup(int guiHeight) {
-		return zoomFor(guiHeight, 720f);
+		return zoomFor(guiHeight, 720f, 640f);
 	}
 
 	/**
@@ -153,10 +153,12 @@ public final class Ui {
 	 * and icons land exactly on screen pixels. The layout is then a little
 	 * taller than designHeight; screens centre themselves in it.
 	 */
-	public static float zoomFor(int guiHeight, float designHeight) {
+	public static float zoomFor(int guiHeight, float designHeight, float minHeight) {
 		int gs = Math.max(1, guiScale());
-		float p = guiHeight * gs / designHeight;
+		float pixels = guiHeight * gs, p = pixels / designHeight;
 		if (p >= 1) p = (float) Math.floor(p * 4 + 1e-3) / 4f;
+		// a bit short (768 px laptops): still 1:1 if the content fits
+		else if (pixels >= minHeight) p = 1;
 		return p / gs;
 	}
 
