@@ -59,6 +59,11 @@ public final class TierService {
 	private TierService() {
 	}
 
+	/** Puts ranks in the cache directly (for the in-game test, which has no tier site to ask). */
+	public static void put(Site site, String name, Map<String, Rank> ranks) {
+		CACHE.put(site + ":" + name.toLowerCase(java.util.Locale.ROOT), new Entry(ranks, Long.MAX_VALUE));
+	}
+
 	/** The ranks if known (asks in the background otherwise). */
 	public static Map<String, Rank> ranks(Site site, String name, UUID uuid) {
 		String key = site + ":" + name.toLowerCase(java.util.Locale.ROOT);

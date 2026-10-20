@@ -113,6 +113,10 @@ jobs:
             convert "$f" -gravity northwest -crop 960x700+0+0 +repage -quality 92 /tmp/crop.jpg || continue
             echo "SHOT crop-$(basename "$f") $(base64 -w0 /tmp/crop.jpg)"
           done
+          for f in $(find . -path '*screenshots*' -name '*glade-tiers*.png' | sort); do
+            convert "$f" -gravity center -crop 960x420+0-170 +repage -quality 92 /tmp/crop.jpg || continue
+            echo "SHOT crop-$(basename "$f") $(base64 -w0 /tmp/crop.jpg)"
+          done
           # Full-resolution crops show real text quality.
           for f in $(find . -path '*screenshots*' -name '*tuff-menu-mods*.png' -o -path '*screenshots*' -name '*tuff-title*.png' | sort); do
             convert "$f" -gravity center -crop 640x360+0+0 +repage -quality 92 /tmp/crop.jpg || continue

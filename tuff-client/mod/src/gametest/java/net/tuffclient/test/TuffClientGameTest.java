@@ -248,6 +248,32 @@ public class TuffClientGameTest implements FabricClientGameTest {
 			if (!freelooking || !back) throw new AssertionError("Freelook didn't switch the camera: on=" + freelooking + " back=" + back);
 			context.waitTicks(5);
 
+			// Tiers: sample ranks on your own nametag, seen from the front
+			world.getServer().runCommand("/tp @a 0.5 -60 0.5 0 0");
+			context.runOnClient(client -> {
+				var m = TuffClient.modules();
+				m.nametags.setEnabled(true);
+				m.tiers.setEnabled(true);
+				m.tiers.pvptiers.set(6); // Neth Pot, on the left
+				m.tiers.pvptiersSide.set(0);
+				m.tiers.mctiers.set(1); // best tier, on the right
+				m.tiers.mctiersSide.set(1);
+				String me = client.player.getScoreboardName();
+				net.tuffclient.tiers.TierService.put(net.tuffclient.tiers.TierService.Site.PVPTIERS, me,
+						java.util.Map.of("neth_pot", new net.tuffclient.tiers.TierService.Rank(1, true, false)));
+				net.tuffclient.tiers.TierService.put(net.tuffclient.tiers.TierService.Site.MCTIERS, me,
+						java.util.Map.of("sword", new net.tuffclient.tiers.TierService.Rank(2, false, false), "axe", new net.tuffclient.tiers.TierService.Rank(3, true, false)));
+				client.options.setCameraType(net.minecraft.client.CameraType.THIRD_PERSON_FRONT);
+			});
+			context.waitTicks(15);
+			context.takeScreenshot("glade-tiers");
+			context.runOnClient(client -> {
+				client.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON);
+				TuffClient.modules().tiers.setEnabled(false);
+				TuffClient.modules().nametags.setEnabled(false);
+			});
+			context.waitTicks(5);
+
 			// Zoom: a gold block 12 blocks ahead must cover far more pixels while zoomed,
 			// proving the narrower FOV reaches the world projection.
 			world.getServer().runCommand("/tp @a 0.5 -60 0.5 0 0");
