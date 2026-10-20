@@ -19,6 +19,10 @@ const SCOPE: &str = "XboxLive.signin offline_access";
 /// Build-time client ID; Settings can override it at runtime.
 pub const BUILD_CLIENT_ID: Option<&str> = option_env!("TUFF_MS_CLIENT_ID");
 
+/// Glade's own Azure app, used when neither Settings nor the build name one.
+/// A client ID is public (every sign-in sends it), not a secret.
+pub const DEFAULT_CLIENT_ID: &str = "d93d1551-5d45-42b7-acfc-886f4de37af7";
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DeviceCode {
     pub device_code: String,
@@ -37,13 +41,14 @@ struct MsToken {
 }
 
 pub fn client_id(runtime: Option<&str>) -> Result<String> {
-    runtime
-        .filter(|s| !s.trim().is_empty())
-        .map(|s| s.trim().to_string())
-        .or_else(|| BUILD_CLIENT_ID.map(String::from))
-        .ok_or_else(|| {
-            anyhow!("Microsoft login isn't set up yet. Add your Azure client ID in Settings → Accounts.")
-        })
+    // an unset CI secret builds in an empty string, so empty means "not set"
+    Ok([runtime, BUILD_CLIENT_ID, Some(DEFAULT_CLIENT_ID)]
+        .into_iter()
+        .flatten()
+        .map(str::trim)
+        .find(|s| !s.is_empty())
+        .unwrap_or(DEFAULT_CLIENT_ID)
+        .to_string())
 }
 
 pub async fn start_device_code(http: &reqwest::Client, client_id: &str) -> Result<DeviceCode> {
@@ -211,4 +216,17 @@ pub fn offline_account(name: &str) -> Result<Account> {
         expires_at: 0,
         xuid: "0".into(),
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn client_id_order() {
+        assert_eq!(client_id(Some(" my-app ")).unwrap(), "my-app");
+        let fallback = BUILD_CLIENT_ID.map(str::trim).filter(|s| !s.is_empty()).unwrap_or(DEFAULT_CLIENT_ID);
+        assert_eq!(client_id(None).unwrap(), fallback);
+        assert_eq!(client_id(Some("  ")).unwrap(), fallback);
+    }
 }

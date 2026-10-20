@@ -67,7 +67,7 @@ export async function mockCall(cmd: string, args: Record<string, any> = {}): Pro
   await delay(120);
   switch (cmd) {
     case "app_info":
-      return { version: "1.0.0", dataDir: "~/.local/share/tuff-client", totalMemoryMb: 16384, suggestedMemoryMb: 4096, msLoginConfigured: false, discordConfigured: false, tuffModBundled: true, tuffMcVersion: "26.3", gladeVersion: "1.1.0", gladeMinecraft: ">=1.21 <=1.21.1 || ~26.3" };
+      return { version: "1.0.0", dataDir: "~/.local/share/tuff-client", totalMemoryMb: 16384, suggestedMemoryMb: 4096, msLoginConfigured: true, discordConfigured: false, tuffModBundled: true, tuffMcVersion: "26.3", gladeVersion: "1.1.0", gladeMinecraft: ">=1.21 <=1.21.1 || ~26.3" };
     case "get_settings": return settings;
     case "save_settings": settings = args.settings; return settings;
     case "list_profiles": return profiles;

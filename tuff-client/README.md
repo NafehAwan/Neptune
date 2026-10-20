@@ -111,11 +111,13 @@ Minecraft only accepts sign-ins from Azure apps that Mojang has approved:
    flows** under Authentication.
 2. Request Minecraft API access for it using Mojang's form for third-party
    launchers (linked from the Minecraft Help Center).
-3. Put the client ID in the launcher (Settings → Accounts), or build with
-   `TUFF_MS_CLIENT_ID=<id>` so it's baked in. The CI workflow reads it from the
-   `TUFF_MS_CLIENT_ID` repository secret.
+3. Glade's own app (`d93d1551-5d45-42b7-acfc-886f4de37af7`, in
+   `launcher/src-tauri/src/auth.rs`) is built in. To use another, put its
+   client ID in Settings → Accounts, or build with `TUFF_MS_CLIENT_ID=<id>`
+   (the CI workflow reads the `TUFF_MS_CLIENT_ID` repository secret when set).
 
-Until then, offline accounts work for singleplayer.
+Sign-in works once Mojang has approved the app; until then Minecraft refuses
+it after the Microsoft step, and offline accounts work for singleplayer.
 
 ### Discord Rich Presence
 
