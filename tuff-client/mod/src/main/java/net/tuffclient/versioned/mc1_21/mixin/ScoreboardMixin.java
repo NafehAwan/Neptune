@@ -1,4 +1,4 @@
-// glade: minecraft <26.2
+// glade: minecraft <1.21.2
 package net.tuffclient.mixin;
 
 import net.minecraft.client.Options;
@@ -11,7 +11,8 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 /** Scoreboard: no background behind the sidebar when it's turned off. */
 @Mixin(Gui.class)
 public abstract class ScoreboardMixin {
-	@Redirect(method = "displayScoreboardSidebar", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Options;getBackgroundColor(F)I"))
+	// 1.21.1 draws the sidebar inside a lambda (guiGraphics.drawManaged)
+	@Redirect(method = "method_55440", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Options;getBackgroundColor(F)I"))
 	private int glade$background(Options options, float opacity) {
 		var m = TuffClient.modules() == null ? null : TuffClient.modules().scoreboard;
 		return m != null && m.noBackground() ? 0 : options.getBackgroundColor(opacity);
