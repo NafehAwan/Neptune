@@ -7,9 +7,9 @@ const { chromium } = require(process.env.PW_PATH || "playwright");
 const out = process.argv[2] || "glade-trailer.mp4", FPS = 60, DUR = 13;
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
-await page.goto("http://localhost:8765/trailer.html");
+await page.goto(`http://localhost:8765/${process.env.HTML || "trailer.html"}`);
 await page.evaluate(() => window.ready);
-const ff = spawn("ffmpeg", ["-y", "-loglevel", "error", "-f", "image2pipe", "-framerate", String(FPS), "-i", "-", "-i", "trailer.wav",
+const ff = spawn("ffmpeg", ["-y", "-loglevel", "error", "-f", "image2pipe", "-framerate", String(FPS), "-i", "-", "-i", process.env.WAV || "trailer.wav",
   "-c:v", "libx264", "-preset", "slow", "-crf", "16", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "256k", "-shortest", "-movflags", "+faststart", out],
   { stdio: ["pipe", "inherit", "inherit"] });
 for (let f = 0; f < FPS * DUR; f++) {
