@@ -55,8 +55,8 @@
   <div class="news" in:fly={{ x: 16, duration: 400, delay: 120 }}>
     <div class="newscard lift">
       <div class="k">What's new</div>
-      <div class="tt">Glade 1.4.0: crisper menu, keys in settings</div>
-      <div class="ss">Set keys right in module settings, new Scoreboard and Menu Background modules, HUD fonts and formats.</div>
+      <div class="tt">Glade 1.5.0: clips, reach, combo and more</div>
+      <div class="ss">Kill clips saved like a screen recorder, Reach and Combo, HUD profiles, Tab ping and Entity Distance.</div>
     </div>
     {#if servers.length}
       <div class="newscard lift">

@@ -58,6 +58,12 @@ public final class ModuleManager {
 	public final CrosshairModule crosshair = add(new CrosshairModule());
 	public final ScoreboardModule scoreboard = add(new ScoreboardModule());
 	public final net.tuffclient.module.visual.MenuBackgroundModule menuBackground = add(new net.tuffclient.module.visual.MenuBackgroundModule());
+	public final net.tuffclient.module.util.ClipsModule clips = add(new net.tuffclient.module.util.ClipsModule());
+	public final net.tuffclient.module.hud.ReachModule reach = add(new net.tuffclient.module.hud.ReachModule());
+	public final net.tuffclient.module.hud.ComboModule combo = add(new net.tuffclient.module.hud.ComboModule());
+	public final net.tuffclient.module.hud.HudProfilesModule hudProfiles = add(new net.tuffclient.module.hud.HudProfilesModule());
+	public final net.tuffclient.module.visual.EntityDistanceModule entityDistance = add(new net.tuffclient.module.visual.EntityDistanceModule());
+	public final net.tuffclient.module.visual.TabPingModule tabPing = add(new net.tuffclient.module.visual.TabPingModule());
 	public final WaypointsModule waypoints = add(new WaypointsModule());
 	public final FreelookModule freelook = add(new FreelookModule());
 	public final ChatPlusModule chatPlus = add(new ChatPlusModule());

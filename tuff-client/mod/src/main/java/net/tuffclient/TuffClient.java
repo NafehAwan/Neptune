@@ -35,6 +35,12 @@ public final class TuffClient implements ClientModInitializer {
 		return menuKey;
 	}
 
+	private static KeyMapping clipKey;
+
+	public static KeyMapping clipKey() {
+		return clipKey;
+	}
+
 	public static KeyMapping zoomKey() {
 		return zoomKey;
 	}
@@ -50,11 +56,15 @@ public final class TuffClient implements ClientModInitializer {
 		zoomKey = keys[1];
 		waypointKey = keys[2];
 		freelookKey = keys[3];
+		clipKey = keys[4];
 		Platform.registerCommands();
 
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
 			unbindOldDefaultsOnce(client);
 			modules.tick(client);
+			modules.clips.update(client);
+			while (clipKey.consumeClick()) modules.clips.save("key", "");
+			net.tuffclient.module.util.ClipsModule.presence(client);
 			while (menuKey.consumeClick()) {
 				if (net.tuffclient.Mc.screen() == null) net.tuffclient.Mc.setScreen(new TuffMenuScreen(null));
 			}

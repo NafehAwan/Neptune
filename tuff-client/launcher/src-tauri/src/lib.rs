@@ -1,4 +1,5 @@
 mod auth;
+mod clips;
 mod crash;
 mod discord;
 mod download;
@@ -628,6 +629,53 @@ async fn check_glade(app: &AppHandle, state: &AppState, profile: &mut Profile) -
     Ok(report)
 }
 
+/// Something the game asked for through a "glade-event" line in its log:
+/// clip settings, saving a clip, or where it's playing (for Discord).
+async fn glade_event(app: AppHandle, rec: Arc<tokio::sync::Mutex<clips::Recorder>>, event: String, profile: String, started: i64) {
+    let (kind, data) = event.split_once(' ').unwrap_or((event.as_str(), ""));
+    match kind {
+        "clips-config" => {
+            if let Err(e) = rec.lock().await.configure(clips::parse_config(data)).await {
+                let _ = app.emit("clip-error", format!("{e:#}"));
+            }
+        }
+        "clip" => {
+            let (config, buffer, active) = {
+                let r = rec.lock().await;
+                (r.config(), r.buffer_dir(), r.active())
+            };
+            let Some(config) = config else { return };
+            if !active {
+                let _ = app.emit("clip-error", "Clips aren't recording yet (is the game window on X11, and ffmpeg installed?)");
+                return;
+            }
+            // keep a moment after the kill in the clip
+            tokio::time::sleep(Duration::from_secs(config.after as u64 + 1)).await;
+            let mut words = data.split_whitespace();
+            let reason = words.next().unwrap_or("clip");
+            let who = words.next().map(|w| format!(" {w}")).unwrap_or_default();
+            let name = format!("Glade {} {}{}", chrono::Local::now().format("%Y-%m-%d %H-%M-%S"), reason, who);
+            let out = clips::clips_dir(&app.state::<AppState>().paths.root);
+            match clips::save(&buffer, config.len + config.after, &out, &name).await {
+                Ok(path) => {
+                    let _ = app.emit("clip-saved", json!({ "path": path, "name": name }));
+                }
+                Err(e) => {
+                    let _ = app.emit("clip-error", format!("Couldn't save the clip: {e:#}"));
+                }
+            }
+        }
+        "presence" => {
+            let state = app.state::<AppState>();
+            state.discord.set(
+                state.discord_app_id(),
+                Presence::Playing { details: format!("Playing {profile}"), state: data.to_string(), started },
+            );
+        }
+        _ => {}
+    }
+}
+
 fn restore_window(app: &AppHandle) {
     if let Some(w) = app.get_webview_window("main") {
         let _ = w.show();
@@ -702,7 +750,13 @@ async fn launch(app: AppHandle, state: State<'_, AppState>, profile_id: String, 
     });
 
     on_progress(Progress::step("Starting Minecraft", 1, 1));
-    let mut child = Command::new(&prepared.java)
+    let mut command = Command::new(&prepared.java);
+    // Clips record X11 windows; on Wayland desktops with X11 support, keep
+    // SDL-based Minecraft versions on X11 like the GLFW ones
+    if std::env::var_os("DISPLAY").is_some() && std::env::var_os("SDL_VIDEODRIVER").is_none() {
+        command.env("SDL_VIDEODRIVER", "x11");
+    }
+    let mut child = command
         .args(&args)
         .current_dir(&game_dir)
         .stdin(std::process::Stdio::null())
@@ -773,13 +827,29 @@ async fn launch(app: AppHandle, state: State<'_, AppState>, profile_id: String, 
     let tail = Arc::new(Mutex::new(VecDeque::<String>::with_capacity(400)));
     let log_app = app.clone();
     let log_tail = tail.clone();
+    let recorder = Arc::new(tokio::sync::Mutex::new(clips::Recorder::new(child.id().unwrap_or(0))));
+    let pump_rec = recorder.clone();
+    let event_profile = profile.name.clone();
     let pump = tokio::spawn(async move {
         let mut batch = Vec::new();
         let mut tick = tokio::time::interval(Duration::from_millis(100));
+        let mut follow = tokio::time::interval(Duration::from_secs(2));
         loop {
             tokio::select! {
+                _ = follow.tick() => {
+                    // keep the clip recording on the game window as it moves or resizes
+                    let rec = pump_rec.clone();
+                    tokio::spawn(async move {
+                        if let Ok(mut r) = rec.try_lock() {
+                            let _ = r.check().await;
+                        }
+                    });
+                }
                 line = line_rx.recv() => match line {
                     Some(line) => {
+                        if let Some((_, event)) = line.split_once("glade-event ") {
+                            tokio::spawn(glade_event(log_app.clone(), pump_rec.clone(), event.trim().to_string(), event_profile.clone(), started));
+                        }
                         {
                             let mut t = log_tail.lock().unwrap();
                             if t.len() == 400 { t.pop_front(); }
@@ -815,6 +885,7 @@ async fn launch(app: AppHandle, state: State<'_, AppState>, profile_id: String, 
             }
         };
         let _ = pump.await;
+        recorder.lock().await.finish().await;
         let code = status.ok().and_then(|s| s.code()).unwrap_or(-1);
         let lines: Vec<String> = tail.lock().unwrap().iter().cloned().collect();
         let state = exit_app.state::<AppState>();

@@ -1,4 +1,11 @@
-Glade 1.4.0
+Glade 1.5.0
+- Clips: when you kill a player, Glade saves the last 15 seconds (you choose 5 to 60, plus a moment after) as a video in Videos/Glade, recorded like a screen recorder with game sound. Also on death or a key. Choose frame rate, resolution and quality in the Clips settings. Recording runs in its own low-priority process so your FPS stays put. Needs ffmpeg (sudo apt install ffmpeg).
+- New HUD modules: Reach (how far your hits land) and Combo (hits in a row).
+- HUD Profiles: keep three HUD layouts and switch between them.
+- Tab Ping: ping as a number in the player list (1.21).
+- Entity Distance: stop drawing far away mobs and items for more FPS.
+- Chat+ can hide messages containing words you choose.
+- Discord shows where you're playing (server or singleplayer).
 - Crisper, smaller Glade menu: text, icons and corners now land exactly on your screen's pixels, and the menu takes less of the screen.
 - Set a module's key right in its settings (Zoom, Freelook, Waypoints): click the key, press any key or a side mouse button, Esc clears it.
 - Freelook is on F4 by default.

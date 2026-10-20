@@ -158,6 +158,8 @@ export async function init() {
   await on<{ profileId: string; report: GladeReport }>("glade-check", ({ report }) => {
     for (const fix of report.fixed) toast(fix, "info", 5000);
   });
+  await on<{ path: string; name: string }>("clip-saved", ({ name }) => toast(`Clip saved to Videos/Glade: ${name}`, "success", 7000));
+  await on<string>("clip-error", (message) => toast(message, "error", 9000));
   await on<GameExit>("game-exit", (exit) => {
     app.lastExit = exit;
     if (exit.crash) app.crashOpen = true;

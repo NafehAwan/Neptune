@@ -20,13 +20,14 @@ public final class Platform {
 	private Platform() {
 	}
 
-	/** Menu, zoom, waypoint and freelook keys, in that order. */
+	/** Menu, zoom, waypoint, freelook and clip keys, in that order. */
 	public static KeyMapping[] registerKeys() {
 		String category = "key.categories.tuff";
 		return new KeyMapping[] {
 				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.menu", InputConstants.KEY_RSHIFT, category)),
 				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.zoom", InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), category)),
 				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.waypoint", InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), category)),
+				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.clip", InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), category)),
 				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.freelook", InputConstants.KEY_F4, category)),
 		};
 	}

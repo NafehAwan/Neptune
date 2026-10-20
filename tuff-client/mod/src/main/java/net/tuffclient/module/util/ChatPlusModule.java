@@ -32,6 +32,8 @@ public final class ChatPlusModule extends Module {
 	private final BoolSetting highlight = add(new BoolSetting("highlight", "Highlight your name", true));
 	private final ColorSetting highlightColor = add(new ColorSetting("highlight_color", "Highlight color", 0xFFE3B23C, false)).showIf(() -> highlight.get());
 	private final BoolSetting ping = add(new BoolSetting("ping", "Sound when you're mentioned", false));
+	/** Chat filter: lines containing any of these words (comma separated) are hidden. */
+	private final net.tuffclient.setting.TextSetting hide = add(new net.tuffclient.setting.TextSetting("hide", "Hide messages containing (comma separated)", "", 200));
 
 	private String lastText;
 	private Component lastShown;
@@ -42,6 +44,18 @@ public final class ChatPlusModule extends Module {
 	}
 
 	/** Rewrites a chat line before it's added (see ChatComponentMixin). */
+	/** Whether the chat filter hides this line. */
+	public boolean hidden(String text) {
+		String words = hide.get().trim();
+		if (!isEnabled() || words.isEmpty()) return false;
+		String lower = text.toLowerCase(java.util.Locale.ROOT);
+		for (String w : words.split(",")) {
+			String k = w.trim().toLowerCase(java.util.Locale.ROOT);
+			if (!k.isEmpty() && lower.contains(k)) return true;
+		}
+		return false;
+	}
+
 	public Component process(Component message, ChatComponentAccessor chat) {
 		String raw = message.getString();
 		AutoGGModule.onChat(raw);

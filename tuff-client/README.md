@@ -211,6 +211,15 @@ or removed.
   (also totems), Hand & Item View (move and resize each hand) and Time &
   Weather (your own time of day and weather, only on your screen).
 
+- **Clips**: the launcher records the game window in the background with
+  ffmpeg (x11grab plus the sound output's monitor, in a `nice`d process, in
+  one-second pieces) and, when you kill a player (or die, or press the clip
+  key), joins the last 5-60 seconds into an mp4 in `~/Videos/Glade`. The game
+  sends its settings and requests as `glade-event` lines in its log
+  (`clips-config ...`, `clip kill <name>`), and `presence ...` for Discord.
+- **Also**: Reach and Combo HUD modules, HUD Profiles (three layouts), Tab Ping
+  (1.21), Entity Distance and a Chat+ word filter.
+
 Settings are saved to `config/tuff/config.json`.
 
 On versions before 26.3 a few visual modules aren't available yet and are

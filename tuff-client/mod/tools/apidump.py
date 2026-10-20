@@ -9,7 +9,7 @@ HOME = os.path.expanduser("~/.gradle")
 
 # Older names of classes Glade uses (renamed or replaced in newer versions).
 EXTRA = """
-net.minecraft.client.gui.GuiGraphics net.minecraft.client.renderer.ItemInHandRenderer net.minecraft.resources.ResourceLocation
+net.minecraft.client.gui.components.PlayerTabOverlay net.minecraft.client.multiplayer.PlayerInfo net.minecraft.client.gui.GuiGraphics net.minecraft.client.renderer.ItemInHandRenderer net.minecraft.resources.ResourceLocation
 net.minecraft.client.renderer.ScreenEffectRenderer net.minecraft.client.renderer.LevelRenderer net.minecraft.client.renderer.GameRenderer
 net.minecraft.client.renderer.FogRenderer net.minecraft.client.renderer.SkyRenderer net.minecraft.client.renderer.RenderType
 net.minecraft.client.renderer.entity.ItemEntityRenderer net.minecraft.client.renderer.entity.state.ItemEntityRenderState
