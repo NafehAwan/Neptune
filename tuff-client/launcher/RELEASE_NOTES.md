@@ -1,5 +1,6 @@
 Glade 1.6.1
-- The badge next to Glade players' names is now the Glade leaf logo.
+- The badge next to Glade players' names is now the Glade leaf logo (a lighter green so it stands out on nametags).
+- Silver tier 2 ranks are brighter on nametags.
 - New Tiers module: MCTiers and PvPTiers ranks next to nametags. Pick a gamemode for each list (or their best one), put each on the left or right of the name, and see a pixel icon for the gamemode: a skull for Neth Pot, sword, axe, potion, end crystal, shield, golden apple and mace. Tiers are colored gold, silver and bronze; retired tiers are pale blue.
 - Glade's menu and title screen stay pixel-sharp on smaller screens too (like 1366x768 laptops), not just 1080p and up.
 - Clips: when you kill a player, Glade saves the last 15 seconds (you choose 5 to 60, plus a moment after) as a video in Videos/Glade, recorded like a screen recorder with game sound. Also on death or a key. Choose frame rate, resolution and quality in the Clips settings. Recording runs in its own low-priority process so your FPS stays put. Needs ffmpeg (sudo apt install ffmpeg).

@@ -124,7 +124,7 @@ public final class TiersModule extends Module {
 		if (r.retired()) return 0xA9C7E8;
 		return switch (r.tier()) {
 			case 1 -> r.high() ? 0xFFCF4A : 0xE8B33E;
-			case 2 -> r.high() ? 0xE4E9EF : 0xB9C0C8;
+			case 2 -> r.high() ? 0xF4F8FC : 0xD6DEE8;
 			case 3 -> r.high() ? 0xF0A061 : 0xC98552;
 			case 4 -> r.high() ? 0x7FB6F0 : 0x6A98C8;
 			default -> r.high() ? 0xA6ADB4 : 0x8A9097;

@@ -7,7 +7,8 @@ import { fileURLToPath } from "url";
 const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.PLAYWRIGHT_PATH || "playwright");
 const here = path.dirname(fileURLToPath(import.meta.url));
-const svg = fs.readFileSync(path.join(here, "glade-leaf.svg"), "utf8");
+// a lighter green than the logo, so it reads on the grey nametag background
+const svg = fs.readFileSync(path.join(here, "glade-leaf.svg"), "utf8").replace("#2F6B4F", "#4FB07F");
 const out = path.join(here, "../mod/src/main/resources/assets/tuff/textures/font/badge.png");
 const browser = await chromium.launch();
 const page = await browser.newPage();
