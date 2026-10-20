@@ -31,7 +31,7 @@ public final class Ui {
 		/** Geist Mono for small labels and numbers. */
 		MONO_10_5("mono10_5"), MONO_10_5_M("mono10_5m"), MONO_11_M("mono11m"), MONO_11_5("mono11_5");
 
-		/** One copy per oversample level, so glyphs are rasterised near the size they are shown at. */
+		/** One copy per oversample level (1, 1.25 ... 3), so glyphs land 1:1 on screen pixels. */
 		private final Identifier[] variants = new Identifier[MAX_OVERSAMPLE];
 
 		Font(String id) {
@@ -41,23 +41,25 @@ public final class Ui {
 		}
 
 		Identifier description() {
-			int oversample = (int) Math.ceil(scale() - 0.2f);
-			return variants[Math.max(1, Math.min(MAX_OVERSAMPLE, oversample)) - 1];
+			int level = Math.round(scale() * 4) - 4;
+			return variants[Math.max(0, Math.min(MAX_OVERSAMPLE - 1, level))];
 		}
 	}
 
-	private static final int MAX_OVERSAMPLE = 6;
+	/** Font copies with oversample 1, 1.25 ... 3 (see art/fonts.py). */
+	private static final int MAX_OVERSAMPLE = 9;
 
-	private static final int[] RADII = {4, 8, 16, 32};
-	private static final Identifier[] ROUND = new Identifier[RADII.length];
-	private static final Identifier[] RING = new Identifier[RADII.length];
+	/** Rounded shapes for every on-screen corner radius from 1 to 40 pixels (see art/sprites.py). */
+	private static final int MAX_RADIUS = 40;
+	private static final Identifier[] ROUND = new Identifier[MAX_RADIUS + 1];
+	private static final Identifier[] RING = new Identifier[MAX_RADIUS + 1];
 	private static final Identifier SHADOW = id("shadow");
 	private static final Identifier SHADOW_RING = id("shadow_ring");
 
 	static {
-		for (int i = 0; i < RADII.length; i++) {
-			ROUND[i] = id("round_" + RADII[i]);
-			RING[i] = id("ring_" + RADII[i]);
+		for (int i = 1; i <= MAX_RADIUS; i++) {
+			ROUND[i] = id("round_" + i);
+			RING[i] = id("ring_" + i);
 		}
 	}
 
@@ -198,19 +200,16 @@ public final class Ui {
 	private static void roundSprite(Gfx g, Identifier[] set, float x, float y, float w, float h, float r, int argb) {
 		if ((argb >>> 24) == 0 || w <= 0 || h <= 0) return;
 		r = Math.max(0.5f, Math.min(r, Math.min(w, h) / 2));
-		float physical = r * scale();
-		int pick = RADII.length - 1;
-		for (int i = 0; i < RADII.length; i++) {
-			if (RADII[i] >= physical) {
-				pick = i;
-				break;
-			}
-		}
-		float s = r / RADII[pick];
+		// draw in screen pixels with the shape made for this radius, so every
+		// texel is exactly one pixel (scaled sprites look broken up)
+		float scale = scale();
+		int radius = Math.max(1, Math.min(MAX_RADIUS, Math.round(r * scale)));
+		// past the largest shape (4K screens) the largest one is scaled up instead
+		float s = Math.max(1f / scale, r / MAX_RADIUS);
 		g.push();
 		g.translate(x, y);
 		g.scale(s, s);
-		g.sprite(set[pick], 0, 0, Math.max(2 * RADII[pick], Math.round(w / s)), Math.max(2 * RADII[pick], Math.round(h / s)), argb);
+		g.sprite(set[radius], 0, 0, Math.max(2 * radius, Math.round(w / s)), Math.max(2 * radius, Math.round(h / s)), argb);
 		g.pop();
 	}
 

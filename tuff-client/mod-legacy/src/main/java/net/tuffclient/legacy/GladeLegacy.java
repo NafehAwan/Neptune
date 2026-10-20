@@ -31,6 +31,7 @@ public final class GladeLegacy implements ClientModInitializer {
 	/** End of every client tick (MinecraftClientMixin). */
 	public static void tick(MinecraftClient client) {
 		if (modules == null) return;
+		unbindOldDefaultsOnce(client);
 		modules.tick(client);
 		while (Keys.MENU.wasPressed()) {
 			if (client.currentScreen == null) client.setScreen(new MenuScreen());
@@ -42,5 +43,25 @@ public final class GladeLegacy implements ClientModInitializer {
 	/** The game is closing (MinecraftClientMixin). */
 	public static void stopping() {
 		if (modules != null) Config.save(modules);
+	}
+
+	private static boolean keysChecked;
+
+	/** Zoom and Freelook used to come bound (C, Left Alt); now you pick them. Clears the old bindings once. */
+	private static void unbindOldDefaultsOnce(MinecraftClient client) {
+		if (keysChecked) return;
+		keysChecked = true;
+		java.io.File marker = net.fabricmc.loader.api.FabricLoader.getInstance().getConfigDir().resolve("tuff").resolve("keys-unbound-1.8").toFile();
+		if (marker.exists()) return;
+		Keys.ZOOM.setCode(0);
+		Keys.FREELOOK.setCode(0);
+		net.minecraft.client.option.KeyBinding.updateKeysByCode();
+		client.options.save();
+		try {
+			marker.getParentFile().mkdirs();
+			marker.createNewFile();
+		} catch (java.io.IOException e) {
+			LOGGER.warn("Couldn't remember that Glade's keys were cleared", e);
+		}
 	}
 }

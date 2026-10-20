@@ -4,7 +4,7 @@
       "type": "ttf",
       "file": "tuff:geistmono-regular.ttf",
       "size": 11.5,
-      "oversample": 3,
+      "oversample": 1.5,
       "shift": [
         0,
         0

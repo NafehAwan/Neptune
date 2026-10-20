@@ -7,7 +7,7 @@ import net.tuffclient.module.Module;
 import net.tuffclient.setting.BoolSetting;
 
 /**
- * Hold Left Alt (by default) to look around your character without changing
+ * Hold the freelook key to look around your character without changing
  * where you walk. The camera moves to third person while held.
  */
 public final class FreelookModule extends Module {
@@ -21,7 +21,7 @@ public final class FreelookModule extends Module {
 	private float pitch;
 
 	public FreelookModule() {
-		super("freelook", "Freelook", "Hold Left Alt to look around without turning your character.", Category.UTILITY, true);
+		super("freelook", "Freelook", "Hold your freelook key (set it in Controls) to look around without turning your character.", Category.UTILITY, true);
 	}
 
 	public boolean active() {

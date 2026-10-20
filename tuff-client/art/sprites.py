@@ -176,8 +176,8 @@ if __name__ == "__main__":
     icons = {**launcher_icons(), **EXTRA}
     for name, grid in icons.items():
         icon(grid, SPRITES / "icon" / f"{name}.png")
-    # One rounded shape per corner radius so on-screen texels stay close to 1:1.
-    for r in (4, 8, 16, 32):
+    # One rounded shape per on-screen corner radius (in pixels), drawn 1:1.
+    for r in range(1, 41):
         rounded(SPRITES / f"round_{r}.png", size=4 * r, radius=r)
         nine_slice(SPRITES / f"round_{r}.png", 4 * r, r)
         ring(SPRITES / f"ring_{r}.png", size=4 * r, radius=r)

@@ -232,6 +232,10 @@ public class TuffClientGameTest implements FabricClientGameTest {
 					if (setting instanceof net.tuffclient.setting.NumberSetting n && n.id.equals("strength")) n.set(90.0);
 				}
 				TuffClient.modules().blockOutline.setEnabled(true);
+				// Glade's keys start unbound; bind them like a player would
+				TuffClient.freelookKey().setKey(client.options.keySwapOffhand.getDefaultKey());
+				TuffClient.zoomKey().setKey(client.options.keyDrop.getDefaultKey());
+				net.minecraft.client.KeyMapping.resetMapping();
 			});
 			context.getInput().holdKey(TuffClient.freelookKey());
 			context.waitTicks(15);

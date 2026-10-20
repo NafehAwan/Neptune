@@ -30,7 +30,7 @@ import net.tuffclient.setting.NumberSetting;
 import org.joml.Vector3fc;
 
 /**
- * Saved places, shown on screen with their distance. Press B (by default) to
+ * Saved places, shown on screen with their distance. Its key (set in Controls) can
  * add one where you stand; a death waypoint is added where you die. Saved per
  * server (or singleplayer) and dimension in config/tuff/waypoints.json.
  */
@@ -60,7 +60,7 @@ public final class WaypointsModule extends Module {
 	private boolean wasDead;
 
 	public WaypointsModule() {
-		super("waypoints", "Waypoints", "Save places and see them on screen with their distance. Press B to add one.", Category.UTILITY, true);
+		super("waypoints", "Waypoints", "Save places and see them on screen with their distance. Bind a key in Controls to add one where you stand.", Category.UTILITY, true);
 	}
 
 	private Map<String, List<Point>> all() {

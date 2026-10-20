@@ -4,7 +4,7 @@
       "type": "ttf",
       "file": "tuff:fraunces-semibold-italic.ttf",
       "size": 22,
-      "oversample": 6,
+      "oversample": 2.25,
       "shift": [
         0,
         0

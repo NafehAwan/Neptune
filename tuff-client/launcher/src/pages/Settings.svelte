@@ -1,7 +1,7 @@
 <script lang="ts">
   import Icon from "../components/Icon.svelte";
   import { api, pickJava } from "../lib/api";
-  import { app, updateSettings } from "../lib/state.svelte";
+  import { app, checkForUpdates, updateSettings } from "../lib/state.svelte";
   import { toast } from "../lib/toast.svelte";
   import type { OnLaunch } from "../lib/types";
 
@@ -122,7 +122,8 @@
 
     <section class="card about rise" style="--i: 5">
       <h3>About</h3>
-      <p><span class="pixel brand">Glade</span> <span class="faint">v{app.info?.version}</span></p>
+      <p><span class="pixel brand">Glade</span> <span class="faint">v{app.info?.version}</span>
+        <button class="btn small" onclick={() => checkForUpdates(true)}><Icon name="refresh" size={12} /> Check for updates</button></p>
       <p class="hint">Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.</p>
       <p class="hint keys">Shortcuts: <kbd>Ctrl</kbd>+<kbd>1</kbd>–<kbd>8</kbd> switch pages · <kbd>Ctrl</kbd>+<kbd>Enter</kbd> play</p>
     </section>

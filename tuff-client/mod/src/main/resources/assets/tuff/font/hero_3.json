@@ -4,7 +4,7 @@
       "type": "ttf",
       "file": "tuff:jakarta-extrabold.ttf",
       "size": 26,
-      "oversample": 3,
+      "oversample": 1.5,
       "shift": [
         0,
         0

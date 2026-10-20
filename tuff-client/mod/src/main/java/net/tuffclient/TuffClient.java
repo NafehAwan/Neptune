@@ -53,6 +53,7 @@ public final class TuffClient implements ClientModInitializer {
 		Platform.registerCommands();
 
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
+			unbindOldDefaultsOnce(client);
 			modules.tick(client);
 			while (menuKey.consumeClick()) {
 				if (net.tuffclient.Mc.screen() == null) net.tuffclient.Mc.setScreen(new TuffMenuScreen(null));
@@ -68,5 +69,30 @@ public final class TuffClient implements ClientModInitializer {
 		Platform.registerHud(modules);
 		LOGGER.info("Glade loaded with {} modules", modules.all().size());
 		HookCheck.runIfAsked();
+	}
+
+	private static boolean keysChecked;
+
+	/**
+	 * Glade used to bind Zoom (C), Waypoint (B) and Freelook (Left Alt) for you;
+	 * now they start unbound and you pick them in Controls. Clears the old
+	 * bindings once, after the options have loaded.
+	 */
+	private static void unbindOldDefaultsOnce(net.minecraft.client.Minecraft client) {
+		if (keysChecked) return;
+		keysChecked = true;
+		java.nio.file.Path marker = net.fabricmc.loader.api.FabricLoader.getInstance().getConfigDir().resolve("tuff").resolve("keys-unbound");
+		if (java.nio.file.Files.exists(marker)) return;
+		try {
+			for (KeyMapping key : new KeyMapping[] {zoomKey, waypointKey, freelookKey}) {
+				key.setKey(com.mojang.blaze3d.platform.InputConstants.UNKNOWN);
+			}
+			KeyMapping.resetMapping();
+			client.options.save();
+			java.nio.file.Files.createDirectories(marker.getParent());
+			java.nio.file.Files.writeString(marker, "Glade's zoom, waypoint and freelook keys start unbound.\n");
+		} catch (Exception e) {
+			LOGGER.warn("Couldn't clear Glade's old key bindings", e);
+		}
 	}
 }

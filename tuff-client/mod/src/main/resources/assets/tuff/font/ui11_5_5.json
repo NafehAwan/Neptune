@@ -4,7 +4,7 @@
       "type": "ttf",
       "file": "tuff:jakarta-regular.ttf",
       "size": 11.5,
-      "oversample": 5,
+      "oversample": 2.0,
       "shift": [
         0,
         0

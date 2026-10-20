@@ -1,6 +1,7 @@
 // glade: minecraft >=26.3
 package net.tuffclient;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
@@ -26,9 +27,9 @@ public final class Platform {
 		KeyMapping.Category category = KeyMapping.Category.register(Identifier.fromNamespaceAndPath(TuffClient.MOD_ID, "tuff"));
 		return new KeyMapping[] {
 				KeyMappingHelper.registerKeyMapping(new KeyMapping("key.tuff.menu", SDLScancode.SDL_SCANCODE_RSHIFT, category)),
-				KeyMappingHelper.registerKeyMapping(new KeyMapping("key.tuff.zoom", SDLScancode.SDL_SCANCODE_C, category)),
-				KeyMappingHelper.registerKeyMapping(new KeyMapping("key.tuff.waypoint", SDLScancode.SDL_SCANCODE_B, category)),
-				KeyMappingHelper.registerKeyMapping(new KeyMapping("key.tuff.freelook", SDLScancode.SDL_SCANCODE_LALT, category)),
+				KeyMappingHelper.registerKeyMapping(new KeyMapping("key.tuff.zoom", InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), category)),
+				KeyMappingHelper.registerKeyMapping(new KeyMapping("key.tuff.waypoint", InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), category)),
+				KeyMappingHelper.registerKeyMapping(new KeyMapping("key.tuff.freelook", InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), category)),
 		};
 	}
 

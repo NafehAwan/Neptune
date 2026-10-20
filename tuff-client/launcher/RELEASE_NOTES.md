@@ -1,7 +1,4 @@
-Glade 1.3.1
-- Fixes "Glade failed to load" on Minecraft 1.21.x and 26.1: zoom, freelook, block outline, low fire, nametags and the cosmetics badge now use the right game code on each version.
-- Block Outline, Low Fire, Zoom and Freelook now work on every 1.21 version.
-- Every Glade update is now tested by starting each supported Minecraft version and checking that all of Glade's game changes fit it.
-- Microsoft sign-in is built in: add your Microsoft account from the account menu, no setup needed.
-- Updating removes the old Tuff Client app and old Glade mod downloads. Your profiles, worlds and downloaded Minecraft versions stay, so nothing has to download again except the new Glade mod.
-- HUD modules now start as plain white text with a shadow: no background and no rainbow. Turn on a background in each module's Style settings and pick its shape: sharp, rounded or smooth corners.
+Glade 1.3.2
+- Sharper Glade menus and title screen: text and rounded corners now line up with your screen's pixels instead of looking broken up.
+- Zoom, Freelook and Waypoint keys start unbound, so you choose your own in Controls (old C, B and Left Alt bindings are cleared once). The Glade menu stays on Right Shift.
+- The launcher checks for updates every 15 minutes and when you come back to it, and Settings has a "Check for updates" button.

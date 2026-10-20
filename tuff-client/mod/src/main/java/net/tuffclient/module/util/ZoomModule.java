@@ -24,7 +24,7 @@ public final class ZoomModule extends Module {
 	private long last = System.nanoTime();
 
 	public ZoomModule() {
-		super("zoom", "Zoom", "Hold C to zoom in. Set how far in its settings.", Category.UTILITY, true);
+		super("zoom", "Zoom", "Hold your zoom key (set it in Controls) to zoom in. Set how far in its settings.", Category.UTILITY, true);
 	}
 
 	public void setHeld(boolean held) {

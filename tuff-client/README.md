@@ -188,9 +188,9 @@ or removed.
   its color, border and its color, background shape (sharp, rounded or smooth
   corners), padding, scale and a quick look (Default, Clean, Boxed, Outline).
   By default HUD modules are white text with a shadow and no background.
-- **Utility**: Zoom (hold C; smooth, snappy or linear curve, speed, scroll to
-  zoom further, optional cinematic camera), Freelook (hold Left Alt), Waypoints
-  (B adds one where you stand, a death waypoint is added where you die; on
+- **Utility**: Zoom (hold your zoom key; smooth, snappy or linear curve, speed, scroll to
+  zoom further, optional cinematic camera), Freelook (hold your freelook key), Waypoints
+  (its key adds one where you stand, a death waypoint is added where you die; on
   screen with distance; managed in the module's settings), Screenshot Tools
   (a card after F2 and chat buttons to open, show in folder, copy the path or
   delete), Chat+ (timestamps, merged repeats, click to copy, your name

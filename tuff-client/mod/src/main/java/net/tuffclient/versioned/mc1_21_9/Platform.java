@@ -26,9 +26,9 @@ public final class Platform {
 		KeyMapping.Category category = KeyMapping.Category.register(Identifier.fromNamespaceAndPath(TuffClient.MOD_ID, "tuff"));
 		return new KeyMapping[] {
 				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.menu", InputConstants.KEY_RSHIFT, category)),
-				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.zoom", InputConstants.KEY_C, category)),
-				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.waypoint", InputConstants.KEY_B, category)),
-				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.freelook", InputConstants.KEY_LALT, category)),
+				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.zoom", InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), category)),
+				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.waypoint", InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), category)),
+				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.freelook", InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), category)),
 		};
 	}
 

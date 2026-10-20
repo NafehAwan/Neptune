@@ -5,7 +5,7 @@ import net.tuffclient.legacy.module.Module;
 import net.tuffclient.legacy.setting.BoolSetting;
 import net.tuffclient.legacy.setting.NumberSetting;
 
-/** Hold the zoom key (C) to zoom in smoothly; scroll to zoom further. */
+/** Hold the zoom key to zoom in smoothly; scroll to zoom further. */
 public final class ZoomModule extends Module {
 	public final NumberSetting factor = add(new NumberSetting("factor", "Zoom", 4, 1.5, 12, 0.5));
 	public final BoolSetting smooth = add(new BoolSetting("smooth", "Smooth zoom", true));
@@ -17,7 +17,7 @@ public final class ZoomModule extends Module {
 	private long last = System.nanoTime();
 
 	public ZoomModule() {
-		super("zoom", "Zoom", "Hold C to zoom in. Scroll while zooming to zoom further.", Category.UTILITY, true);
+		super("zoom", "Zoom", "Hold your zoom key (set it in Controls) to zoom in. Scroll while zooming to zoom further.", Category.UTILITY, true);
 	}
 
 	public void setHeld(boolean held) {

@@ -5,7 +5,7 @@ import net.tuffclient.legacy.module.Category;
 import net.tuffclient.legacy.module.Module;
 import net.tuffclient.legacy.setting.BoolSetting;
 
-/** Hold Left Alt to look around in third person while you keep walking the same way. */
+/** Hold the freelook key to look around in third person while you keep walking the same way. */
 public final class FreelookModule extends Module {
 	public final BoolSetting invert = add(new BoolSetting("invert", "Invert up and down", false));
 	private boolean active;
@@ -13,7 +13,7 @@ public final class FreelookModule extends Module {
 	public float yaw, pitch;
 
 	public FreelookModule() {
-		super("freelook", "Freelook", "Hold Left Alt to look around you while moving straight.", Category.UTILITY, true);
+		super("freelook", "Freelook", "Hold your freelook key (set it in Controls) to look around while moving straight.", Category.UTILITY, true);
 	}
 
 	public boolean active() {

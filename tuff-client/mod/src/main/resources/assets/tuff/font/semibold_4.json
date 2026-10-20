@@ -4,7 +4,7 @@
       "type": "ttf",
       "file": "tuff:jakarta-semibold.ttf",
       "size": 9.5,
-      "oversample": 4,
+      "oversample": 1.75,
       "shift": [
         0,
         0

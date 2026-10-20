@@ -75,9 +75,11 @@ for name, file in STATIC.items():
     font.save(font_dir / f"{name}.ttf")
 
 for name, (file, size) in FONTS.items():
-    for level in range(1, 7):
+    # oversample 1, 1.25 ... 3: common window heights (720, 900, 1080, 1440, 2160)
+    # are quarter steps of the 720-high layout, so glyphs land 1:1 on pixels
+    for level in range(1, 10):
         data = {"providers": [
-            {"type": "ttf", "file": f"tuff:{file}.ttf", "size": size, "oversample": level, "shift": [0, 0]},
+            {"type": "ttf", "file": f"tuff:{file}.ttf", "size": size, "oversample": 1 + (level - 1) * 0.25, "shift": [0, 0]},
             {"type": "reference", "id": "minecraft:default"},
         ]}
         (font_dir / f"{name}_{level}.json").write_text(json.dumps(data, indent=2) + "\n")

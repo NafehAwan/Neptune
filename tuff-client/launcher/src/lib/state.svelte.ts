@@ -52,17 +52,28 @@ export async function createPresetProfile(preset: string, gameVersion: string) {
   }
 }
 
-const UPDATE_CHECK_MS = 60 * 60 * 1000;
+const UPDATE_CHECK_MS = 15 * 60 * 1000;
 
 /** Checks for a newer launcher and Glade mod. Updates can't be turned off. */
-export async function checkForUpdates() {
+let lastCheck = 0;
+
+/** Checks for a newer launcher and Glade mod. With `manual`, says what it found. */
+export async function checkForUpdates(manual = false) {
+  lastCheck = Date.now();
   try {
     const status = await api.checkUpdate();
     if (status.modUpdated) toast(`Glade mod updated to ${status.modUpdated}. It's used from your next launch.`, "success", 6000);
     if (status.launcher) app.update = status.launcher;
-  } catch {
+    else if (manual) toast(`Glade ${app.info?.version} is the newest version.`, "success");
+  } catch (e) {
     // offline or no release yet: try again later
+    if (manual) toast(`Couldn't check for updates: ${e}`, "error", 8000);
   }
+}
+
+/** When the window comes back into focus, check again if it's been a few minutes. */
+function checkOnFocus() {
+  if (Date.now() - lastCheck > 5 * 60 * 1000) checkForUpdates();
 }
 
 export function selectedProfile(): Profile | null {
@@ -153,7 +164,8 @@ export async function init() {
   });
   app.ready = true;
   checkForUpdates();
-  setInterval(checkForUpdates, UPDATE_CHECK_MS);
+  setInterval(() => checkForUpdates(), UPDATE_CHECK_MS);
+  window.addEventListener("focus", checkOnFocus);
   // browser preview only: ?crash shows the crash dialog with a sample report
   if (!isTauri && location.search.includes("crash")) {
     app.lastExit = {

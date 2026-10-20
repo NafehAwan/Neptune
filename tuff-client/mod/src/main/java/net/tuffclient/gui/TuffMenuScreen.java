@@ -84,7 +84,7 @@ public final class TuffMenuScreen extends GladeScreen {
 			Map.entry("small_shield", "shield"), Map.entry("hand_view", "hand"), Map.entry("time_weather", "daytime"));
 	/** The short line under each mod name. */
 	private static final Map<String, String> BLURBS = Map.ofEntries(
-			Map.entry("zoom", "Hold C to zoom in"), Map.entry("fullbright", "See clearly at night"),
+			Map.entry("zoom", "Hold your zoom key"), Map.entry("fullbright", "See clearly at night"),
 			Map.entry("crosshair", "Your own crosshair"), Map.entry("toggle_sprint", "Always sprint"),
 			Map.entry("keystrokes", "Show WASD and clicks"), Map.entry("fps", "Frames per second"),
 			Map.entry("cps", "Clicks per second"), Map.entry("armor", "Armor durability"),
@@ -96,7 +96,7 @@ public final class TuffMenuScreen extends GladeScreen {
 			Map.entry("compass", "Heading strip at the top"), Map.entry("biome_light", "Biome and light level"),
 			Map.entry("item_counter", "Arrows, totems, pearls"), Map.entry("durability", "Warns before things break"),
 			Map.entry("session_stats", "Time, kills, blocks mined"), Map.entry("pack_display", "Your resource pack"),
-			Map.entry("day_time", "Day count and time"), Map.entry("waypoints", "Save places, press B"),
+			Map.entry("day_time", "Day count and time"), Map.entry("waypoints", "Save places on screen"),
 			Map.entry("screenshot_tools", "Open, copy or delete after F2"), Map.entry("chat_plus", "Timestamps, merge, copy"),
 			Map.entry("auto_gg", "Says gg when a game ends"), Map.entry("auto_reconnect", "Rejoin after a disconnect"),
 			Map.entry("freelook", "Hold Alt to look around"), Map.entry("clean_f3", "A tidy F3 screen"),

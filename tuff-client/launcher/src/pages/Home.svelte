@@ -55,8 +55,8 @@
   <div class="news" in:fly={{ x: 16, duration: 400, delay: 120 }}>
     <div class="newscard lift">
       <div class="k">What's new</div>
-      <div class="tt">Glade 1.3.1: steadier on every version</div>
-      <div class="ss">Fixes Glade failing to load on 1.21 and 26.1, and shows how much is downloaded, how fast and how long is left.</div>
+      <div class="tt">Glade 1.3.2: sharper menus, your own keys</div>
+      <div class="ss">Crisper text in game, and zoom, freelook and waypoint keys you pick yourself in Controls.</div>
     </div>
     {#if servers.length}
       <div class="newscard lift">
