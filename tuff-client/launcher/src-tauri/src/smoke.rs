@@ -24,7 +24,14 @@ async fn loaders_start() {
     for item in wanted.split(',').filter(|s| !s.is_empty()) {
         let (loader, game_version) = item.split_once(':').expect("loader:version");
         let loader: Loader = serde_json::from_value(serde_json::json!(loader)).expect("known loader");
-        match start(&http, &paths, loader, game_version).await {
+        let mut result = start(&http, &paths, loader.clone(), game_version).await;
+        // a dropped connection to Fabric, Mojang or Modrinth isn't the game failing: try once more
+        if result.as_ref().is_err_and(crate::network_error) {
+            println!("  {item}: network error, trying again");
+            tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+            result = start(&http, &paths, loader, game_version).await;
+        }
+        match result {
             Ok(line) => println!("SMOKE OK {item}: {line}"),
             Err(e) => {
                 println!("SMOKE FAIL {item}: {e:#}");

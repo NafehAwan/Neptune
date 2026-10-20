@@ -624,9 +624,21 @@ async fn check_glade(app: &AppHandle, state: &AppState, profile: &mut Profile) -
         }
     }
     let on_download = |title: &str, s: download::DlStatus| send(Progress::download(&format!("Downloading {title}"), s));
-    let report = glade::ensure_with(&state.http, &state.paths, profile, &builds, &on_download).await?;
+    let report = match glade::ensure_with(&state.http, &state.paths, profile, &builds, &on_download).await {
+        // one more try when the connection dropped (installing Fabric API)
+        Err(e) if network_error(&e) => {
+            tokio::time::sleep(Duration::from_secs(2)).await;
+            glade::ensure_with(&state.http, &state.paths, profile, &builds, &on_download).await?
+        }
+        other => other?,
+    };
     let _ = app.emit("glade-check", json!({ "profileId": profile.id, "report": report }));
     Ok(report)
+}
+
+/// Whether an error is a network hiccup (connection reset, timeout) worth one retry.
+pub(crate) fn network_error(e: &anyhow::Error) -> bool {
+    e.chain().any(|c| c.downcast_ref::<reqwest::Error>().is_some_and(|r| r.is_connect() || r.is_timeout() || r.is_request()))
 }
 
 /// Something the game asked for through a "glade-event" line in its log:
@@ -1340,4 +1352,15 @@ pub fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running Glade");
+}
+
+#[cfg(test)]
+mod network_tests {
+    #[tokio::test]
+    async fn refused_connection_is_a_network_error() {
+        let client = reqwest::Client::builder().no_proxy().build().unwrap();
+        let err = anyhow::Error::from(client.get("http://127.0.0.1:9/").send().await.unwrap_err()).context("installing Fabric API");
+        assert!(super::network_error(&err));
+        assert!(!super::network_error(&anyhow::anyhow!("No version of this mod supports Fabric")));
+    }
 }
