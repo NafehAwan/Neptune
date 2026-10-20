@@ -55,8 +55,8 @@
   <div class="news" in:fly={{ x: 16, duration: 400, delay: 120 }}>
     <div class="newscard lift">
       <div class="k">What's new</div>
-      <div class="tt">Glade 1.5.0: clips, reach, combo and more</div>
-      <div class="ss">Kill clips saved like a screen recorder, Reach and Combo, HUD profiles, Tab ping and Entity Distance.</div>
+      <div class="tt">Glade 1.6.0: tiers on nametags</div>
+      <div class="ss">MCTiers and PvPTiers ranks beside nametags, with gamemode icons. Plus kill clips, Reach, Combo and HUD profiles.</div>
     </div>
     {#if servers.length}
       <div class="newscard lift">

@@ -73,7 +73,7 @@ public final class TuffMenuScreen extends GladeScreen {
 			Map.entry("effects", "potion"), Map.entry("clock", "clock"), Map.entry("server", "globe"),
 			Map.entry("speed", "bolt"), Map.entry("memory", "chip"), Map.entry("zoom", "zoom"),
 			Map.entry("fullbright", "sun"), Map.entry("toggle_sprint", "sprint"), Map.entry("crosshair", "crosshair"),
-			Map.entry("scoreboard", "scoreboard"), Map.entry("menu_background", "eye_off"), Map.entry("clips", "film"), Map.entry("reach", "sword"), Map.entry("combo", "flame"), Map.entry("hud_profiles", "grid"), Map.entry("entity_distance", "eye"), Map.entry("tab_ping", "signal"), Map.entry("title_screen", "image"),
+			Map.entry("scoreboard", "scoreboard"), Map.entry("menu_background", "eye_off"), Map.entry("clips", "film"), Map.entry("reach", "sword"), Map.entry("combo", "flame"), Map.entry("hud_profiles", "grid"), Map.entry("entity_distance", "eye"), Map.entry("tab_ping", "signal"), Map.entry("tiers", "trophy"), Map.entry("title_screen", "image"),
 			Map.entry("compass", "compass"), Map.entry("biome_light", "biome"), Map.entry("item_counter", "backpack"),
 			Map.entry("durability", "alert"), Map.entry("session_stats", "stats"), Map.entry("pack_display", "package"),
 			Map.entry("day_time", "daytime"), Map.entry("waypoints", "flag"), Map.entry("screenshot_tools", "camera"),
@@ -92,7 +92,7 @@ public final class TuffMenuScreen extends GladeScreen {
 			Map.entry("coordinates", "Position and facing"), Map.entry("ping", "Server latency"),
 			Map.entry("effects", "Active effects"), Map.entry("clock", "Real-world time"),
 			Map.entry("server", "Server address"), Map.entry("speed", "Movement speed"),
-			Map.entry("memory", "Memory in use"), Map.entry("scoreboard", "Hide it or its background"), Map.entry("menu_background", "No dark tint in inventories"), Map.entry("clips", "Save kills as videos"), Map.entry("reach", "Distance of your hits"), Map.entry("combo", "Hits in a row"), Map.entry("hud_profiles", "Switch HUD layouts"), Map.entry("entity_distance", "More FPS in crowds"), Map.entry("tab_ping", "Ping numbers in Tab"),
+			Map.entry("memory", "Memory in use"), Map.entry("scoreboard", "Hide it or its background"), Map.entry("menu_background", "No dark tint in inventories"), Map.entry("clips", "Save kills as videos"), Map.entry("reach", "Distance of your hits"), Map.entry("combo", "Hits in a row"), Map.entry("hud_profiles", "Switch HUD layouts"), Map.entry("entity_distance", "More FPS in crowds"), Map.entry("tab_ping", "Ping numbers in Tab"), Map.entry("tiers", "MCTiers & PvPTiers ranks"),
 			Map.entry("title_screen", "The Glade main menu"),
 			Map.entry("compass", "Heading strip at the top"), Map.entry("biome_light", "Biome and light level"),
 			Map.entry("item_counter", "Arrows, totems, pearls"), Map.entry("durability", "Warns before things break"),
@@ -113,7 +113,7 @@ public final class TuffMenuScreen extends GladeScreen {
 			"armor", "coordinates", "compass", "durability", "item_counter", "biome_light", "day_time", "session_stats", "ping", "effects", "clock",
 			"server", "speed", "memory", "pack_display", "chat_plus", "screenshot_tools", "clean_f3", "auto_gg", "auto_reconnect", "hit_color",
 			"block_outline", "particles", "hit_sounds", "custom_sky", "time_weather", "item_physics", "old_animations", "hand_view", "small_shield",
-			"low_fire", "nametags", "cosmetics", "scoreboard", "menu_background", "entity_distance", "tab_ping", "title_screen");
+			"low_fire", "nametags", "tiers", "cosmetics", "scoreboard", "menu_background", "entity_distance", "tab_ping", "title_screen");
 
 	// the panel: 940x604, centred, radius 26, padding 26 30
 	private static final float PW = 940, PH = 604, PAD_X = 30, PAD_Y = 26;

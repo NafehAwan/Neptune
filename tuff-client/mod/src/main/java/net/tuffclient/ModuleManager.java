@@ -64,6 +64,7 @@ public final class ModuleManager {
 	public final net.tuffclient.module.hud.HudProfilesModule hudProfiles = add(new net.tuffclient.module.hud.HudProfilesModule());
 	public final net.tuffclient.module.visual.EntityDistanceModule entityDistance = add(new net.tuffclient.module.visual.EntityDistanceModule());
 	public final net.tuffclient.module.visual.TabPingModule tabPing = add(new net.tuffclient.module.visual.TabPingModule());
+	public final net.tuffclient.module.visual.TiersModule tiers = add(new net.tuffclient.module.visual.TiersModule());
 	public final WaypointsModule waypoints = add(new WaypointsModule());
 	public final FreelookModule freelook = add(new FreelookModule());
 	public final ChatPlusModule chatPlus = add(new ChatPlusModule());

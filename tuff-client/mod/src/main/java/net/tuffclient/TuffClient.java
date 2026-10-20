@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 
 public final class TuffClient implements ClientModInitializer {
 	public static final String MOD_ID = "tuff";
+	public static final String VERSION = net.fabricmc.loader.api.FabricLoader.getInstance().getModContainer(MOD_ID)
+			.map(c -> c.getMetadata().getVersion().getFriendlyString()).orElse("dev");
 	public static final Logger LOGGER = LoggerFactory.getLogger("Glade");
 	private static ModuleManager modules;
 	private static KeyMapping menuKey;

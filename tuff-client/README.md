@@ -217,6 +217,10 @@ or removed.
   key), joins the last 5-60 seconds into an mp4 in `~/Videos/Glade`. The game
   sends its settings and requests as `glade-event` lines in its log
   (`clips-config ...`, `clip kill <name>`), and `presence ...` for Discord.
+- **Tiers**: MCTiers (`/api/v2/profile`) and PvPTiers (`/api/profile`,
+  `/api/search_profile`) ranks beside nametags, per-list gamemode and side, with
+  pixel gamemode icons (`assets/tuff/font/tiers.json`); looked up once per player
+  on a background thread and cached for two hours.
 - **Also**: Reach and Combo HUD modules, HUD Profiles (three layouts), Tab Ping
   (1.21), Entity Distance and a Chat+ word filter.
 
