@@ -17,7 +17,6 @@ import net.tuffclient.TuffClient;
 import net.tuffclient.module.Category;
 import net.tuffclient.module.Module;
 import net.tuffclient.setting.BoolSetting;
-import net.tuffclient.setting.ColorSetting;
 
 /**
  * A small leaf badge next to the names of Glade players, and a Glade cape.
@@ -29,7 +28,6 @@ public final class CosmeticsModule extends Module {
 	/** The Glade cape texture (textures/entity/cape/glade.png). */
 	public static final Identifier CAPE_TEXTURE = Identifier.fromNamespaceAndPath(TuffClient.MOD_ID, "entity/cape/glade");
 	private final BoolSetting badge = add(new BoolSetting("badge", "Leaf badge next to Glade players", true));
-	private final ColorSetting badgeColor = add(new ColorSetting("badge_color", "Badge color", 0xFF4FC79A, false)).showIf(() -> badge.get());
 	private final BoolSetting cape = add(new BoolSetting("cape", "Glade cape", true));
 	private final BoolSetting othersCapes = add(new BoolSetting("others_capes", "Show other Glade players' capes", true)).showIf(() -> cape.get());
 	private final Set<UUID> users = new HashSet<>();
@@ -70,8 +68,13 @@ public final class CosmeticsModule extends Module {
 		return player == Minecraft.getInstance().player || othersCapes.get() && isGlade(player);
 	}
 
+	private static final net.minecraft.resources.Identifier BADGE_FONT = net.minecraft.resources.Identifier.fromNamespaceAndPath("tuff", "badge");
+
 	/** The badge put before a Glade player's name. */
 	public Component badge() {
-		return Component.literal("☘ ").withStyle(s -> s.withColor(badgeColor.argb() & 0xFFFFFF));
+		// the Glade leaf logo, drawn in its own colours (assets/tuff/font/badge.json)
+		return Component.empty()
+				.append(Component.literal("\uE200").withStyle(s -> net.tuffclient.gui.Fonts.withFont(s.withColor(0xFFFFFF), BADGE_FONT)))
+				.append(" ");
 	}
 }
