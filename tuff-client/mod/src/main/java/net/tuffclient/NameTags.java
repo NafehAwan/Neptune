@@ -14,7 +14,7 @@ public final class NameTags {
 		if (modules == null || name == null || !(entity instanceof Player p)) return name;
 		Component out = modules.tiers.decorate(p, name);
 		var cosmetics = modules.cosmetics;
-		if (cosmetics.showBadge(p)) out = Component.empty().append(cosmetics.badge()).append(out);
+		if (cosmetics.showBadge(p)) out = cosmetics.withBadge(out);
 		return out;
 	}
 }

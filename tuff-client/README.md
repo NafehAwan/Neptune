@@ -204,7 +204,7 @@ or removed.
 - **Visual**: Fullbright, Crosshair, Hit Color (the damage flash), Block
   Outline (color and thickness), Particles (crits and sparkles on every hit,
   multiplier), Custom Sky (sky and fog tint), Nametags (your own in third
-  person, hide all, background opacity) and Cosmetics (a leaf badge before Glade
+  person, hide all, background opacity) and Cosmetics (a leaf badge, left or right of the name and in the tab list, for Glade
   players' names and a Glade cape; players are listed in `cosmetics/users.json`),
   Hit Sounds (a sound on each hit you land), Item Physics (dropped items lie
   flat), Old Animations (the held item never dips), Low Fire, Small Shield

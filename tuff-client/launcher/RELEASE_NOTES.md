@@ -1,3 +1,7 @@
+Glade 1.6.2
+- The leaf badge now shows next to Glade players in the tab list too (Cosmetics, "Badge in the tab list").
+- Choose which side of the name the badge goes on: Left or Right (Cosmetics, "Badge side").
+
 Glade 1.6.1
 - The badge next to Glade players' names is now the Glade leaf logo (a lighter green so it stands out on nametags).
 - Silver tier 2 ranks are brighter on nametags.

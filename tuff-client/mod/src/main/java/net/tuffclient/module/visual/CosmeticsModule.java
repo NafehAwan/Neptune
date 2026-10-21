@@ -10,6 +10,8 @@ import java.util.UUID;
 
 import com.google.gson.JsonParser;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
@@ -17,6 +19,7 @@ import net.tuffclient.TuffClient;
 import net.tuffclient.module.Category;
 import net.tuffclient.module.Module;
 import net.tuffclient.setting.BoolSetting;
+import net.tuffclient.setting.ChoiceSetting;
 
 /**
  * A small leaf badge next to the names of Glade players, and a Glade cape.
@@ -28,6 +31,8 @@ public final class CosmeticsModule extends Module {
 	/** The Glade cape texture (textures/entity/cape/glade.png). */
 	public static final Identifier CAPE_TEXTURE = Identifier.fromNamespaceAndPath(TuffClient.MOD_ID, "entity/cape/glade");
 	private final BoolSetting badge = add(new BoolSetting("badge", "Leaf badge next to Glade players", true));
+	private final ChoiceSetting badgeSide = add(new ChoiceSetting("badge_side", "Badge side", 0, "Left", "Right")).showIf(() -> badge.get());
+	private final BoolSetting badgeTab = add(new BoolSetting("badge_tab", "Badge in the tab list", true)).showIf(() -> badge.get());
 	private final BoolSetting cape = add(new BoolSetting("cape", "Glade cape", true));
 	private final BoolSetting othersCapes = add(new BoolSetting("others_capes", "Show other Glade players' capes", true)).showIf(() -> cape.get());
 	private final Set<UUID> users = new HashSet<>();
@@ -68,13 +73,34 @@ public final class CosmeticsModule extends Module {
 		return player == Minecraft.getInstance().player || othersCapes.get() && isGlade(player);
 	}
 
-	private static final net.minecraft.resources.Identifier BADGE_FONT = net.minecraft.resources.Identifier.fromNamespaceAndPath("tuff", "badge");
+	/** True when a tab list entry is a Glade player (matched by UUID through the connection, safe on every version). */
+	public boolean isGlade(PlayerInfo info) {
+		fetch();
+		Minecraft mc = Minecraft.getInstance();
+		ClientPacketListener conn = mc.getConnection();
+		if (conn == null || info == null) return false;
+		if (mc.player != null && conn.getPlayerInfo(mc.player.getUUID()) == info) return true;
+		for (UUID id : users) if (conn.getPlayerInfo(id) == info) return true;
+		return false;
+	}
 
-	/** The badge put before a Glade player's name. */
+	private static final Identifier BADGE_FONT = Identifier.fromNamespaceAndPath("tuff", "badge");
+
+	/** The leaf logo glyph, drawn in its own colours (assets/tuff/font/badge.json). */
 	public Component badge() {
-		// the Glade leaf logo, drawn in its own colours (assets/tuff/font/badge.json)
-		return Component.empty()
-				.append(Component.literal("\uE200").withStyle(s -> net.tuffclient.gui.Fonts.withFont(s.withColor(0xFFFFFF), BADGE_FONT)))
-				.append(" ");
+		return Component.literal("\uE200").withStyle(s -> net.tuffclient.gui.Fonts.withFont(s.withColor(0xFFFFFF), BADGE_FONT));
+	}
+
+	/** Puts the badge on the chosen side of a name. */
+	public Component withBadge(Component name) {
+		return badgeSide.get() == 0
+				? Component.empty().append(badge()).append(" ").append(name)
+				: Component.empty().append(name).append(" ").append(badge());
+	}
+
+	/** A tab list name with the badge, when it belongs to a Glade player. */
+	public Component decorateTab(PlayerInfo info, Component name) {
+		if (name == null || !isEnabled() || !badge.get() || !badgeTab.get() || !isGlade(info)) return name;
+		return withBadge(name);
 	}
 }

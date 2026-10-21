@@ -267,6 +267,12 @@ public class TuffClientGameTest implements FabricClientGameTest {
 			});
 			context.waitTicks(15);
 			context.takeScreenshot("glade-tiers");
+			// the tab list shows the leaf badge next to your own name
+			boolean tabBadge = context.computeOnClient(client -> {
+				var info = client.getConnection().getPlayerInfo(client.player.getUUID());
+				return net.tuffclient.Mc.tabList().getNameForDisplay(info).getString().contains("\uE200");
+			});
+			if (!tabBadge) throw new AssertionError("Tab list name has no Glade badge");
 			context.runOnClient(client -> {
 				client.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON);
 				TuffClient.modules().tiers.setEnabled(false);

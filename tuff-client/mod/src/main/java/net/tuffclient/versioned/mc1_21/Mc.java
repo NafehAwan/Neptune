@@ -26,4 +26,9 @@ public final class Mc {
 	public static boolean hudHidden() {
 		return get().options.hideGui;
 	}
+
+	/** The tab list overlay. */
+	public static net.minecraft.client.gui.components.PlayerTabOverlay tabList() {
+		return get().gui.getTabList();
+	}
 }
