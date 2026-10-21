@@ -1,3 +1,7 @@
+Glade 1.6.3
+- Right Shift in game now opens the HUD editor: your HUD stays on screen and you can drag modules to move them, drag a module's corner to resize it, and use its bar to open its settings or remove it. Right-click a module for its settings. The card in the middle opens Mods & Settings, plus Theme, Packs and Settings. Right Shift again closes it.
+- Nametags no longer overlap a server's own nametags: when a server puts its own name above a player, Glade hides the normal one (Nametags, "Hide nametags under a server's own nametags"). Your own nametag in third person also respects servers that hide nametags.
+
 Glade 1.6.2
 - The leaf badge now shows next to Glade players in the tab list too (Cosmetics, "Badge in the tab list").
 - Choose which side of the name the badge goes on: Left or Right (Cosmetics, "Badge side").

@@ -164,7 +164,9 @@ public class TuffClientGameTest implements FabricClientGameTest {
 			context.waitTicks(20);
 			context.takeScreenshot("tuff-hud");
 
-			context.setScreen(() -> new HudEditorScreen(null));
+			// Right Shift in game opens the HUD editor
+			context.getInput().pressKey(TuffClient.menuKey());
+			context.waitForScreen(HudEditorScreen.class);
 			context.waitTicks(10);
 			context.takeScreenshot("tuff-hud-editor");
 

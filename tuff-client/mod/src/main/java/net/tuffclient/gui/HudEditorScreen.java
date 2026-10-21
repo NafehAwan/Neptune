@@ -2,19 +2,37 @@ package net.tuffclient.gui;
 
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.tuffclient.ModuleManager;
 import net.tuffclient.TuffClient;
 import net.tuffclient.TuffConfig;
 import net.tuffclient.module.hud.CpsModule;
 import net.tuffclient.module.hud.HudModule;
 
-/** Drag HUD modules around, with snapping to screen edges, the center and each other. */
+/**
+ * Right Shift in game: the HUD stays visible and can be edited in place. Drag
+ * a module to move it (it snaps to screen edges, the centre and other
+ * modules), drag its corner to resize, and use its bar for settings or to
+ * remove it. The card in the middle opens Glade's mods and settings.
+ */
 public final class HudEditorScreen extends GladeScreen {
 	private static final int SNAP = 4;
+	private static final int BAR_H = 13;
+	private static final Identifier EMBLEM = Identifier.fromNamespaceAndPath(TuffClient.MOD_ID, "textures/gui/title/emblem.png");
+	/** The small buttons under the card: page, icon, label. */
+	private static final Object[][] QUICK = {
+			{TuffMenuScreen.Page.THEME, "palette", "Theme"},
+			{TuffMenuScreen.Page.PACKS, "package", "Packs"},
+			{TuffMenuScreen.Page.SETTINGS, "sliders", "Settings"},
+	};
 	private final Screen parent;
+	private HudModule focus;
 	private HudModule dragging;
+	private HudModule resizing;
 	private double grabX;
 	private double grabY;
+	private double startScale;
+	private int startW;
 	private Integer guideX;
 	private Integer guideY;
 
@@ -25,43 +43,145 @@ public final class HudEditorScreen extends GladeScreen {
 
 	@Override
 	protected void drawBackground(Gfx g, int mouseX, int mouseY, float partialTick) {
-		g.fill(0, 0, width, height, minecraft.player == null ? 0xFF2A3A30 : 0x50000000);
-		g.fill(width / 2, 0, width / 2 + 1, height, 0x18FFFFFF);
-		g.fill(0, height / 2, width, height / 2 + 1, 0x18FFFFFF);
+		g.fill(0, 0, width, height, minecraft.player == null ? 0xFF2A3A30 : 0x40000000);
 	}
+
+	// ------------------------------------------------------------------ layout
+
+	private float cardX() {
+		return width / 2f - 70;
+	}
+
+	private float cardY() {
+		return height / 2f - 52;
+	}
+
+	private float[] mainButton() {
+		return new float[] {width / 2f - 58, cardY() + 50, 116, 22};
+	}
+
+	private float[] quick(int i) {
+		float size = 22, gap = 6, total = QUICK.length * size + (QUICK.length - 1) * gap;
+		return new float[] {width / 2f - total / 2 + i * (size + gap), cardY() + 78, size, size};
+	}
+
+	/** The bar over (or under) a module: name and scale, settings, remove. */
+	private float[] bar(HudModule m) {
+		int[] p = ModuleManager.position(m, width, height);
+		float w = barWidth(m);
+		float x = Math.max(2, Math.min(width - w - 2, p[0]));
+		float y = p[1] > BAR_H + 3 ? p[1] - BAR_H - 2 : p[1] + p[3] + 2;
+		return new float[] {x, y, w, BAR_H};
+	}
+
+	private static String label(HudModule m) {
+		return m.name + "  " + Math.round(m.scale.get() * 100) + "%";
+	}
+
+	private static float barWidth(HudModule m) {
+		return Ui.width(label(m), Ui.Font.SEMIBOLD) + 10 + 2 * BAR_H;
+	}
+
+	private float[] gear(HudModule m) {
+		float[] b = bar(m);
+		return new float[] {b[0] + b[2] - 2 * BAR_H, b[1], BAR_H, BAR_H};
+	}
+
+	private float[] remove(HudModule m) {
+		float[] b = bar(m);
+		return new float[] {b[0] + b[2] - BAR_H, b[1], BAR_H, BAR_H};
+	}
+
+	private int[] handle(HudModule m) {
+		int[] p = ModuleManager.position(m, width, height);
+		return new int[] {p[0] + p[2] - 3, p[1] + p[3] - 3, 6, 6};
+	}
+
+	private static boolean in(double mx, double my, float[] r) {
+		return Theme.inside(mx, my, r[0], r[1], r[0] + r[2], r[1] + r[3]);
+	}
+
+	private static boolean in(double mx, double my, int[] r) {
+		return Theme.inside(mx, my, r[0], r[1], r[0] + r[2], r[1] + r[3]);
+	}
+
+	private boolean overCard(double mx, double my) {
+		return Theme.inside(mx, my, cardX(), cardY(), cardX() + 140, cardY() + 108);
+	}
+
+	// ------------------------------------------------------------------ drawing
 
 	@Override
 	protected void draw(Gfx g, int mouseX, int mouseY, float partialTick) {
 		CpsModule.sample(minecraft);
-		HudModule hovered = dragging != null ? dragging : at(mouseX, mouseY);
+		updateFocus(mouseX, mouseY);
 		for (HudModule m : TuffClient.modules().hud()) {
 			if (!m.isEnabled()) continue;
 			ModuleManager.renderModule(g, font, m, true);
 			int[] p = ModuleManager.position(m, width, height);
-			int color = m == dragging ? Theme.COPPER : m == hovered ? Theme.COPPER_HI : 0x60FFFFFF;
-			g.outline(p[0] - 1, p[1] - 1, p[2] + 2, p[3] + 2, color);
-			if (m == hovered && dragging == null) {
-				String label = m.name + "  " + Math.round(m.scale.get() * 100) + "%";
-				float lw = Ui.width(label, Ui.Font.SEMIBOLD) + 10;
-				float ly = p[1] > 16 ? p[1] - 15 : p[1] + p[3] + 3;
-				Ui.round(g, p[0], ly, lw, 13, 4, Theme.alpha(Theme.COPPER, 0.95f));
-				Ui.text(g, label, p[0] + 5, ly + 3, Theme.INK, Ui.Font.SEMIBOLD);
-			}
+			boolean active = m == focus;
+			Ui.round(g, p[0] - 2, p[1] - 2, p[2] + 4, p[3] + 4, 3, active ? Theme.alpha(Theme.COPPER, 0.18f) : 0x14FFFFFF);
+			Ui.outline(g, p[0] - 2, p[1] - 2, p[2] + 4, p[3] + 4, 3, active ? Theme.COPPER : 0x50FFFFFF);
 		}
+		if (focus != null) drawBar(g, focus, mouseX, mouseY);
 		if (guideX != null) g.fill(guideX, 0, guideX + 1, height, Theme.COPPER);
 		if (guideY != null) g.fill(0, guideY, width, guideY + 1, Theme.COPPER);
+		drawCard(g, mouseX, mouseY);
 
-		String help = "Drag to move  ·  Scroll to resize  ·  Right-click to reset  ·  Esc when done";
+		String help = "Drag to move  ·  Drag the corner to resize  ·  Right-click for settings  ·  Right Shift to close";
 		float hw = Ui.width(help, Ui.Font.MEDIUM) + 20;
-		float hy = height - 54;
-		Ui.round(g, width / 2f - hw / 2, hy, hw, 18, 9, 0xE6FFFFFF, Theme.GLASS_RIM, 1);
-		Ui.centered(g, help, width / 2f, hy + 5.5f, Theme.TEXT, Ui.Font.MEDIUM);
+		float hy = height - 24;
+		Ui.round(g, width / 2f - hw / 2, hy, hw, 16, 8, 0xD9FFFFFF, Theme.GLASS_RIM, 1);
+		Ui.centered(g, help, width / 2f, hy + 4.5f, Theme.TEXT, Ui.Font.MEDIUM);
+	}
 
-		int bw = 104, bx = width / 2 - bw / 2, by = height - 30;
-		boolean over = Theme.inside(mouseX, mouseY, bx, by, bx + bw, by + 20);
-		Ui.accentButton(g, bx, by, bw, 20, over ? 1 : 0, 1);
-		Ui.icon(g, "grid", bx + 10, by + 4, 12, Theme.INK);
-		Ui.text(g, "HUD Modules", bx + 28, by + 6, Theme.INK, Ui.Font.SEMIBOLD);
+	private void drawBar(Gfx g, HudModule m, int mouseX, int mouseY) {
+		float[] b = bar(m);
+		Ui.round(g, b[0], b[1], b[2], b[3], 4, Theme.alpha(Theme.COPPER, 0.95f));
+		Ui.text(g, label(m), b[0] + 5, b[1] + 3, Theme.INK, Ui.Font.SEMIBOLD);
+		float[] gear = gear(m), x = remove(m);
+		if (in(mouseX, mouseY, gear)) Ui.round(g, gear[0], gear[1], gear[2], gear[3], 4, 0x33FFFFFF);
+		if (in(mouseX, mouseY, x)) Ui.round(g, x[0], x[1], x[2], x[3], 4, Theme.alpha(Theme.DANGER, 0.9f));
+		Ui.lucide(g, "settings", gear[0] + 2, gear[1] + 2, 9, Theme.INK);
+		Ui.lucide(g, "close", x[0] + 2, x[1] + 2, 9, Theme.INK);
+		int[] h = handle(m);
+		Ui.round(g, h[0], h[1], h[2], h[3], 2, Theme.INK);
+		Ui.round(g, h[0] + 1, h[1] + 1, h[2] - 2, h[3] - 2, 1.5f, Theme.COPPER);
+	}
+
+	private void drawCard(Gfx g, int mouseX, int mouseY) {
+		float x = cardX(), y = cardY(), cx = width / 2f;
+		Ui.glass(g, x, y, 140, 108, 12, 0xC8FFFFFF, 1);
+		Ui.image(g, EMBLEM, cx - 15, y + 10, 30, 30, 512, 512, 0xFFFFFFFF);
+		float[] main = mainButton();
+		Ui.accentButton(g, main[0], main[1], main[2], main[3], in(mouseX, mouseY, main) ? 1 : 0, 1);
+		String text = "Mods & Settings";
+		float tw = 12 + 6 + Ui.width(text, Ui.Font.SEMIBOLD);
+		float tx = cx - tw / 2;
+		Ui.lucide(g, "grid", tx, main[1] + 5, 12, Theme.INK);
+		Ui.text(g, text, tx + 18, main[1] + 7, Theme.INK, Ui.Font.SEMIBOLD);
+		String tip = null;
+		for (int i = 0; i < QUICK.length; i++) {
+			float[] q = quick(i);
+			boolean over = in(mouseX, mouseY, q);
+			Ui.glassButton(g, q[0], q[1], q[2], q[3], over ? 1 : 0, 1);
+			Ui.lucide(g, (String) QUICK[i][1], q[0] + 5, q[1] + 5, 12, over ? Theme.COPPER : Theme.TEXT);
+			if (over) tip = (String) QUICK[i][2];
+		}
+		if (tip != null) {
+			float w = Ui.width(tip, Ui.Font.MEDIUM) + 12;
+			Ui.round(g, cx - w / 2, y + 112, w, 14, 7, 0xE6FFFFFF, Theme.GLASS_RIM, 1);
+			Ui.centered(g, tip, cx, y + 115.5f, Theme.TEXT, Ui.Font.MEDIUM);
+		}
+	}
+
+	private void updateFocus(double mx, double my) {
+		if (dragging != null || resizing != null) {
+			focus = dragging != null ? dragging : resizing;
+			return;
+		}
+		if (focus != null && focus.isEnabled() && (in(mx, my, bar(focus)) || in(mx, my, handle(focus)))) return;
+		focus = overCard(mx, my) ? null : at(mx, my);
 	}
 
 	private HudModule at(double mx, double my) {
@@ -70,27 +190,63 @@ public final class HudEditorScreen extends GladeScreen {
 			HudModule m = list.get(i);
 			if (!m.isEnabled()) continue;
 			int[] p = ModuleManager.position(m, width, height);
-			if (Theme.inside(mx, my, p[0], p[1], p[0] + p[2], p[1] + p[3])) return m;
+			if (Theme.inside(mx, my, p[0] - 2, p[1] - 2, p[0] + p[2] + 2, p[1] + p[3] + 2)) return m;
 		}
 		return null;
 	}
 
+	// ------------------------------------------------------------------ input
+
+	private void openMenu(TuffMenuScreen.Page page, HudModule settingsOf) {
+		TuffConfig.save(TuffClient.modules());
+		TuffMenuScreen menu = new TuffMenuScreen(this, page);
+		if (settingsOf != null && !settingsOf.settings().isEmpty()) menu.openSettings(settingsOf);
+		net.tuffclient.Mc.setScreen(menu);
+	}
+
 	@Override
 	protected boolean onClick(Input.Click event, boolean doubleClick) {
-		int bw = 104, bx = width / 2 - bw / 2, by = height - 30;
-		if (Theme.inside(event.x(), event.y(), bx, by, bx + bw, by + 20)) {
-			net.tuffclient.Mc.setScreen(new TuffMenuScreen(this, TuffMenuScreen.Page.MODS));
+		double mx = event.x(), my = event.y();
+		if (in(mx, my, mainButton())) {
+			openMenu(TuffMenuScreen.Page.MODS, null);
 			return true;
 		}
-		HudModule m = at(event.x(), event.y());
+		for (int i = 0; i < QUICK.length; i++) {
+			if (in(mx, my, quick(i))) {
+				openMenu((TuffMenuScreen.Page) QUICK[i][0], null);
+				return true;
+			}
+		}
+		if (overCard(mx, my)) return true;
+		updateFocus(mx, my);
+		if (focus != null) {
+			HudModule m = focus;
+			if (in(mx, my, gear(m))) {
+				openMenu(TuffMenuScreen.Page.MODS, m);
+				return true;
+			}
+			if (in(mx, my, remove(m))) {
+				m.setEnabled(false);
+				focus = null;
+				return true;
+			}
+			if (in(mx, my, handle(m)) && event.button() == 0) {
+				resizing = m;
+				startScale = m.scale.get();
+				startW = Math.max(1, ModuleManager.position(m, width, height)[2]);
+				grabX = mx;
+				return true;
+			}
+		}
+		HudModule m = at(mx, my);
 		if (m != null) {
 			if (event.button() == 1) {
-				m.scale.set(1.0);
+				openMenu(TuffMenuScreen.Page.MODS, m);
 			} else {
 				int[] p = ModuleManager.position(m, width, height);
 				dragging = m;
-				grabX = event.x() - p[0];
-				grabY = event.y() - p[1];
+				grabX = mx - p[0];
+				grabY = my - p[1];
 			}
 			return true;
 		}
@@ -99,6 +255,11 @@ public final class HudEditorScreen extends GladeScreen {
 
 	@Override
 	protected boolean onDrag(Input.Click event, double dx, double dy) {
+		if (resizing != null) {
+			double w = Math.max(4, startW + (event.x() - grabX));
+			resizing.scale.set(startScale * w / startW);
+			return true;
+		}
 		if (dragging == null) return super.onDrag(event, dx, dy);
 		int[] p = ModuleManager.position(dragging, width, height);
 		int w = p[2], h = p[3];
@@ -137,6 +298,7 @@ public final class HudEditorScreen extends GladeScreen {
 	@Override
 	protected boolean onRelease(Input.Click event) {
 		dragging = null;
+		resizing = null;
 		guideX = null;
 		guideY = null;
 		return super.onRelease(event);
@@ -150,6 +312,15 @@ public final class HudEditorScreen extends GladeScreen {
 			return true;
 		}
 		return false;
+	}
+
+	@Override
+	protected boolean onKey(Input.Key key) {
+		if (keyMatches(TuffClient.menuKey())) {
+			onClose();
+			return true;
+		}
+		return super.onKey(key);
 	}
 
 	@Override

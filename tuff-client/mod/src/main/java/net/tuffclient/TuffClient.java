@@ -68,7 +68,8 @@ public final class TuffClient implements ClientModInitializer {
 			while (clipKey.consumeClick()) modules.clips.save("key", "");
 			net.tuffclient.module.util.ClipsModule.presence(client);
 			while (menuKey.consumeClick()) {
-				if (net.tuffclient.Mc.screen() == null) net.tuffclient.Mc.setScreen(new TuffMenuScreen(null));
+				// in game: edit the HUD in place, with Glade's menu one click away
+				if (net.tuffclient.Mc.screen() == null) net.tuffclient.Mc.setScreen(client.player != null ? new net.tuffclient.gui.HudEditorScreen(null) : new TuffMenuScreen(null));
 			}
 			modules.zoom.setHeld(zoomKey.isDown() && net.tuffclient.Mc.screen() == null);
 			while (waypointKey.consumeClick()) {
