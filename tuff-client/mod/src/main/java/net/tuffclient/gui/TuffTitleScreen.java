@@ -100,7 +100,9 @@ public final class TuffTitleScreen extends GladeScreen {
 
 	/** How far the 720-tall layout is moved down to sit in the middle of the (slightly taller) screen. */
 	private float oy() {
-		return (height / zoom() - H) / 2;
+		// on a whole screen pixel, or everything below would sit between two
+		float p = zoom() * Ui.guiScale();
+		return Math.round((height / zoom() - H) / 2 * p) / p;
 	}
 
 	/** Width of the mockup space for this window (1280 at 16:9). */
@@ -224,8 +226,8 @@ public final class TuffTitleScreen extends GladeScreen {
 
 		// footer
 		float fa = stage(0.4f);
-		Ui.textAt(g, version, 20, H + oy() - 19, Theme.alpha(0xD9FFFFFF, fa), Ui.Font.MONO_11_5);
-		Ui.rightAt(g, "Not an official Minecraft product", vw() - 20, H + oy() - 19, Theme.alpha(0xD9FFFFFF, fa), Ui.Font.UI_11_5);
+		Ui.textAt(g, version, 16, H + oy() - 14, Theme.alpha(0xD9FFFFFF, fa), Ui.Font.MONO_10_5);
+		Ui.rightAt(g, "Not an official Minecraft product", vw() - 16, H + oy() - 14, Theme.alpha(0xD9FFFFFF, fa), Ui.Font.UI_11_5);
 
 		// account chip and its menu go on top of everything
 		accounts.render(g, 20, 18, mouseX, mouseY, dt, stage(0.05f));

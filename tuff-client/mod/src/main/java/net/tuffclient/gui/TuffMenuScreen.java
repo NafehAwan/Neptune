@@ -289,11 +289,17 @@ public final class TuffMenuScreen extends GladeScreen {
 
 	/** Top of the panel, centred in the layout. */
 	private float py() {
-		return (vh() - PH) / 2;
+		return whole((vh() - PH) / 2);
 	}
 
 	private float px() {
-		return (vw() - PW) / 2;
+		return whole((vw() - PW) / 2);
+	}
+
+	/** Rounds a layout coordinate to a whole screen pixel, so the panel never sits between two. */
+	private float whole(float v) {
+		float p = zoom() * Ui.guiScale();
+		return Math.round(v * p) / p;
 	}
 
 	// ------------------------------------------------------------------ rendering
@@ -326,7 +332,7 @@ public final class TuffMenuScreen extends GladeScreen {
 		listAge += dt;
 		hits.clear();
 
-		float s = 0.97f + 0.03f * open;
+		float s = open > 0.995f ? 1 : 0.97f + 0.03f * open;
 		Ui.zoom = z;
 		g.push();
 		g.scale(z, z);

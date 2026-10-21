@@ -1,3 +1,8 @@
+Glade 1.6.4
+- Sharper in-game menus: Glade's title screen, menu and HUD editor now put every letter, corner and icon on whole screen pixels, so nothing looks broken up, whatever your window size.
+- The title screen card is smaller, and the version text at the bottom is smaller too.
+- The card in the middle of the HUD editor is solid, so the crosshair no longer shows through it.
+
 Glade 1.6.3
 - Right Shift in game now opens the HUD editor: your HUD stays on screen and you can drag modules to move them, drag a module's corner to resize it, and use its bar to open its settings or remove it. Right-click a module for its settings. The card in the middle opens Mods & Settings, plus Theme, Packs and Settings. Right Shift again closes it.
 - Nametags no longer overlap a server's own nametags: when a server puts its own name above a player, Glade hides the normal one (Nametags, "Hide nametags under a server's own nametags"). Your own nametag in third person also respects servers that hide nametags.

@@ -49,11 +49,11 @@ public final class HudEditorScreen extends GladeScreen {
 	// ------------------------------------------------------------------ layout
 
 	private float cardX() {
-		return width / 2f - 70;
+		return Ui.snap(width / 2f - 70);
 	}
 
 	private float cardY() {
-		return height / 2f - 52;
+		return Ui.snap(height / 2f - 52);
 	}
 
 	private float[] mainButton() {
@@ -151,7 +151,7 @@ public final class HudEditorScreen extends GladeScreen {
 
 	private void drawCard(Gfx g, int mouseX, int mouseY) {
 		float x = cardX(), y = cardY(), cx = width / 2f;
-		Ui.glass(g, x, y, 140, 108, 12, 0xC8FFFFFF, 1);
+		Ui.glass(g, x, y, 140, 108, 12, 0xF2FFFFFF, 1);
 		Ui.image(g, EMBLEM, cx - 15, y + 10, 30, 30, 512, 512, 0xFFFFFFFF);
 		float[] main = mainButton();
 		Ui.accentButton(g, main[0], main[1], main[2], main[3], in(mouseX, mouseY, main) ? 1 : 0, 1);

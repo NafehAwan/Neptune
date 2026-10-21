@@ -110,7 +110,7 @@ public final class Ui {
 	public static void text(Gfx g, String s, float x, float y, int color, Font font) {
 		if ((color >>> 24) < 4 || s.isEmpty()) return;
 		g.push();
-		g.translate(x, y);
+		g.translate(snap(x), snap(y));
 		g.text(mc().font, text(s, font), 0, 0, color, false);
 		g.pop();
 	}
@@ -143,7 +143,7 @@ public final class Ui {
 	 * 1280x720; screens drawn in that space look the same at any window size.
 	 */
 	public static float mockup(int guiHeight) {
-		return zoomFor(guiHeight, 720f, 640f);
+		return zoomFor(guiHeight, 860f, 640f);
 	}
 
 	/**
@@ -223,7 +223,7 @@ public final class Ui {
 		// past the largest shape (4K screens) the largest one is scaled up instead
 		float s = Math.max(1f / scale, r / MAX_RADIUS);
 		g.push();
-		g.translate(x, y);
+		g.translate(snap(x), snap(y));
 		g.scale(s, s);
 		g.sprite(set[radius], 0, 0, Math.max(2 * radius, Math.round(w / s)), Math.max(2 * radius, Math.round(h / s)), argb);
 		g.pop();
@@ -280,7 +280,7 @@ public final class Ui {
 	public static void image(Gfx g, Identifier texture, float x, float y, float w, float h, int texW, int texH, int argb) {
 		if ((argb >>> 24) == 0) return;
 		g.push();
-		g.translate(x, y);
+		g.translate(snap(x), snap(y));
 		g.scale(w / texW, h / texH);
 		g.texture(texture, 0, 0, 0f, 0f, texW, texH, texW, texH, texW, texH, argb);
 		g.pop();
@@ -336,7 +336,7 @@ public final class Ui {
 		// past the largest sprite, scale it up instead
 		float s = Math.max(1f / scale, size / LUCIDE_SIZES[LUCIDE_SIZES.length - 1]), drawn = pick * s;
 		g.push();
-		g.translate(x + (size - drawn) / 2, y + (size - drawn) / 2);
+		g.translate(snap(x + (size - drawn) / 2), snap(y + (size - drawn) / 2));
 		g.scale(s, s);
 		g.sprite(id("lucide/" + pick + "/" + name), 0, 0, pick, pick, argb);
 		g.pop();
@@ -354,6 +354,15 @@ public final class Ui {
 
 	public static int guiScale() {
 		return (int) mc().getWindow().getGuiScale();
+	}
+
+	/**
+	 * Moves a coordinate onto the nearest whole screen pixel, so text, corners
+	 * and icons never straddle two pixels (which looks broken up in game).
+	 */
+	public static float snap(float v) {
+		float p = scale();
+		return p <= 0 ? v : Math.round(v * p) / p;
 	}
 
 	/** Physical pixels per GUI unit, including {@link #zoom}. */
