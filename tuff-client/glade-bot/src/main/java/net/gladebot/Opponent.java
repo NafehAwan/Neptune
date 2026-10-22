@@ -43,8 +43,9 @@ final class Opponent {
 		double along = d < 1e-4 ? 0 : (velocity.x * toBot.x + velocity.z * toBot.z) / d;
 		approaching = along > 0.05;
 		retreating = along < -0.08;
-		critJump = !p.onGround() && d < 4.5 && (approaching || velocity.y > 0);
 		charge = p.getAttackStrengthScale(0.5f);
+		// in the air, coming in, sword charged: going for a crit (a jump reset hop isn't)
+		critJump = !p.onGround() && d < 4.5 && approaching && charge > 0.8f;
 		hp = p.getHealth() + p.getAbsorptionAmount();
 		sinceBusy = busy() ? 0 : sinceBusy + 1;
 	}

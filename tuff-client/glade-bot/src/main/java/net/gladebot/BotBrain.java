@@ -365,8 +365,17 @@ public final class BotBrain {
 		boolean jump = false;
 		boolean canHurt = target.invulnerableTime <= 10;
 
+		boolean fallingNow = !bot.onGround() && bot.getDeltaMovement().y < 0 && bot.fallDistance > 0;
+		// already falling (a crit jump or a jump reset) with the sword ready: crit
+		if (fallingNow && inReach && charge >= tier.charge && canHurt && busy == 0) {
+			bot.setSprinting(false);
+			swing(false);
+			critJump = false;
+			move(forward, strafe, false, false);
+			return;
+		}
 		// punish crits: they jump in, hit them out of the air with a sprint hit
-		if (opp.critJump && inReach && charge >= 0.9f && canHurt && busy == 0) {
+		if (opp.critJump && !critJump && inReach && charge >= 0.9f && canHurt && busy == 0) {
 			bot.setSprinting(true);
 			swing(true);
 			move(1, strafe, true, false);
@@ -391,7 +400,7 @@ public final class BotBrain {
 			if (critJump) {
 				critTicks++;
 				if (bot.onGround() && critTicks > 3) critJump = false;
-			} else if (bot.onGround() && charge >= 0.45f && dist < tier.reach + 1.5) {
+			} else if (bot.onGround() && charge >= 0.45f && dist < tier.reach + 0.6) {
 				critJump = true;
 				critTicks = 0;
 				jump = true;
