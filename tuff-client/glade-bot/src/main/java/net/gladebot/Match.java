@@ -178,6 +178,19 @@ public final class Match {
 			bot.hurtServer(level, bot.damageSources().generic(), 200f);
 			GladeBot.LOGGER.info("[gladebot] lethal hit 2");
 		}
+		// worn armour and room to mend: it should mend every piece back up
+		if (ticks == 800) {
+			for (var slot : new net.minecraft.world.entity.EquipmentSlot[] {net.minecraft.world.entity.EquipmentSlot.HEAD, net.minecraft.world.entity.EquipmentSlot.CHEST,
+					net.minecraft.world.entity.EquipmentSlot.LEGS, net.minecraft.world.entity.EquipmentSlot.FEET}) {
+				var piece = bot.getItemBySlot(slot);
+				piece.setDamageValue((int) (piece.getMaxDamage() * 0.6));
+			}
+			bot.setHealth(bot.getMaxHealth());
+			dummy.brain.pause(200);
+			dummy.teleportTo(level, bot.getX() + 9, bot.getY(), bot.getZ(), java.util.Set.of(), 0, 0, true);
+			GladeBot.LOGGER.info("[gladebot] armour worn to 40%: {}", bot.brain.armorReport());
+		}
+		if (ticks == 1000) GladeBot.LOGGER.info("[gladebot] armour after mending: {}", bot.brain.armorReport());
 		if (ticks >= 2400) end(level.getServer(), "draw");
 	}
 

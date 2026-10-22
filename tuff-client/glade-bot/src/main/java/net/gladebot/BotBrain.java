@@ -48,6 +48,10 @@ public final class BotBrain {
 	private boolean critJump, drinking, swingIsCrit, swingPicked, deiviCommit, lastOffTotem;
 	private int lastPopTick = -1000, age, lastDeivi = -100000, styleTicks;
 	private boolean oppWasEating, jumpNow;
+	/** XP bottles it allows itself this mend session, and ticks it's paused for (tests). */
+	private int mendBudget, paused;
+	/** How long a mend fight opens defensively. */
+	private static final int OPENING = 600;
 	/** The current playstyle (changes as the fight goes, see {@link #updateStyle}). */
 	private Settings.Style play = Settings.Style.AGGRESSIVE;
 	private float yawWobble, pitchWobble;
@@ -67,6 +71,11 @@ public final class BotBrain {
 		enter(Mode.FIGHT);
 	}
 
+	/** Stands still for a while (used by the self test to give the other bot room to mend). */
+	public void pause(int ticks) {
+		paused = ticks;
+	}
+
 	/** Stops fighting (the match is over). */
 	public void stop() {
 		target = null;
@@ -83,6 +92,11 @@ public final class BotBrain {
 		Tier tier = Settings.tier;
 		age++;
 		if (target == null || target.isRemoved() || !target.isAlive() || mode == Mode.IDLE) {
+			move(0, 0, false, false);
+			return;
+		}
+		if (paused > 0) {
+			paused--;
 			move(0, 0, false, false);
 			return;
 		}
@@ -134,6 +148,10 @@ public final class BotBrain {
 		} else if (oppWasEating) {
 			play = Settings.Style.STRAFE;
 			styleTicks = 60 + random.nextInt(60);
+		} else if (Settings.mend && age < OPENING && (Settings.style == Settings.Style.RANDOM || Settings.style == Settings.Style.DEFENSIVE)) {
+			// a mend fight opens defensively: hold distance, counter-hit, mend when it can
+			play = Settings.Style.DEFENSIVE;
+			styleTicks = 0;
 		} else if (--styleTicks <= 0) {
 			if (Settings.style == Settings.Style.RANDOM) {
 				Settings.Style[] pick = {Settings.Style.AGGRESSIVE, Settings.Style.CRIT, Settings.Style.STRAFE};
@@ -266,9 +284,11 @@ public final class BotBrain {
 			return;
 		}
 		// 4. mend when they're far or busy (not while they're low: keep the pressure on)
-		if (Settings.mend && armorLeft() < tier.mendAt && has(s -> s.is(Items.EXPERIENCE_BOTTLE)) && hp > 10 && opp.hp > 10
-				&& (dist > 6 || opp.busy() && dist > 4)) {
+		boolean armourLow = armorLeft() < tier.mendAt || averageArmor() < tier.mendAt + 0.1f;
+		if (Settings.mend && armourLow && has(s -> s.is(Items.EXPERIENCE_BOTTLE)) && hp > 10 && opp.hp > 10
+				&& (dist > 6 || opp.busy() && dist > 4 || play == Settings.Style.DEFENSIVE && dist > 5)) {
 			enter(Mode.MEND);
+			mendBudget = mendBudget();
 			return;
 		}
 		// 5. hotbar almost out of pots: refill with room
@@ -300,6 +320,18 @@ public final class BotBrain {
 		} else if (punish || play == Settings.Style.AGGRESSIVE) {
 			forward = 1;
 			sprint = true;
+		} else if (play == Settings.Style.DEFENSIVE) {
+			// hold the edge of reach: back off unless charged and they come in, drift in when far
+			if (dist < tier.reach + 0.3 && (charge < 0.9f || opp.charge > 0.8f && !opp.approaching)) {
+				forward = -0.6f;
+				sprint = false;
+			} else if (dist > 4.2) {
+				forward = 0.6f;
+				sprint = false;
+			} else {
+				forward = charge > 0.9f && opp.approaching ? 1 : 0;
+				sprint = forward > 0;
+			}
 		} else if (strafeStyle && dist < 3.4 && dist > 2.2) {
 			// circle at the edge of reach instead of pressing in
 			forward = charge > 0.85f ? 1 : 0.3f;
@@ -335,6 +367,7 @@ public final class BotBrain {
 				case CRIT -> 0.95f;
 				case AGGRESSIVE -> tier.critChance * 0.5f;
 				case STRAFE -> tier.critChance * 0.8f;
+				case DEFENSIVE -> tier.critChance * 0.6f;
 				default -> tier.critChance;
 			};
 			// they're eating: free crits
@@ -478,7 +511,8 @@ public final class BotBrain {
 		turn(yawTo(where), 90, tier.aimSpeed * 2.5f);
 		move(-1, strafeDir * 0.4f, false, false);
 		boolean coming = dist < 4.5 && !opp.busy() || opp.approaching && dist < 5.5;
-		if (coming || armorLeft() > 0.97f || modeTicks > 300) {
+		if (coming || armorLeft() > 0.97f || mendBudget <= 0 || modeTicks > 400) {
+			GladeBot.LOGGER.info("[gladebot] {} mended: {}", bot.getName().getString(), armorReport());
 			enter(Mode.FIGHT);
 			return;
 		}
@@ -492,6 +526,7 @@ public final class BotBrain {
 		if (bot.getXRot() >= 75) {
 			use();
 			mends++;
+			mendBudget--;
 			busy = 1;
 		}
 	}
@@ -686,6 +721,46 @@ public final class BotBrain {
 		if ((speed == null || speed.getDuration() < 100) && has(BotBrain::isSpeed)) return BotBrain::isSpeed;
 		if (start && bot.getEffect(MobEffects.FIRE_RESISTANCE) == null && has(BotBrain::isFireRes)) return BotBrain::isFireRes;
 		return null;
+	}
+
+	/** Average durability left over the armour pieces, 0..1. */
+	private float averageArmor() {
+		float sum = 0;
+		int n = 0;
+		for (EquipmentSlot slot : ARMOR) {
+			ItemStack s = bot.getItemBySlot(slot);
+			if (s.isEmpty() || s.getMaxDamage() <= 0) continue;
+			sum += 1 - s.getDamageValue() / (float) s.getMaxDamage();
+			n++;
+		}
+		return n == 0 ? 1 : sum / n;
+	}
+
+	/**
+	 * Bottles to use this session: what the armour needs (a bottle gives about
+	 * 7 XP, and Mending fixes 2 durability per XP on a random damaged piece, so
+	 * every piece comes back together), but at most a third of what's left so
+	 * there's XP for later in the fight.
+	 */
+	private int mendBudget() {
+		int missing = 0;
+		for (EquipmentSlot slot : ARMOR) missing += bot.getItemBySlot(slot).getDamageValue();
+		int need = (int) Math.ceil(missing / 14.0);
+		int bottles = 0;
+		var inv = bot.getInventory();
+		for (int i = 0; i < 36; i++) if (inv.getItem(i).is(Items.EXPERIENCE_BOTTLE)) bottles += inv.getItem(i).getCount();
+		return Math.max(1, Math.min(need, Math.max(6, bottles / 3)));
+	}
+
+	/** Each piece's durability left, for the log. */
+	public String armorReport() {
+		StringBuilder b = new StringBuilder();
+		for (EquipmentSlot slot : ARMOR) {
+			ItemStack s = bot.getItemBySlot(slot);
+			if (s.isEmpty() || s.getMaxDamage() <= 0) continue;
+			b.append(slot.getName()).append('=').append(Math.round(100 * (1 - s.getDamageValue() / (float) s.getMaxDamage()))).append("% ");
+		}
+		return b.toString().trim();
 	}
 
 	/** The worst armour piece's durability left, 0..1. */

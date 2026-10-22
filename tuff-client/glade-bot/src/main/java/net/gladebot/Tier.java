@@ -10,9 +10,9 @@ public enum Tier {
 	// in the offhand and swaps a totem in when low, mends whenever there's room, and
 	// takes about half a second to pull more pots from its inventory.
 	//          reaction aimSpeed jitter reach  charge crit  wtap  strafe healAt burstAt burst potGap mendAt refill totemAt deivi strafeMin strafeMax
-	LT3("LT3", 5, 22f, 4.0f, 2.95, 0.92f, 0.45f, 0.40f, 0.8f, 9f, 5f, 2, 5, 0.60f, 14, 6f, 0.25f, 10, 30),
-	HT3("HT3", 4, 30f, 3.0f, 3.05, 0.95f, 0.70f, 0.60f, 1.0f, 8f, 5f, 4, 3, 0.85f, 10, 8f, 0.55f, 6, 22),
-	LT2("LT2", 3, 38f, 2.0f, 3.15, 0.97f, 0.80f, 0.75f, 1.0f, 7f, 5f, 4, 2, 0.88f, 7, 9f, 0.70f, 5, 18);
+	LT3("LT3", 5, 22f, 4.0f, 2.95, 0.92f, 0.45f, 0.40f, 0.8f, 9f, 5f, 2, 5, 0.45f, 14, 6f, 0.25f, 10, 30),
+	HT3("HT3", 4, 30f, 3.0f, 3.05, 0.95f, 0.70f, 0.60f, 1.0f, 8f, 5f, 4, 3, 0.50f, 10, 8f, 0.55f, 6, 22),
+	LT2("LT2", 3, 38f, 2.0f, 3.15, 0.97f, 0.80f, 0.75f, 1.0f, 7f, 5f, 4, 2, 0.55f, 7, 9f, 0.70f, 5, 18);
 
 	public final String label;
 	/** Ticks between the player moving and the bot reacting. */
@@ -28,7 +28,7 @@ public enum Tier {
 	public final float healAt, burstAt;
 	/** Most pots in a burst, and ticks between them. */
 	public final int burst, potGap;
-	/** Armour durability left (0..1) at which it backs off to mend. */
+	/** Armour durability left (0..1, worst piece) at which it starts mending. */
 	public final float mendAt;
 	/** Ticks it takes to move a potion from the inventory to the hotbar. */
 	public final int refill;

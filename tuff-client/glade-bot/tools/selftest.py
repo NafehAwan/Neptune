@@ -41,6 +41,14 @@ def send(cmd):
 
 ok = False
 
+def armour_even():
+    m = wait_for(r"\[gladebot\] armour after mending: (.*)", 1)
+    if not m:
+        return False
+    vals = [int(v) for v in re.findall(r"=(\d+)%", m.group(1))]
+    print(f"SELFTEST armour after mending {vals}")
+    return len(vals) == 4 and min(vals) >= 55 and max(vals) - min(vals) <= 20
+
 def stats(text):
     return {k: int(v) for k, v in re.findall(r"(\w+)=(\d+)", text)}
 
@@ -65,6 +73,8 @@ if wait_for(r"Done \(", 600):
             "pots": both.get("pots", 0) > 0,
             "jump resets": both.get("jumpResets", 0) >= 1,
             "playstyle changes": both.get("styleSwitches", 0) >= 1,
+            "mends": bot.get("mends", 0) >= 1,
+            "armour mended evenly": armour_even(),
         }
         for name, passed in checks.items():
             print(f"SELFTEST {'PASS' if passed else 'FAIL'} {name}")

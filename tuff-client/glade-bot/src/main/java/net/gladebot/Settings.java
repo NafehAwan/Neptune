@@ -31,7 +31,7 @@ public final class Settings {
 	public static boolean clumps = true;
 
 	public enum Style {
-		RANDOM("Random"), AGGRESSIVE("Aggressive"), CRIT("Crit"), STRAFE("Strafe");
+		RANDOM("Random"), AGGRESSIVE("Aggressive"), CRIT("Crit"), STRAFE("Strafe"), DEFENSIVE("Defensive");
 
 		public final String label;
 
