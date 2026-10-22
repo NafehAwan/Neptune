@@ -40,6 +40,8 @@ public final class GladeBot implements ModInitializer {
 		for (Tier t : Tier.values()) {
 			tier.then(Commands.literal(t.name().toLowerCase()).executes(ctx -> {
 				Settings.tier = t;
+				// every tier starts with jump reset on
+				Settings.jumpReset = true;
 				Settings.save();
 				return say(ctx, "Bot tier: " + t.label);
 			}));

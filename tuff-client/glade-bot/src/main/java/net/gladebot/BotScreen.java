@@ -45,6 +45,7 @@ public final class BotScreen extends Screen {
 		for (Tier t : Tier.values()) {
 			tierButtons[t.ordinal()] = addRenderableWidget(Button.builder(tierLabel(t), b -> {
 				tier = t;
+				Settings.jumpReset = true;
 				command("bot tier " + t.name().toLowerCase());
 				status = "Tier " + t.label + (anyTuning() ? " (your sliders still apply; Reset to use its own)" : "");
 				for (Tier u : Tier.values()) tierButtons[u.ordinal()].setMessage(tierLabel(u));

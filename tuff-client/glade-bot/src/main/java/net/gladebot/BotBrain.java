@@ -52,7 +52,7 @@ public final class BotBrain {
 	private int lastPopTick = -1000, age, lastDeivi = -100000, styleTicks;
 	private boolean oppWasEating, jumpNow;
 	/** XP bottles it allows itself this mend session, and ticks it's paused for (tests). */
-	private int mendBudget, paused, mendCooldown;
+	private int mendBudget, paused, mendCooldown, lastGap = -1000;
 	/** How long a mend fight opens defensively. */
 	private static final int OPENING = 600;
 	/** The current playstyle (changes as the fight goes, see {@link #updateStyle}). */
@@ -72,6 +72,11 @@ public final class BotBrain {
 
 	public void startFight() {
 		enter(Mode.FIGHT);
+	}
+
+	/** The opponent is low on health (under 5 hearts) or armour (under 35%, or well below its own): time to push. */
+	private boolean opponentOpen() {
+		return opp.hp <= 10 || opp.dura < 0.35f || opp.dura < averageArmor() - 0.2f;
 	}
 
 	/** Stands still for a while (used by the self test to give the other bot room to mend). */
@@ -174,6 +179,8 @@ public final class BotBrain {
 		oppWasEating = eating;
 		// defensive, but well fed: high saturation heals it fast, so it can afford to trade
 		if (play == Settings.Style.DEFENSIVE && bot.getFoodData().getSaturationLevel() >= 10) play = Settings.Style.AGGRESSIVE;
+		// they're low on health or armour: go for it, whatever the style
+		if (opponentOpen() && play != Settings.Style.CRIT) play = Settings.Style.AGGRESSIVE;
 		if (play != before) styleSwitches++;
 	}
 
@@ -300,9 +307,13 @@ public final class BotBrain {
 		}
 		// 3. gap in a safe window
 		// agro: gaps only when it needs the health (after a pop, or getting low), so it doesn't hand out free crits
-		boolean wantsGap = Settings.mend || hp <= 12 || age - lastPopTick < 120;
+		// gap only when it needs the health (hurt, or recovering from a pop), at most every
+		// 10 seconds, and never while they're low: then it's time to hit, not eat
+		boolean justPopped = age - lastPopTick < 120;
+		boolean wantsGap = (hp <= 14 || justPopped) && age - lastGap >= 200 && !opponentOpen();
 		if (wantsGap && bot.getOffhandItem().is(Items.GOLDEN_APPLE) && bot.getEffect(MobEffects.ABSORPTION) == null && hp > Settings.healAt(tier) && !threatened
-				&& (space || age - lastPopTick < 120) && aggro == 0) {
+				&& (space || justPopped) && aggro == 0) {
+			lastGap = age;
 			enter(Mode.EAT);
 			return;
 		}
@@ -323,7 +334,7 @@ public final class BotBrain {
 
 		selectSword();
 		aim(where, tier.aimSpeed, tier.jitter);
-		boolean punish = opp.busy() || aggro > 0 || opp.hp < 8 || deiviCommit;
+		boolean punish = opp.busy() || aggro > 0 || opponentOpen() || deiviCommit;
 
 		boolean strafeStyle = play == Settings.Style.STRAFE;
 		// strafing: full A/D in long runs (a person holds A or D for half a second or more;
