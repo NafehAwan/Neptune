@@ -65,9 +65,10 @@ public final class Match {
 	}
 
 	/**
-	 * /bot selftest: a match between the bot and a dummy that stands still,
-	 * on a dedicated server with nobody online. Halfway in the bot is put on
-	 * 2.5 hearts to check it pots and swaps a totem. Everything is logged.
+	 * /bot selftest: the bot against a second bot ("Sparring", same tier) on a
+	 * dedicated server with nobody online, for two minutes. Along the way the
+	 * bot is put on low health (it should swap a totem in and pot) and hit
+	 * twice for lethal damage (it should double pop). Everything is logged.
 	 */
 	public static String selfTest(MinecraftServer server) {
 		ServerLevel level = server.overworld();
@@ -76,8 +77,9 @@ public final class Match {
 		int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, 0, 0);
 		GladeBot.LOGGER.info("[gladebot] selftest arena at y={}", y);
 		stop(server);
-		BotPlayer target = BotPlayer.spawn(server, level, new Vec3(0.5, y, 0.5), 0, "Dummy");
+		BotPlayer target = BotPlayer.spawn(server, level, new Vec3(0.5, y, 0.5), 0, "Sparring");
 		String msg = start(target);
+		target.brain = new BotBrain(target, bot);
 		dummy = target;
 		selfTest = true;
 		GladeBot.LOGGER.info("[gladebot] selftest started: {}", msg);
@@ -122,6 +124,7 @@ public final class Match {
 					title(player, Component.literal("Fight!").withStyle(ChatFormatting.GREEN));
 					sound(player, 2f);
 					bot.brain.startFight();
+					if (dummy != null && dummy.brain != null) dummy.brain.startFight();
 				}
 			}
 			case FIGHT -> {
@@ -136,16 +139,32 @@ public final class Match {
 	}
 
 	private static void selfTestTick() {
-		BotBrain b = bot.brain;
-		if (ticks % 40 == 0) {
-			GladeBot.LOGGER.info("[gladebot] t={} botHp={} dummyHp={} hits={} pots={} offhand={}", ticks, bot.getHealth(), dummy.getHealth(), b.hits, b.pots,
-					bot.getOffhandItem().getItem());
+		if (ticks % 100 == 0) {
+			GladeBot.LOGGER.info("[gladebot] t={} bot hp={} offhand={} | {}", ticks, bot.getHealth(), bot.getOffhandItem().getItem(), bot.brain.stats());
+			GladeBot.LOGGER.info("[gladebot] t={} sparring hp={} offhand={} | {}", ticks, dummy.getHealth(), dummy.getOffhandItem().getItem(), dummy.brain.stats());
 		}
-		// put the bot in danger once, to check it swaps a totem in and pots
-		if (ticks == 100) {
+		ServerLevel level = (ServerLevel) bot.level();
+		// low: it should swap a totem in and pot
+		if (ticks == 200) {
 			bot.setHealth(5f);
 			GladeBot.LOGGER.info("[gladebot] bot set to 5 hp");
 		}
+		// two lethal hits a few ticks apart: it should double pop
+		if (ticks == 500) {
+			var inv = bot.getInventory();
+			bot.setItemSlot(net.minecraft.world.entity.EquipmentSlot.OFFHAND, new net.minecraft.world.item.ItemStack(Items.TOTEM_OF_UNDYING));
+			inv.setItem(1, new net.minecraft.world.item.ItemStack(Items.TOTEM_OF_UNDYING));
+			bot.setHealth(2f);
+			bot.invulnerableTime = 0;
+			bot.hurtServer(level, bot.damageSources().generic(), 200f);
+			GladeBot.LOGGER.info("[gladebot] lethal hit 1");
+		}
+		if (ticks == 510 && state == State.FIGHT) {
+			bot.invulnerableTime = 0;
+			bot.hurtServer(level, bot.damageSources().generic(), 200f);
+			GladeBot.LOGGER.info("[gladebot] lethal hit 2");
+		}
+		if (ticks >= 2400) end(level.getServer(), "draw");
 	}
 
 	/**
@@ -178,7 +197,11 @@ public final class Match {
 		BotBrain brain = bot.brain;
 		brain.stop();
 		if (player == null) return;
-		GladeBot.LOGGER.info("[gladebot] result winner={} hits={} pots={} totemSwaps={} selftest={}", who, brain.hits, brain.pots, brain.totemSwaps, selfTest);
+		GladeBot.LOGGER.info("[gladebot] result winner={} {}", who, brain.stats());
+		if (dummy != null && dummy.brain != null) {
+			GladeBot.LOGGER.info("[gladebot] sparring {}", dummy.brain.stats());
+			dummy.brain.stop();
+		}
 		boolean won = who.equals("you");
 		title(player, Component.literal(won ? "You win!" : "GladeBot wins").withStyle(won ? ChatFormatting.GREEN : ChatFormatting.RED));
 		player.sendSystemMessage(Component.literal("GladeBot (" + Settings.tier.label + ") landed " + brain.hits + " hits and threw " + brain.pots + " pots."));

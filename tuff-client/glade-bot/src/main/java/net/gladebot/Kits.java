@@ -34,32 +34,33 @@ public final class Kits {
 	}
 
 	/**
-	 * The default Neth Pot kit, as in a real HT3 mend fight: gapples in the
-	 * offhand, a totem on slot 9 to swap in when low and spares, XP on slot 2,
-	 * splash healing, and splash strength and speed (thrown at your feet).
+	 * The default Neth Pot kit, slot for slot as the real one: sword, totem,
+	 * five heals, speed and strength on the hotbar; 64 gapples in the offhand;
+	 * the inventory is heals with four strength, four speed, a spare totem and
+	 * (with mend) 64 XP bottles.
 	 */
 	public static ItemStack[] defaultKit(HolderLookup.Provider registries, boolean mend) {
 		ItemStack[] kit = new ItemStack[SIZE];
 		java.util.Arrays.fill(kit, ItemStack.EMPTY);
+		ItemStack heal = potion(Items.SPLASH_POTION, Potions.STRONG_HEALING);
+		ItemStack strength = potion(Items.SPLASH_POTION, Potions.STRONG_STRENGTH);
+		ItemStack speed = potion(Items.SPLASH_POTION, Potions.STRONG_SWIFTNESS);
+		// hotbar
 		kit[0] = enchant(registries, Items.NETHERITE_SWORD, Enchantments.SHARPNESS, 5);
-		kit[1] = mend ? new ItemStack(Items.EXPERIENCE_BOTTLE, 64) : potion(Items.SPLASH_POTION, Potions.STRONG_HEALING);
-		for (int i = 2; i <= 6; i++) kit[i] = potion(Items.SPLASH_POTION, Potions.STRONG_HEALING);
-		kit[7] = potion(Items.SPLASH_POTION, Potions.STRONG_STRENGTH);
-		kit[8] = new ItemStack(Items.TOTEM_OF_UNDYING);
-		// inventory: 2 spare totems, buffs, XP, then healing
-		kit[9] = new ItemStack(Items.TOTEM_OF_UNDYING);
-		kit[10] = new ItemStack(Items.TOTEM_OF_UNDYING);
-		kit[11] = potion(Items.SPLASH_POTION, Potions.STRONG_SWIFTNESS);
-		kit[12] = potion(Items.SPLASH_POTION, Potions.STRONG_SWIFTNESS);
-		kit[13] = potion(Items.SPLASH_POTION, Potions.STRONG_STRENGTH);
-		kit[14] = potion(Items.SPLASH_POTION, Potions.STRONG_STRENGTH);
-		kit[15] = potion(Items.SPLASH_POTION, Potions.LONG_FIRE_RESISTANCE);
-		int from = 16;
-		if (mend) {
-			kit[16] = new ItemStack(Items.EXPERIENCE_BOTTLE, 64);
-			from = 17;
-		}
-		for (int i = from; i <= 35; i++) kit[i] = potion(Items.SPLASH_POTION, Potions.STRONG_HEALING);
+		kit[1] = new ItemStack(Items.TOTEM_OF_UNDYING);
+		for (int i = 2; i <= 6; i++) kit[i] = heal.copy();
+		kit[7] = speed.copy();
+		kit[8] = strength.copy();
+		// inventory, top row: 5 heals, 4 strength
+		for (int i = 9; i <= 13; i++) kit[i] = heal.copy();
+		for (int i = 14; i <= 17; i++) kit[i] = strength.copy();
+		// middle row: 5 heals, 4 speed
+		for (int i = 18; i <= 22; i++) kit[i] = heal.copy();
+		for (int i = 23; i <= 26; i++) kit[i] = speed.copy();
+		// bottom row: 7 heals, a totem, XP
+		for (int i = 27; i <= 33; i++) kit[i] = heal.copy();
+		kit[34] = new ItemStack(Items.TOTEM_OF_UNDYING);
+		kit[35] = mend ? new ItemStack(Items.EXPERIENCE_BOTTLE, 64) : heal.copy();
 		kit[36] = armor(registries, Items.NETHERITE_BOOTS);
 		kit[37] = armor(registries, Items.NETHERITE_LEGGINGS);
 		kit[38] = armor(registries, Items.NETHERITE_CHESTPLATE);

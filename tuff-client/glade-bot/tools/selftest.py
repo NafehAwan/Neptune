@@ -1,6 +1,7 @@
 """CI: starts a 1.21.11 dedicated server with Glade Bot, runs /bot selftest
-(the bot against a dummy that stands still) and checks the bot fought:
-it landed hits, threw pots, swapped a totem in when low, and won."""
+(the bot against a second bot for two minutes) and checks it plays Neth Pot
+properly: no sweep hits, at least half its hits crits, real strafing, gaps,
+punishes, a double pop when hit twice for lethal damage, and pots."""
 import os, re, subprocess, sys, threading, time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -39,13 +40,33 @@ def send(cmd):
     p.stdin.flush()
 
 ok = False
+
+def stats(text):
+    return {k: int(v) for k, v in re.findall(r"(\w+)=(\d+)", text)}
+
 if wait_for(r"Done \(", 600):
     send("bot selftest")
-    m = wait_for(r"\[gladebot\] result winner=(\w+) hits=(\d+) pots=(\d+) totemSwaps=(\d+)", 300)
+    m = wait_for(r"\[gladebot\] result winner=(\w+) (.*)", 400)
+    sp = wait_for(r"\[gladebot\] sparring (hits=.*)", 30)
     if m:
-        winner, hits, pots, swaps = m.group(1), int(m.group(2)), int(m.group(3)), int(m.group(4))
-        print(f"SELFTEST winner={winner} hits={hits} pots={pots} totemSwaps={swaps}")
-        ok = winner == "bot" and hits > 0 and pots > 0 and swaps > 0
+        bot = stats(m.group(2))
+        other = stats(sp.group(1)) if sp else {}
+        both = {k: bot.get(k, 0) + other.get(k, 0) for k in set(bot) | set(other)}
+        print(f"SELFTEST winner={m.group(1)}")
+        print(f"SELFTEST bot      {bot}")
+        print(f"SELFTEST sparring {other}")
+        checks = {
+            "no sweep hits": both.get("sweeps", 1) == 0,
+            "at least half the hits are crits": both.get("hits", 0) > 0 and both.get("crits", 0) * 2 >= both.get("hits", 0),
+            "strafes (10+ direction changes)": both.get("strafeFlips", 0) >= 10,
+            "gaps": both.get("gaps", 0) >= 1,
+            "punishes": both.get("punishes", 0) >= 1,
+            "double pop when hit twice": bot.get("doublePops", 0) >= 1,
+            "pots": both.get("pots", 0) > 0,
+        }
+        for name, passed in checks.items():
+            print(f"SELFTEST {'PASS' if passed else 'FAIL'} {name}")
+        ok = all(checks.values())
     else:
         print("SELFTEST no result")
     send("stop")
