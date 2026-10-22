@@ -19,7 +19,6 @@ import net.minecraft.world.phys.Vec3;
  */
 public final class BotPlayer extends ServerPlayer {
 	public static final String NAME = "GladeBot";
-	private static final UUID ID = UUID.nameUUIDFromBytes(("OfflinePlayer:" + NAME).getBytes(java.nio.charset.StandardCharsets.UTF_8));
 
 	private final FakeConnection fake;
 	private final MinecraftServer host;
@@ -33,7 +32,12 @@ public final class BotPlayer extends ServerPlayer {
 	}
 
 	public static BotPlayer spawn(MinecraftServer server, ServerLevel level, Vec3 pos, float yaw) {
-		GameProfile profile = new GameProfile(ID, NAME);
+		return spawn(server, level, pos, yaw, NAME);
+	}
+
+	public static BotPlayer spawn(MinecraftServer server, ServerLevel level, Vec3 pos, float yaw, String name) {
+		UUID id = UUID.nameUUIDFromBytes(("OfflinePlayer:" + name).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+		GameProfile profile = new GameProfile(id, name);
 		FakeConnection connection = new FakeConnection();
 		BotPlayer bot = new BotPlayer(server, level, profile, connection);
 		server.getPlayerList().placeNewPlayer(connection, bot, CommonListenerCookie.createInitial(profile, false));

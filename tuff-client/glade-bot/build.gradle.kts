@@ -66,3 +66,8 @@ tasks.register("gladeClasspath") {
         out.get().asFile.apply { parentFile.mkdirs() }.writeText(project.configurations.getByName("compileClasspath").files.joinToString("\n"))
     }
 }
+
+// The CI self test drives a dedicated server through its console.
+tasks.matching { it.name == "runServer" }.configureEach {
+    (this as JavaExec).standardInput = System.`in`
+}

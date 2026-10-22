@@ -35,6 +35,9 @@ public final class Match {
 	private static UUID playerId;
 	private static int ticks;
 	private static GameType savedMode;
+	/** A self test (CI): a dummy that stands still is "you", and the log tells the story. */
+	private static BotPlayer dummy;
+	private static boolean selfTest;
 
 	private Match() {
 	}
@@ -61,6 +64,23 @@ public final class Match {
 		return "Neth Pot vs GladeBot (" + Settings.tier.label + (Settings.mend ? ", mend" : ", no mend") + "): get ready!";
 	}
 
+	/**
+	 * /bot selftest: a match between the bot and a dummy that stands still,
+	 * on a dedicated server with nobody online. Halfway in the bot is put on
+	 * 2.5 hearts to check it pots and swaps a totem. Everything is logged.
+	 */
+	public static String selfTest(MinecraftServer server) {
+		ServerLevel level = server.overworld();
+		int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, 0, 0);
+		stop(server);
+		BotPlayer target = BotPlayer.spawn(server, level, new Vec3(0.5, y, 0.5), 0, "Dummy");
+		String msg = start(target);
+		dummy = target;
+		selfTest = true;
+		GladeBot.LOGGER.info("[gladebot] selftest started: {}", msg);
+		return msg;
+	}
+
 	/** Ends the match now and removes the bot. */
 	public static void stop(MinecraftServer server) {
 		if (bot != null) {
@@ -73,6 +93,9 @@ public final class Match {
 		playerId = null;
 		savedMode = null;
 		state = State.NONE;
+		if (dummy != null && !dummy.isRemoved()) dummy.remove();
+		dummy = null;
+		selfTest = false;
 	}
 
 	public static void tick(MinecraftServer server) {
@@ -92,16 +115,33 @@ public final class Match {
 				}
 				if (ticks >= COUNTDOWN) {
 					state = State.FIGHT;
+					ticks = 0;
 					title(player, Component.literal("Fight!").withStyle(ChatFormatting.GREEN));
 					sound(player, 2f);
 					bot.brain.startFight();
 				}
+			}
+			case FIGHT -> {
+				if (selfTest) selfTestTick();
 			}
 			case OVER -> {
 				if (ticks >= 60) stop(server);
 			}
 			default -> {
 			}
+		}
+	}
+
+	private static void selfTestTick() {
+		BotBrain b = bot.brain;
+		if (ticks % 40 == 0) {
+			GladeBot.LOGGER.info("[gladebot] t={} botHp={} dummyHp={} hits={} pots={} offhand={}", ticks, bot.getHealth(), dummy.getHealth(), b.hits, b.pots,
+					bot.getOffhandItem().getItem());
+		}
+		// put the bot in danger once, to check it swaps a totem in and pots
+		if (ticks == 100) {
+			bot.setHealth(5f);
+			GladeBot.LOGGER.info("[gladebot] bot set to 5 hp");
 		}
 	}
 
@@ -129,6 +169,7 @@ public final class Match {
 		BotBrain brain = bot.brain;
 		brain.stop();
 		if (player == null) return;
+		GladeBot.LOGGER.info("[gladebot] result winner={} hits={} pots={} totemSwaps={} selftest={}", who, brain.hits, brain.pots, brain.totemSwaps, selfTest);
 		boolean won = who.equals("you");
 		title(player, Component.literal(won ? "You win!" : "GladeBot wins").withStyle(won ? ChatFormatting.GREEN : ChatFormatting.RED));
 		player.sendSystemMessage(Component.literal("GladeBot (" + Settings.tier.label + ") landed " + brain.hits + " hits and threw " + brain.pots + " pots."));

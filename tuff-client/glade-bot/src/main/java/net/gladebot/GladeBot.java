@@ -48,6 +48,7 @@ public final class GladeBot implements ModInitializer {
 				.executes(ctx -> say(ctx, "Glade Bot (" + Settings.tier.label + ", " + (Settings.mend ? "mend" : "no mend")
 						+ "): /bot start, /bot stop, /bot tier lt3|ht3|lt2, /bot mend on|off, /bot kit save me|bot, /bot kit reset. Press B for settings."))
 				.then(Commands.literal("start").executes(ctx -> say(ctx, Match.start(player(ctx)))))
+				.then(Commands.literal("selftest").executes(ctx -> say(ctx, Match.selfTest(ctx.getSource().getServer()))))
 				.then(Commands.literal("stop").executes(ctx -> {
 					Match.stop(ctx.getSource().getServer());
 					return say(ctx, "Match stopped.");

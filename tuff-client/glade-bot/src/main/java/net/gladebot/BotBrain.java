@@ -38,7 +38,7 @@ public final class BotBrain {
 	private boolean critJump, drinking;
 	private float yawWobble, pitchWobble;
 	/** Hits landed and potions thrown (shown after a match, and used by tests). */
-	public int hits, pots;
+	public int hits, pots, totemSwaps;
 
 	public BotBrain(BotPlayer bot, ServerPlayer target) {
 		this.bot = bot;
@@ -403,6 +403,7 @@ public final class BotBrain {
 	/** Selects a hotbar slot and swaps it with the offhand (the F key). */
 	private void swapOffhand(int slot) {
 		var inv = bot.getInventory();
+		if (inv.getItem(slot).is(Items.TOTEM_OF_UNDYING)) totemSwaps++;
 		select(slot);
 		ItemStack hand = inv.getItem(slot), off = bot.getOffhandItem();
 		inv.setItem(slot, off);
