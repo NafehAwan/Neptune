@@ -33,27 +33,37 @@ public final class Kits {
 	private Kits() {
 	}
 
-	/** The default Neth Pot kit (with or without mending XP). */
+	/**
+	 * The default Neth Pot kit, as in a real HT3 mend fight: totem in the
+	 * offhand and spares, XP on slot 2, splash healing, and splash strength
+	 * and speed (thrown at your feet, not drunk).
+	 */
 	public static ItemStack[] defaultKit(HolderLookup.Provider registries, boolean mend) {
 		ItemStack[] kit = new ItemStack[SIZE];
 		java.util.Arrays.fill(kit, ItemStack.EMPTY);
-		kit[0] = enchant(registries, Items.NETHERITE_SWORD, Enchantments.SHARPNESS, 5, Enchantments.UNBREAKING, 3, Enchantments.MENDING, 1);
-		kit[1] = potion(Items.POTION, Potions.STRONG_STRENGTH);
-		kit[2] = potion(Items.POTION, Potions.STRONG_SWIFTNESS);
-		for (int i = 3; i <= 7; i++) kit[i] = potion(Items.SPLASH_POTION, Potions.STRONG_HEALING);
-		kit[8] = mend ? new ItemStack(Items.EXPERIENCE_BOTTLE, 64) : potion(Items.SPLASH_POTION, Potions.STRONG_HEALING);
-		// the rest of the inventory: spare buffs, then healing
-		kit[9] = potion(Items.POTION, Potions.STRONG_STRENGTH);
-		kit[10] = potion(Items.POTION, Potions.STRONG_SWIFTNESS);
-		kit[11] = potion(Items.POTION, Potions.LONG_FIRE_RESISTANCE);
-		kit[12] = potion(Items.POTION, Potions.STRONG_STRENGTH);
-		kit[13] = potion(Items.POTION, Potions.STRONG_SWIFTNESS);
-		if (mend) kit[14] = new ItemStack(Items.EXPERIENCE_BOTTLE, 64);
-		for (int i = mend ? 15 : 14; i <= 35; i++) kit[i] = potion(Items.SPLASH_POTION, Potions.STRONG_HEALING);
+		kit[0] = enchant(registries, Items.NETHERITE_SWORD, Enchantments.SHARPNESS, 5);
+		kit[1] = mend ? new ItemStack(Items.EXPERIENCE_BOTTLE, 64) : potion(Items.SPLASH_POTION, Potions.STRONG_HEALING);
+		for (int i = 2; i <= 6; i++) kit[i] = potion(Items.SPLASH_POTION, Potions.STRONG_HEALING);
+		kit[7] = potion(Items.SPLASH_POTION, Potions.STRONG_STRENGTH);
+		kit[8] = new ItemStack(Items.TOTEM_OF_UNDYING);
+		// inventory: spare totems, buffs, XP, then healing
+		for (int i = 9; i <= 12; i++) kit[i] = new ItemStack(Items.TOTEM_OF_UNDYING);
+		kit[13] = potion(Items.SPLASH_POTION, Potions.STRONG_SWIFTNESS);
+		kit[14] = potion(Items.SPLASH_POTION, Potions.STRONG_SWIFTNESS);
+		kit[15] = potion(Items.SPLASH_POTION, Potions.STRONG_STRENGTH);
+		kit[16] = potion(Items.SPLASH_POTION, Potions.STRONG_STRENGTH);
+		kit[17] = potion(Items.SPLASH_POTION, Potions.LONG_FIRE_RESISTANCE);
+		int from = 18;
+		if (mend) {
+			kit[18] = new ItemStack(Items.EXPERIENCE_BOTTLE, 64);
+			from = 19;
+		}
+		for (int i = from; i <= 35; i++) kit[i] = potion(Items.SPLASH_POTION, Potions.STRONG_HEALING);
 		kit[36] = armor(registries, Items.NETHERITE_BOOTS);
 		kit[37] = armor(registries, Items.NETHERITE_LEGGINGS);
 		kit[38] = armor(registries, Items.NETHERITE_CHESTPLATE);
 		kit[39] = armor(registries, Items.NETHERITE_HELMET);
+		kit[40] = new ItemStack(Items.TOTEM_OF_UNDYING);
 		return kit;
 	}
 

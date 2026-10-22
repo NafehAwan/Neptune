@@ -90,32 +90,39 @@ public final class BotBrain {
 
 	/** The countdown: face the player and drink buffs. */
 	private void ready(Tier tier, Vec3 where) {
-		aim(where, tier.aimSpeed, 0);
 		move(0, 0, false, false);
-		if (busy > 0 || bot.isUsingItem()) return;
-		Predicate<ItemStack> buff = neededBuff();
-		if (buff == null) return;
+		Predicate<ItemStack> buff = busy > 0 || bot.isUsingItem() ? null : neededBuff(true);
+		if (buff == null) {
+			if (!bot.isUsingItem()) aim(where, tier.aimSpeed, 0);
+			return;
+		}
 		int slot = hotbar(buff);
 		if (slot < 0) {
 			refill(buff, tier);
 			return;
 		}
 		select(slot);
+		if (bot.getMainHandItem().is(Items.SPLASH_POTION)) {
+			// splash buffs go at your feet
+			turn(bot.getYRot(), 90, tier.aimSpeed * 2.5f);
+			if (bot.getXRot() < 75) return;
+		}
 		use();
-		busy = 2;
+		busy = tier.potGap + 1;
 	}
 
 	private void fight(Tier tier, Vec3 where, double dist) {
 		if (bot.getHealth() <= tier.healAt && has(BotBrain::isHealing)) {
 			enter(Mode.HEAL);
-			potsLeft = bot.getHealth() <= tier.doublePotAt ? 2 : 1;
+			float hp = bot.getHealth();
+			potsLeft = hp > tier.burstAt ? 1 : hp <= 3 ? tier.burst : Math.max(2, tier.burst - 1);
 			return;
 		}
-		if (dist > 6 && neededBuff() != null) {
+		if (dist > 5 && neededBuff(false) != null) {
 			enter(Mode.BUFF);
 			return;
 		}
-		if (Settings.mend && dist > 7 && armorLeft() < tier.mendAt && has(s -> s.is(Items.EXPERIENCE_BOTTLE))) {
+		if (Settings.mend && dist > 6 && armorLeft() < tier.mendAt && has(s -> s.is(Items.EXPERIENCE_BOTTLE))) {
 			enter(Mode.MEND);
 			return;
 		}
@@ -196,13 +203,14 @@ public final class BotBrain {
 			use();
 			pots++;
 			potsLeft--;
-			busy = tier == Tier.LT3 ? 4 : 3;
+			busy = tier.potGap;
 		}
 	}
 
-	/** Drink strength or speed with room to spare. */
+	/** Re-buff strength or speed with room to spare: splash at your feet, or drink. */
 	private void buff(Tier tier, Vec3 where, double dist) {
-		turn(yawTo(where), 0, tier.aimSpeed);
+		boolean splash = bot.getMainHandItem().is(Items.SPLASH_POTION) && neededBuff(false) != null && neededBuff(false).test(bot.getMainHandItem());
+		turn(yawTo(where), splash ? 90 : 0, tier.aimSpeed * (splash ? 2.5f : 1));
 		move(-0.6f, strafeDir * tier.strafe, false, false);
 		if (dist < 3.5 || modeTicks > 80) {
 			bot.stopUsingItem();
@@ -214,7 +222,7 @@ public final class BotBrain {
 			return;
 		}
 		if (busy > 0) return;
-		Predicate<ItemStack> buff = neededBuff();
+		Predicate<ItemStack> buff = neededBuff(false);
 		if (buff == null) {
 			enter(Mode.FIGHT);
 			return;
@@ -225,6 +233,13 @@ public final class BotBrain {
 			return;
 		}
 		select(slot);
+		if (bot.getMainHandItem().is(Items.SPLASH_POTION)) {
+			if (bot.getXRot() < 75) return;
+			use();
+			pots++;
+			busy = tier.potGap;
+			return;
+		}
 		use();
 		drinking = true;
 	}
@@ -233,7 +248,7 @@ public final class BotBrain {
 	private void mend(Tier tier, Vec3 where, double dist) {
 		turn(yawTo(where), 90, tier.aimSpeed * 2.5f);
 		move(-1, strafeDir * 0.4f, false, false);
-		if (dist < 4.5 || armorLeft() > 0.92f || modeTicks > 100) {
+		if (dist < 4.5 || armorLeft() > 0.97f || modeTicks > 300) {
 			enter(Mode.FIGHT);
 			return;
 		}
@@ -301,7 +316,10 @@ public final class BotBrain {
 		return true;
 	}
 
-	/** Puts a spare totem in the offhand when it's empty. */
+	/**
+	 * Puts a spare totem in the offhand after one pops: from the hotbar it's a
+	 * quick hand swap, from the inventory it takes as long as a refill.
+	 */
 	private void keepTotem(Tier tier) {
 		if (!bot.getOffhandItem().isEmpty() || busy > 0) return;
 		var inv = bot.getInventory();
@@ -309,7 +327,7 @@ public final class BotBrain {
 			if (inv.getItem(i).is(Items.TOTEM_OF_UNDYING)) {
 				bot.setItemSlot(EquipmentSlot.OFFHAND, inv.getItem(i));
 				inv.setItem(i, ItemStack.EMPTY);
-				busy = tier.refill;
+				busy = i < 9 ? 3 : tier.refill;
 				return;
 			}
 		}
@@ -324,23 +342,30 @@ public final class BotBrain {
 	}
 
 	private static boolean isStrength(ItemStack s) {
-		if (!s.is(Items.POTION)) return false;
+		if (!s.is(Items.POTION) && !s.is(Items.SPLASH_POTION)) return false;
 		PotionContents c = s.getOrDefault(DataComponents.POTION_CONTENTS, PotionContents.EMPTY);
 		return c.is(Potions.STRENGTH) || c.is(Potions.STRONG_STRENGTH) || c.is(Potions.LONG_STRENGTH);
 	}
 
 	private static boolean isSpeed(ItemStack s) {
-		if (!s.is(Items.POTION)) return false;
+		if (!s.is(Items.POTION) && !s.is(Items.SPLASH_POTION)) return false;
 		PotionContents c = s.getOrDefault(DataComponents.POTION_CONTENTS, PotionContents.EMPTY);
 		return c.is(Potions.SWIFTNESS) || c.is(Potions.STRONG_SWIFTNESS) || c.is(Potions.LONG_SWIFTNESS);
 	}
 
-	/** The buff to drink next (strength, then speed), or null. */
-	private Predicate<ItemStack> neededBuff() {
+	private static boolean isFireRes(ItemStack s) {
+		if (!s.is(Items.POTION) && !s.is(Items.SPLASH_POTION)) return false;
+		PotionContents c = s.getOrDefault(DataComponents.POTION_CONTENTS, PotionContents.EMPTY);
+		return c.is(Potions.FIRE_RESISTANCE) || c.is(Potions.LONG_FIRE_RESISTANCE);
+	}
+
+	/** The buff to use next (strength, then speed, and fire resistance before the fight), or null. */
+	private Predicate<ItemStack> neededBuff(boolean start) {
 		MobEffectInstance strength = bot.getEffect(MobEffects.STRENGTH);
 		if ((strength == null || strength.getDuration() < 100) && has(BotBrain::isStrength)) return BotBrain::isStrength;
 		MobEffectInstance speed = bot.getEffect(MobEffects.SPEED);
 		if ((speed == null || speed.getDuration() < 100) && has(BotBrain::isSpeed)) return BotBrain::isSpeed;
+		if (start && bot.getEffect(MobEffects.FIRE_RESISTANCE) == null && has(BotBrain::isFireRes)) return BotBrain::isFireRes;
 		return null;
 	}
 

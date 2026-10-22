@@ -5,10 +5,14 @@ package net.gladebot;
  * clips of real players at each tier.
  */
 public enum Tier {
-	//          reaction aimSpeed jitter reach  charge critChance wtapChance strafe healAt doublePotAt mendAt refill
-	LT3("LT3", 5, 22f, 4.0f, 2.95, 0.92f, 0.35f, 0.40f, 0.55f, 8f, 5f, 0.45f, 8),
-	HT3("HT3", 4, 30f, 3.0f, 3.05, 0.95f, 0.50f, 0.60f, 0.70f, 9f, 6f, 0.50f, 6),
-	LT2("LT2", 3, 38f, 2.0f, 3.15, 0.97f, 0.65f, 0.75f, 0.85f, 10f, 7f, 0.55f, 4);
+	// HT3 is measured from a real HT3 mend fight: it pots late (one pot under 4 hearts,
+	// a burst of up to 3-4 at 2.5 hearts or less, a pot every 3 ticks, looking straight
+	// down), mends with XP whenever there's room even with armour still high, and takes
+	// about half a second to pull more pots from its inventory.
+	//          reaction aimSpeed jitter reach  charge critChance wtapChance strafe healAt burstAt burst potGap mendAt refill
+	LT3("LT3", 5, 22f, 4.0f, 2.95, 0.92f, 0.35f, 0.40f, 0.55f, 9f, 5f, 2, 5, 0.60f, 14),
+	HT3("HT3", 4, 30f, 3.0f, 3.05, 0.95f, 0.50f, 0.60f, 0.70f, 8f, 5f, 4, 3, 0.85f, 10),
+	LT2("LT2", 3, 38f, 2.0f, 3.15, 0.97f, 0.65f, 0.75f, 0.85f, 7f, 5f, 4, 2, 0.88f, 7);
 
 	public final String label;
 	/** Ticks between the player moving and the bot reacting. */
@@ -20,15 +24,17 @@ public enum Tier {
 	/** Sword charge (0..1) the bot waits for before hitting. */
 	public final float charge;
 	public final float critChance, wtapChance, strafe;
-	/** Health at which it pots, and at which it throws two. */
-	public final float healAt, doublePotAt;
+	/** Health at which it throws one pot, and at which it throws a burst. */
+	public final float healAt, burstAt;
+	/** Most pots in a burst, and ticks between them. */
+	public final int burst, potGap;
 	/** Armour durability left (0..1) at which it backs off to mend. */
 	public final float mendAt;
 	/** Ticks it takes to move a potion from the inventory to the hotbar. */
 	public final int refill;
 
 	Tier(String label, int reaction, float aimSpeed, float jitter, double reach, float charge, float critChance, float wtapChance, float strafe,
-			float healAt, float doublePotAt, float mendAt, int refill) {
+			float healAt, float burstAt, int burst, int potGap, float mendAt, int refill) {
 		this.label = label;
 		this.reaction = reaction;
 		this.aimSpeed = aimSpeed;
@@ -39,7 +45,9 @@ public enum Tier {
 		this.wtapChance = wtapChance;
 		this.strafe = strafe;
 		this.healAt = healAt;
-		this.doublePotAt = doublePotAt;
+		this.burstAt = burstAt;
+		this.burst = burst;
+		this.potGap = potGap;
 		this.mendAt = mendAt;
 		this.refill = refill;
 	}

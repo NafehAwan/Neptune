@@ -16,7 +16,7 @@ public final class FakeConnection extends Connection {
 
 	public FakeConnection() {
 		super(PacketFlow.SERVERBOUND);
-		((ConnectionAccessor) this).gladebot$setChannel(channel);
+		((ConnectionAccessor) (Object) this).gladebot$setChannel(channel);
 	}
 
 	/** Throws away everything sent to the bot. */
