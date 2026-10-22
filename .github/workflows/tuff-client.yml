@@ -231,22 +231,6 @@ jobs:
       - name: Self test on a dedicated server (the bot against a dummy)
         id: selftest
         run: timeout 15m python3 tools/selftest.py
-      - name: Run the bot game test (screenshots; Fabric's test tool stalls on 1.21.11)
-        continue-on-error: true
-        run: |
-          timeout 20m xvfb-run -a -s "-screen 0 1920x1080x24 +extension GLX +render -noreset" ./gradlew :1.21.11:runClientGameTest --stacktrace 2>&1 | tee test.log; status=${PIPESTATUS[0]}
-          if [ "$status" -ne 0 ]; then echo "=== COMPILE ERRORS"; grep -E "error:|What went wrong" -A3 test.log | head -200; fi
-          exit $status
-      - name: Print screenshot previews
-        if: always()
-        run: |
-          for f in $(find . -path '*screenshots*' -name '*.png' | sort); do
-            convert "$f" -resize 960x -quality 70 /tmp/preview.jpg || continue
-            echo "SHOT $(basename "$f") $(base64 -w0 /tmp/preview.jpg)"
-          done
-      - name: Show game log
-        if: failure()
-        run: find . -name latest.log -path '*logs*' -exec tail -n 200 {} \;
       - name: Publish the bot (its own pre-release, so Glade's updater ignores it)
         if: steps.selftest.outcome == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/claude/serene-euler-8ygwvm'
         env:
@@ -263,6 +247,22 @@ jobs:
             gh release create "$TAG" glade-bot-1.21.11.jar --title "Glade Bot $V (Minecraft 1.21.11)" --prerelease --latest=false --target "$GITHUB_SHA" \
               --notes "Neth Pot practice bot for singleplayer. Put glade-bot-1.21.11.jar in your mods folder next to Fabric API (Minecraft 1.21.11, Fabric). In a world press B, pick LT3/HT3/LT2 and mend, then Start fight (or /bot start)."
           fi
+      - name: Run the bot game test (screenshots; Fabric's test tool stalls on 1.21.11)
+        continue-on-error: true
+        run: |
+          timeout 20m xvfb-run -a -s "-screen 0 1920x1080x24 +extension GLX +render -noreset" ./gradlew :1.21.11:runClientGameTest --stacktrace 2>&1 | tee test.log; status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then echo "=== COMPILE ERRORS"; grep -E "error:|What went wrong" -A3 test.log | head -200; fi
+          exit $status
+      - name: Print screenshot previews
+        if: always()
+        run: |
+          for f in $(find . -path '*screenshots*' -name '*.png' | sort); do
+            convert "$f" -resize 960x -quality 70 /tmp/preview.jpg || continue
+            echo "SHOT $(basename "$f") $(base64 -w0 /tmp/preview.jpg)"
+          done
+      - name: Show game log
+        if: failure()
+        run: find . -name latest.log -path '*logs*' -exec tail -n 200 {} \;
       - uses: actions/upload-artifact@v4
         if: always()
         with:
