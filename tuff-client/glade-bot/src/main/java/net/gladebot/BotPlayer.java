@@ -64,7 +64,13 @@ public final class BotPlayer extends ServerPlayer {
 		if (brain != null) brain.tick();
 		super.tick();
 		// what a real player's connection does each tick: move and run the player
+		double y = getY();
 		doTick();
+		// a real player's fall is tracked from their client's movement; the bot has
+		// none, so track it here (crits need it: you only crit while falling)
+		double dy = getY() - y;
+		if (!onGround() && dy < 0) fallDistance = Math.max(fallDistance, 0) - dy;
+		else if (onGround()) fallDistance = 0;
 	}
 
 	public void knockback(double strength, double x, double z) {

@@ -404,8 +404,12 @@ public final class BotBrain {
 				move(forward, strafe, false, false);
 				return;
 			}
-			// no sprint in the air before a crit, so the hit isn't a sprint hit
-			if (critJump) sprint = false;
+			// no sprint in the air before a crit, so the hit isn't a sprint hit;
+			// keep moving in so they're in reach on the way down
+			if (critJump) {
+				sprint = false;
+				if (dist > 2.4) forward = 1;
+			}
 		} else if (swingPicked && inReach && charge >= tier.charge && canHurt && busy == 0 && bot.isSprinting() && wtap == 0) {
 			swing(true);
 			if (Settings.wtap && random.nextFloat() < tier.wtapChance) wtap = 1 + random.nextInt(2);

@@ -165,10 +165,12 @@ public final class Match {
 			GladeBot.LOGGER.info("[gladebot] bot set to 5 hp");
 		}
 		// two lethal hits a few ticks apart: it should double pop
-		if (ticks == 500) {
+		if (ticks == 495) {
 			var inv = bot.getInventory();
 			bot.setItemSlot(net.minecraft.world.entity.EquipmentSlot.OFFHAND, new net.minecraft.world.item.ItemStack(Items.TOTEM_OF_UNDYING));
 			inv.setItem(1, new net.minecraft.world.item.ItemStack(Items.TOTEM_OF_UNDYING));
+		}
+		if (ticks == 500) {
 			bot.setHealth(2f);
 			bot.invulnerableTime = 0;
 			bot.hurtServer(level, bot.damageSources().generic(), 200f);
