@@ -5,6 +5,7 @@ plugins {
 }
 
 val mc: String = sc.current.version
+val mcCompat: String = property("mod.mc_compat") as String
 version = "${property("mod.version")}+$mc"
 base.archivesName = "glade-bot"
 
@@ -36,7 +37,7 @@ tasks.withType<JavaCompile>().configureEach {
 }
 
 tasks.processResources {
-    val props = mapOf("version" to project.version.toString(), "minecraft" to property("mod.mc_compat") as String)
+    val props = mapOf("version" to project.version.toString(), "minecraft" to mcCompat)
     inputs.properties(props)
     filesMatching("fabric.mod.json") { expand(props) }
 }

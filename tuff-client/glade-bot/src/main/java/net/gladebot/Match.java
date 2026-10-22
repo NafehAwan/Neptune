@@ -157,6 +157,6 @@ public final class Match {
 	}
 
 	private static void sound(ServerPlayer player, float pitch) {
-		player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.NOTE_BLOCK_PLING, SoundSource.PLAYERS, 1f, pitch);
+		player.level().playSound((net.minecraft.world.entity.player.Player) null, player.getX(), player.getY(), player.getZ(), SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 1f, pitch);
 	}
 }
