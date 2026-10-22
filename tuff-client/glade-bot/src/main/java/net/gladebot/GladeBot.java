@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Glade Bot: a Neth Pot practice bot for singleplayer.
  *
- * /bot start, /bot stop, /bot tier lt3|ht3|lt2, /bot mend on|off,
+ * /bot start, /bot stop, /bot tier lt3|mt3|ht3, /bot mend on|off,
  * /bot kit save me|bot (your current inventory becomes that kit), /bot kit reset.
  * Press B for the settings screen.
  */
@@ -81,7 +81,7 @@ public final class GladeBot implements ModInitializer {
 		set.then(style);
 		dispatcher.register(Commands.literal("bot")
 				.executes(ctx -> say(ctx, "Glade Bot (" + Settings.tier.label + ", " + (Settings.mend ? "mend" : "no mend")
-						+ "): /bot start, /bot stop, /bot tier lt3|ht3|lt2, /bot mend on|off, /bot kit save me|bot, /bot kit reset. Press B for settings."))
+						+ "): /bot start, /bot stop, /bot tier lt3|mt3|ht3, /bot mend on|off, /bot kit save me|bot, /bot kit reset. Press B for settings."))
 				.then(Commands.literal("start").executes(ctx -> say(ctx, Match.start(player(ctx)))))
 				.then(Commands.literal("selftest").executes(ctx -> say(ctx, Match.selfTest(ctx.getSource().getServer()))))
 				.then(Commands.literal("stop").executes(ctx -> {
