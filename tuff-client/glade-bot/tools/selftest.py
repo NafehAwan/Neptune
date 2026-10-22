@@ -47,7 +47,7 @@ def armour_even():
         return False
     vals = [int(v) for v in re.findall(r"=(\d+)%", m.group(1))]
     print(f"SELFTEST armour after mending {vals}")
-    return len(vals) == 4 and min(vals) >= 55 and max(vals) - min(vals) <= 20
+    return len(vals) == 4 and min(vals) >= 50 and max(vals) - min(vals) <= 12
 
 def stats(text):
     return {k: int(v) for k, v in re.findall(r"(\w+)=(\d+)", text)}

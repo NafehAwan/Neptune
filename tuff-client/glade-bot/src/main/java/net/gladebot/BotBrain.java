@@ -45,7 +45,10 @@ public final class BotBrain {
 	private ServerPlayer target;
 	private Mode mode = Mode.READY;
 	private int modeTicks, busy, strafeDir = 1, strafeTicks, wtap, potsLeft, critTicks, aggro, retreat;
-	private boolean critJump, drinking, swingIsCrit, swingPicked, deiviCommit, lastOffTotem;
+	private boolean critJump, drinking, swingIsCrit, swingPicked, deiviCommit;
+	private int lastTotems = -1;
+	/** Armour taken off while mending so the XP goes to the pieces that need it (put back when mending stops). */
+	private final java.util.Map<EquipmentSlot, Integer> stashed = new java.util.EnumMap<>(EquipmentSlot.class);
 	private int lastPopTick = -1000, age, lastDeivi = -100000, styleTicks;
 	private boolean oppWasEating, jumpNow;
 	/** XP bottles it allows itself this mend session, and ticks it's paused for (tests). */
@@ -167,6 +170,7 @@ public final class BotBrain {
 	}
 
 	private void enter(Mode next) {
+		unstash();
 		mode = next;
 		modeTicks = 0;
 		drinking = false;
@@ -177,10 +181,12 @@ public final class BotBrain {
 
 	// ------------------------------------------------------------------ totem pops
 
-	/** A totem that was in the offhand and is now gone popped: pot up (and go aggressive after a deivi pop). */
+	/** One totem fewer than last tick means one popped: pot up (and go aggressive after a deivi pop). */
 	private void watchPops(Tier tier) {
-		boolean offTotem = bot.getOffhandItem().is(Items.TOTEM_OF_UNDYING);
-		if (lastOffTotem && bot.getOffhandItem().isEmpty() && mode != Mode.READY) {
+		int totems = countAll(s -> s.is(Items.TOTEM_OF_UNDYING));
+		boolean popped = lastTotems >= 0 && totems < lastTotems && mode != Mode.READY;
+		lastTotems = totems;
+		if (popped) {
 			pops++;
 			if (age - lastPopTick < 60) doublePops++;
 			lastPopTick = age;
@@ -195,7 +201,14 @@ public final class BotBrain {
 			GladeBot.LOGGER.info("[gladebot] {} popped a totem{}", bot.getName().getString(), deiviCommit ? " (deivi pop)" : "");
 			enter(Mode.POP);
 		}
-		lastOffTotem = offTotem;
+	}
+
+	private int countAll(Predicate<ItemStack> what) {
+		var inv = bot.getInventory();
+		int n = 0;
+		for (int i = 0; i < 36; i++) if (what.test(inv.getItem(i))) n += inv.getItem(i).getCount();
+		if (what.test(bot.getOffhandItem())) n += bot.getOffhandItem().getCount();
+		return n;
 	}
 
 	/** Right after a pop: throw the queued pots at your feet, then rush if it was a deivi pop. */
@@ -365,9 +378,9 @@ public final class BotBrain {
 			swingPicked = true;
 			float critShare = switch (play) {
 				case CRIT -> 0.95f;
-				case AGGRESSIVE -> tier.critChance * 0.5f;
-				case STRAFE -> tier.critChance * 0.8f;
-				case DEFENSIVE -> tier.critChance * 0.6f;
+				case AGGRESSIVE -> tier.critChance * 0.75f;
+				case STRAFE -> tier.critChance * 0.9f;
+				case DEFENSIVE -> tier.critChance * 0.85f;
 				default -> tier.critChance;
 			};
 			// they're eating: free crits
@@ -517,6 +530,7 @@ public final class BotBrain {
 			return;
 		}
 		if (busy > 0) return;
+		balanceArmor();
 		int slot = hotbar(s -> s.is(Items.EXPERIENCE_BOTTLE));
 		if (slot < 0) {
 			if (!refill(s -> s.is(Items.EXPERIENCE_BOTTLE), tier)) enter(Mode.FIGHT);
@@ -684,7 +698,6 @@ public final class BotBrain {
 		ItemStack hand = inv.getItem(slot), off = bot.getOffhandItem();
 		inv.setItem(slot, off);
 		bot.setItemSlot(EquipmentSlot.OFFHAND, hand);
-		lastOffTotem = hand.is(Items.TOTEM_OF_UNDYING);
 	}
 
 	// ------------------------------------------------------------------ what to throw
@@ -723,6 +736,55 @@ public final class BotBrain {
 		return null;
 	}
 
+	private static float left(ItemStack s) {
+		return s.isEmpty() || s.getMaxDamage() <= 0 ? 1 : 1 - s.getDamageValue() / (float) s.getMaxDamage();
+	}
+
+	/**
+	 * Mending puts each XP orb on a random damaged piece, so bigger pieces fall
+	 * behind. While mending, a piece that's well ahead of the worst one comes
+	 * off into the inventory (so the XP goes elsewhere) and goes back on as soon
+	 * as the others catch up or mending stops.
+	 */
+	private void balanceArmor() {
+		var inv = bot.getInventory();
+		// put back pieces the others have caught up with
+		for (var it = stashed.entrySet().iterator(); it.hasNext();) {
+			var e = it.next();
+			ItemStack piece = inv.getItem(e.getValue());
+			if (left(piece) <= armorLeft() + 0.03f || armorLeft() > 0.9f) {
+				bot.setItemSlot(e.getKey(), piece);
+				inv.setItem(e.getValue(), ItemStack.EMPTY);
+				it.remove();
+			}
+		}
+		float worst = armorLeft();
+		for (EquipmentSlot slot : ARMOR) {
+			ItemStack piece = bot.getItemBySlot(slot);
+			if (piece.isEmpty() || left(piece) < worst + 0.08f) continue;
+			int free = -1;
+			for (int i = 9; i < 36 && free < 0; i++) if (inv.getItem(i).isEmpty()) free = i;
+			if (free < 0) return;
+			inv.setItem(free, piece);
+			bot.setItemSlot(slot, ItemStack.EMPTY);
+			stashed.put(slot, free);
+		}
+	}
+
+	/** Puts every piece taken off for mending back on. */
+	private void unstash() {
+		if (stashed.isEmpty()) return;
+		var inv = bot.getInventory();
+		for (var e : stashed.entrySet()) {
+			ItemStack piece = inv.getItem(e.getValue());
+			if (!piece.isEmpty()) {
+				bot.setItemSlot(e.getKey(), piece);
+				inv.setItem(e.getValue(), ItemStack.EMPTY);
+			}
+		}
+		stashed.clear();
+	}
+
 	/** Average durability left over the armour pieces, 0..1. */
 	private float averageArmor() {
 		float sum = 0;
@@ -756,20 +818,27 @@ public final class BotBrain {
 	public String armorReport() {
 		StringBuilder b = new StringBuilder();
 		for (EquipmentSlot slot : ARMOR) {
-			ItemStack s = bot.getItemBySlot(slot);
+			ItemStack s = piece(slot);
 			if (s.isEmpty() || s.getMaxDamage() <= 0) continue;
 			b.append(slot.getName()).append('=').append(Math.round(100 * (1 - s.getDamageValue() / (float) s.getMaxDamage()))).append("% ");
 		}
 		return b.toString().trim();
 	}
 
-	/** The worst armour piece's durability left, 0..1. */
+	/** An armour piece, worn or taken off for mending. */
+	private ItemStack piece(EquipmentSlot slot) {
+		Integer at = stashed.get(slot);
+		return at != null ? bot.getInventory().getItem(at) : bot.getItemBySlot(slot);
+	}
+
+	/** The worst worn armour piece's durability left, 0..1. */
 	private float armorLeft() {
 		float worst = 1;
 		for (EquipmentSlot slot : ARMOR) {
+			if (stashed.containsKey(slot)) continue;
 			ItemStack s = bot.getItemBySlot(slot);
 			if (s.isEmpty() || s.getMaxDamage() <= 0) continue;
-			worst = Math.min(worst, 1 - s.getDamageValue() / (float) s.getMaxDamage());
+			worst = Math.min(worst, left(s));
 		}
 		return worst;
 	}

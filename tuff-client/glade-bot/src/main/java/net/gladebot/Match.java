@@ -77,6 +77,7 @@ public final class Match {
 		int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, 0, 0);
 		GladeBot.LOGGER.info("[gladebot] selftest arena at y={}", y);
 		stop(server);
+		Settings.tier = Tier.HT3;
 		BotPlayer target = BotPlayer.spawn(server, level, new Vec3(0.5, y, 0.5), 0, "Sparring");
 		String msg = start(target);
 		target.brain = new BotBrain(target, bot);
