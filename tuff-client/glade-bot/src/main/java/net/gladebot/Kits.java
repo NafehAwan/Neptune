@@ -34,9 +34,9 @@ public final class Kits {
 	}
 
 	/**
-	 * The default Neth Pot kit, as in a real HT3 mend fight: totem in the
-	 * offhand and spares, XP on slot 2, splash healing, and splash strength
-	 * and speed (thrown at your feet, not drunk).
+	 * The default Neth Pot kit, as in a real HT3 mend fight: gapples in the
+	 * offhand, a totem on slot 9 to swap in when low and spares, XP on slot 2,
+	 * splash healing, and splash strength and speed (thrown at your feet).
 	 */
 	public static ItemStack[] defaultKit(HolderLookup.Provider registries, boolean mend) {
 		ItemStack[] kit = new ItemStack[SIZE];
@@ -63,7 +63,7 @@ public final class Kits {
 		kit[37] = armor(registries, Items.NETHERITE_LEGGINGS);
 		kit[38] = armor(registries, Items.NETHERITE_CHESTPLATE);
 		kit[39] = armor(registries, Items.NETHERITE_HELMET);
-		kit[40] = new ItemStack(Items.TOTEM_OF_UNDYING);
+		kit[40] = new ItemStack(Items.GOLDEN_APPLE, 32);
 		return kit;
 	}
 

@@ -26,7 +26,7 @@ import net.minecraft.world.phys.Vec3;
  * and turns at most {@link Tier#aimSpeed} degrees a tick, like a person.
  */
 public final class BotBrain {
-	private enum Mode { READY, FIGHT, HEAL, BUFF, MEND, IDLE }
+	private enum Mode { READY, FIGHT, HEAL, BUFF, MEND, EAT, IDLE }
 
 	private static final EquipmentSlot[] ARMOR = {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
 	private final BotPlayer bot;
@@ -68,13 +68,14 @@ public final class BotBrain {
 		Vec3 where = seen.peekFirst().add(0, target.getBbHeight() * 0.8, 0);
 		double dist = bot.distanceTo(target);
 		modeTicks++;
-		keepTotem(tier);
+		offhand(tier, dist);
 		switch (mode) {
 			case READY -> ready(tier, where);
 			case FIGHT -> fight(tier, where, dist);
 			case HEAL -> heal(tier, where);
 			case BUFF -> buff(tier, where, dist);
 			case MEND -> mend(tier, where, dist);
+			case EAT -> eat(tier, where, dist);
 			default -> move(0, 0, false, false);
 		}
 	}
@@ -120,6 +121,10 @@ public final class BotBrain {
 		}
 		if (dist > 5 && neededBuff(false) != null) {
 			enter(Mode.BUFF);
+			return;
+		}
+		if (dist > 4.5 && bot.getOffhandItem().is(Items.GOLDEN_APPLE) && bot.getEffect(MobEffects.ABSORPTION) == null && bot.getHealth() < 19) {
+			enter(Mode.EAT);
 			return;
 		}
 		if (Settings.mend && dist > 6 && armorLeft() < tier.mendAt && has(s -> s.is(Items.EXPERIENCE_BOTTLE))) {
@@ -244,6 +249,29 @@ public final class BotBrain {
 		drinking = true;
 	}
 
+	/** Eat the offhand gapple while backing off, sword still in hand. */
+	private void eat(Tier tier, Vec3 where, double dist) {
+		selectSword();
+		aim(where, tier.aimSpeed, tier.jitter);
+		move(-0.7f, strafeDir * tier.strafe, false, false);
+		if (bot.getHealth() <= tier.healAt || modeTicks > 60) {
+			bot.stopUsingItem();
+			enter(Mode.FIGHT);
+			return;
+		}
+		if (drinking) {
+			if (!bot.isUsingItem()) enter(Mode.FIGHT);
+			return;
+		}
+		ItemStack apple = bot.getOffhandItem();
+		if (!apple.is(Items.GOLDEN_APPLE)) {
+			enter(Mode.FIGHT);
+			return;
+		}
+		bot.gameMode.useItem(bot, bot.level(), apple, InteractionHand.OFF_HAND);
+		drinking = true;
+	}
+
 	/** Back off and throw XP bottles down to repair armour. */
 	private void mend(Tier tier, Vec3 where, double dist) {
 		turn(yawTo(where), 90, tier.aimSpeed * 2.5f);
@@ -317,20 +345,68 @@ public final class BotBrain {
 	}
 
 	/**
-	 * Puts a spare totem in the offhand after one pops: from the hotbar it's a
-	 * quick hand swap, from the inventory it takes as long as a refill.
+	 * The offhand, as an HT3 player runs it: a gapple normally; a totem
+	 * swapped in from the hotbar when low; another one straight after a pop
+	 * if still in danger (a double pop); the gapple back once safe; and a
+	 * spare totem pulled onto the hotbar for next time.
 	 */
-	private void keepTotem(Tier tier) {
-		if (!bot.getOffhandItem().isEmpty() || busy > 0) return;
-		var inv = bot.getInventory();
-		for (int i = 0; i < 36; i++) {
-			if (inv.getItem(i).is(Items.TOTEM_OF_UNDYING)) {
-				bot.setItemSlot(EquipmentSlot.OFFHAND, inv.getItem(i));
-				inv.setItem(i, ItemStack.EMPTY);
-				busy = i < 9 ? 3 : tier.refill;
+	private void offhand(Tier tier, double dist) {
+		if (busy > 0 || bot.isUsingItem() || mode == Mode.READY) return;
+		ItemStack off = bot.getOffhandItem();
+		float hp = bot.getHealth();
+		boolean danger = hp <= tier.totemAt && dist < 6;
+		if (danger) {
+			if (off.is(Items.TOTEM_OF_UNDYING)) return;
+			int slot = hotbar(s -> s.is(Items.TOTEM_OF_UNDYING));
+			if (slot >= 0) {
+				swapOffhand(slot);
+				busy = 2;
+			} else {
+				refill(s -> s.is(Items.TOTEM_OF_UNDYING), tier);
+			}
+			return;
+		}
+		boolean safe = hp > tier.totemAt + 4 || dist > 6;
+		if (safe && !off.is(Items.GOLDEN_APPLE)) {
+			int slot = hotbar(s -> s.is(Items.GOLDEN_APPLE));
+			if (slot >= 0) {
+				swapOffhand(slot);
+				busy = 2;
 				return;
 			}
+			var inv = bot.getInventory();
+			for (int i = 9; i < 36; i++) {
+				ItemStack apples = inv.getItem(i);
+				if (apples.is(Items.GOLDEN_APPLE)) {
+					inv.setItem(i, off);
+					bot.setItemSlot(EquipmentSlot.OFFHAND, apples);
+					busy = tier.refill;
+					return;
+				}
+			}
+			// no gapples left: keep a totem there
+			if (off.isEmpty()) {
+				int slot2 = hotbar(s -> s.is(Items.TOTEM_OF_UNDYING));
+				if (slot2 >= 0) {
+					swapOffhand(slot2);
+					busy = 2;
+					return;
+				}
+			}
 		}
+		// a totem ready on the hotbar for the next swap
+		if (safe && !off.is(Items.TOTEM_OF_UNDYING) && hotbar(s -> s.is(Items.TOTEM_OF_UNDYING)) < 0 && has(s -> s.is(Items.TOTEM_OF_UNDYING))) {
+			refill(s -> s.is(Items.TOTEM_OF_UNDYING), tier);
+		}
+	}
+
+	/** Selects a hotbar slot and swaps it with the offhand (the F key). */
+	private void swapOffhand(int slot) {
+		var inv = bot.getInventory();
+		select(slot);
+		ItemStack hand = inv.getItem(slot), off = bot.getOffhandItem();
+		inv.setItem(slot, off);
+		bot.setItemSlot(EquipmentSlot.OFFHAND, hand);
 	}
 
 	// ------------------------------------------------------------------ what to drink

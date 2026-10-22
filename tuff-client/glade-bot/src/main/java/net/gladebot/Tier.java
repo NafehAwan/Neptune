@@ -9,10 +9,12 @@ public enum Tier {
 	// a burst of up to 3-4 at 2.5 hearts or less, a pot every 3 ticks, looking straight
 	// down), mends with XP whenever there's room even with armour still high, and takes
 	// about half a second to pull more pots from its inventory.
-	//          reaction aimSpeed jitter reach  charge critChance wtapChance strafe healAt burstAt burst potGap mendAt refill
-	LT3("LT3", 5, 22f, 4.0f, 2.95, 0.92f, 0.35f, 0.40f, 0.55f, 9f, 5f, 2, 5, 0.60f, 14),
-	HT3("HT3", 4, 30f, 3.0f, 3.05, 0.95f, 0.50f, 0.60f, 0.70f, 8f, 5f, 4, 3, 0.85f, 10),
-	LT2("LT2", 3, 38f, 2.0f, 3.15, 0.97f, 0.65f, 0.75f, 0.85f, 7f, 5f, 4, 2, 0.88f, 7);
+	// It keeps a gapple in the offhand and swaps a totem in when low (sometimes a second
+	// one straight after a pop: a double pop), then puts the gapple back and eats it.
+	//          reaction aimSpeed jitter reach  charge critChance wtapChance strafe healAt burstAt burst potGap mendAt refill totemAt
+	LT3("LT3", 5, 22f, 4.0f, 2.95, 0.92f, 0.35f, 0.40f, 0.55f, 9f, 5f, 2, 5, 0.60f, 14, 6f),
+	HT3("HT3", 4, 30f, 3.0f, 3.05, 0.95f, 0.50f, 0.60f, 0.70f, 8f, 5f, 4, 3, 0.85f, 10, 8f),
+	LT2("LT2", 3, 38f, 2.0f, 3.15, 0.97f, 0.65f, 0.75f, 0.85f, 7f, 5f, 4, 2, 0.88f, 7, 9f);
 
 	public final String label;
 	/** Ticks between the player moving and the bot reacting. */
@@ -32,9 +34,11 @@ public enum Tier {
 	public final float mendAt;
 	/** Ticks it takes to move a potion from the inventory to the hotbar. */
 	public final int refill;
+	/** Health at which it swaps a totem into the offhand (in place of the gapple). */
+	public final float totemAt;
 
 	Tier(String label, int reaction, float aimSpeed, float jitter, double reach, float charge, float critChance, float wtapChance, float strafe,
-			float healAt, float burstAt, int burst, int potGap, float mendAt, int refill) {
+			float healAt, float burstAt, int burst, int potGap, float mendAt, int refill, float totemAt) {
 		this.label = label;
 		this.reaction = reaction;
 		this.aimSpeed = aimSpeed;
@@ -50,6 +54,7 @@ public enum Tier {
 		this.potGap = potGap;
 		this.mendAt = mendAt;
 		this.refill = refill;
+		this.totemAt = totemAt;
 	}
 
 	public static Tier parse(String s) {
