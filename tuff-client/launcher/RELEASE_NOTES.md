@@ -1,3 +1,8 @@
+Glade 1.7.0
+- New FPS Boost module (on by default): turns off clouds, entity shadows and biome blending, and stops drawing mobs and items past 48 blocks. Each part can be switched off; turning the module off puts the game's defaults back.
+- The Right Shift HUD editor fades in and out, and its card, module bars and hints now use Glade's menu fonts and style at a smaller size.
+- Glade is now tested on Minecraft 1.21.11 in game, and on Windows (also next to Sodium).
+
 Glade 1.6.4
 - Sharper in-game menus: Glade's title screen, menu and HUD editor now put every letter, corner and icon on whole screen pixels, so nothing looks broken up, whatever your window size.
 - The title screen card is smaller, and the version text at the bottom is smaller too.

@@ -49,6 +49,12 @@ public class TuffClientGameTest implements FabricClientGameTest {
 		context.waitForScreen(TuffTitleScreen.class);
 		context.waitTicks(40);
 		context.takeScreenshot("tuff-title");
+		// A window a little shorter than the screen (title bar, taskbar): still pixel-exact.
+		context.getInput().resizeWindow(1920, 1009);
+		context.waitTicks(10);
+		context.takeScreenshot("tuff-title-short");
+		context.getInput().resizeWindow(1920, 1080);
+		context.waitTicks(10);
 
 		// The UI fonts must actually be loaded (their widths differ from the game font).
 		boolean customFont = context.computeOnClient(client ->
@@ -58,7 +64,7 @@ public class TuffClientGameTest implements FabricClientGameTest {
 
 		// The account menu: 3D heads, and offline accounts switch on the spot and back again.
 		context.getInput().setCursorPos(4, 400);
-		context.runOnClient(client -> ((TuffTitleScreen) client.gui.screen()).setAccountMenuOpen(true));
+		context.runOnClient(client -> ((TuffTitleScreen) net.tuffclient.Mc.screen()).setAccountMenuOpen(true));
 		context.waitTicks(12);
 		context.takeScreenshot("glade-account-menu");
 		String original = context.computeOnClient(client -> client.getUser().getName());
@@ -73,7 +79,7 @@ public class TuffClientGameTest implements FabricClientGameTest {
 			String why = Accounts.switchTo(Accounts.launchAccount());
 			if (why != null) throw new AssertionError("Could not switch back: " + why);
 			Accounts.remove(tester);
-			((TuffTitleScreen) client.gui.screen()).setAccountMenuOpen(false);
+			((TuffTitleScreen) net.tuffclient.Mc.screen()).setAccountMenuOpen(false);
 		});
 		if (!original.equals(context.computeOnClient(client -> client.getUser().getName()))) {
 			throw new AssertionError("Switching back did not restore the original account");
@@ -83,16 +89,16 @@ public class TuffClientGameTest implements FabricClientGameTest {
 		// Right Shift opens Glade's settings from the title screen.
 		context.getInput().pressKey(TuffClient.menuKey());
 		context.waitForScreen(TuffMenuScreen.class);
-		context.runOnClient(client -> client.gui.screen().onClose());
+		context.runOnClient(client -> net.tuffclient.Mc.screen().onClose());
 		context.waitForScreen(TuffTitleScreen.class);
 		// Without Mod Menu installed, Mods opens Glade's own mods page.
-		context.runOnClient(client -> ((TuffTitleScreen) client.gui.screen()).openMods());
+		context.runOnClient(client -> ((TuffTitleScreen) net.tuffclient.Mc.screen()).openMods());
 		context.waitForScreen(TuffMenuScreen.class);
-		context.runOnClient(client -> client.gui.screen().onClose());
+		context.runOnClient(client -> net.tuffclient.Mc.screen().onClose());
 		context.waitForScreen(TuffTitleScreen.class);
 		context.waitTicks(10);
 
-		Screen title = context.computeOnClient(client -> client.gui.screen());
+		Screen title = context.computeOnClient(client -> net.tuffclient.Mc.screen());
 		TuffMenuScreen menu = context.computeOnClient(client -> new TuffMenuScreen(title));
 		context.setScreen(() -> menu);
 		// Park the cursor in a corner so screenshots show no hover state or tooltip.

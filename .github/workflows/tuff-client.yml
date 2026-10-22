@@ -81,10 +81,14 @@ jobs:
           if-no-files-found: warn
 
   mod-test:
-    name: Fabric mod in-game test
+    name: Fabric mod in-game test (${{ matrix.mc }})
     needs: mod
     runs-on: ubuntu-24.04
     timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        mc: [ "1.21.11", "26.3" ]
     defaults:
       run:
         working-directory: tuff-client/mod
@@ -100,7 +104,7 @@ jobs:
       - name: Run client game test
         # Same setup as Fabric API's own client tests: Mesa's software Vulkan driver.
         run: |
-          timeout 15m xvfb-run -a -s "-screen 0 1920x1080x24 +extension GLX +render -noreset" ./gradlew :26.3:runClientGameTest --stacktrace
+          timeout 15m xvfb-run -a -s "-screen 0 1920x1080x24 +extension GLX +render -noreset" ./gradlew :${{ matrix.mc }}:runClientGameTest --stacktrace
       - name: Print screenshot previews
         if: always()
         run: |
@@ -118,7 +122,7 @@ jobs:
             echo "SHOT crop-$(basename "$f") $(base64 -w0 /tmp/crop.jpg)"
           done
           # Full-resolution crops show real text quality.
-          for f in $(find . -path '*screenshots*' -name '*tuff-menu-mods*.png' -o -path '*screenshots*' -name '*tuff-title*.png' | sort); do
+          for f in $(find . -path '*screenshots*' -name '*tuff-menu-mods*.png' -o -path '*screenshots*' -name '*tuff-title.png' | sort); do
             convert "$f" -gravity center -crop 640x360+0+0 +repage -quality 92 /tmp/crop.jpg || continue
             echo "SHOT crop-$(basename "$f") $(base64 -w0 /tmp/crop.jpg)"
           done
@@ -128,7 +132,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: glade-test-screenshots
+          name: glade-test-screenshots-${{ matrix.mc }}
           path: |
             tuff-client/mod/**/run/**/screenshots
             tuff-client/mod/run/**/screenshots
@@ -136,13 +140,61 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: glade-test-logs
+          name: glade-test-logs-${{ matrix.mc }}
           path: |
             tuff-client/mod/**/run/**/logs
             tuff-client/mod/run/**/logs
             tuff-client/mod/**/run/**/crash-reports
             tuff-client/mod/run/**/crash-reports
           if-no-files-found: ignore
+
+  mod-windows:
+    # Glade on Windows: the same in-game test on 1.21.11, on its own and next to Sodium.
+    name: Fabric mod on Windows (1.21.11${{ matrix.sodium && ' + Sodium' || '' }})
+    needs: mod
+    runs-on: windows-2022
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        sodium: [ false, true ]
+    defaults:
+      run:
+        shell: bash
+        working-directory: tuff-client/mod
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: |
+            21
+            25
+          distribution: 'temurin'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Install Mesa (software OpenGL, the runner has no GPU)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download -R pal1000/mesa-dist-win --pattern '*-release-msvc.7z' -D "$RUNNER_TEMP/mesa"
+          7z x -o"$RUNNER_TEMP/mesa/x" "$RUNNER_TEMP"/mesa/*.7z > /dev/null
+          # Windows loads opengl32.dll from java.exe's folder first
+          for j in "$JAVA_HOME_21_X64" "$JAVA_HOME_25_X64"; do cp "$RUNNER_TEMP"/mesa/x/x64/*.dll "$j/bin/"; done
+          ls "$JAVA_HOME_21_X64/bin" | grep -i -E 'opengl|gallium|glapi'
+      - name: Add Sodium
+        if: matrix.sodium
+        run: |
+          mkdir -p extra-mods/1.21.11
+          url=$(curl -fsSL 'https://api.modrinth.com/v2/project/sodium/version?game_versions=%5B%221.21.11%22%5D&loaders=%5B%22fabric%22%5D' | python -c "import sys,json;v=json.load(sys.stdin)[0];f=[f for f in v['files'] if f['primary']] or v['files'];print(f[0]['url'])")
+          echo "Sodium: $url"
+          curl -fsSL "$url" -o extra-mods/1.21.11/sodium.jar
+      - name: Run client game test
+        env:
+          GALLIUM_DRIVER: llvmpipe
+        run: |
+          timeout 30m ./gradlew :1.21.11:runClientGameTest --stacktrace "-Porg.gradle.java.installations.fromEnv=JAVA_HOME_21_X64,JAVA_HOME_25_X64" "-Porg.gradle.java.installations.auto-download=false"
+      - name: Show game log
+        if: failure()
+        run: find . -name latest.log -path '*logs*' -exec tail -n 200 {} \;
 
   loaders:
     name: Launcher loaders (install and start)

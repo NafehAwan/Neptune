@@ -20,9 +20,12 @@ public final class EntityDistanceModule extends Module {
 	/** Whether this entity is too far to draw. */
 	public boolean tooFar(Entity entity) {
 		Minecraft mc = Minecraft.getInstance();
-		if (!isEnabled() || mc.player == null || entity == mc.player) return false;
-		if (entity instanceof Player && !players.get()) return false;
-		double d = distance.get();
+		boolean own = isEnabled();
+		var boost = net.tuffclient.TuffClient.modules() == null ? null : net.tuffclient.TuffClient.modules().fpsBoost;
+		if (!own && (boost == null || !boost.hidesFarEntities())) return false;
+		if (mc.player == null || entity == mc.player) return false;
+		if (entity instanceof Player && (!own || !players.get())) return false;
+		double d = own ? distance.get() : 48;
 		return mc.player.distanceToSqr(entity) > d * d;
 	}
 }

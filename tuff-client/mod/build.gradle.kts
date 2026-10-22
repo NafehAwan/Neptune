@@ -105,9 +105,9 @@ tasks.processResources {
     }
 }
 
-// Client game tests (26.3): boot the real game, open every Glade screen and save
-// screenshots so CI checks the mod at runtime.
-if (mc == "26.3") {
+// Client game tests (1.21.11 and 26.3): boot the real game, open every Glade
+// screen and save screenshots so CI checks the mod at runtime.
+if (mc == "26.3" || mc == "1.21.11") {
     fabricApi {
         configureTests {
             createSourceSet = true
@@ -134,3 +134,10 @@ tasks.register("gladeClasspath") {
     }
 }
 
+
+// Other mods to run next to Glade in the game test (CI drops Sodium in
+// extra-mods/<version> to check Glade works with it).
+val extraMods = rootProject.file("extra-mods/$mc")
+if (extraMods.isDirectory) {
+    dependencies { "modLocalRuntime"(fileTree(extraMods) { include("*.jar") }) }
+}
