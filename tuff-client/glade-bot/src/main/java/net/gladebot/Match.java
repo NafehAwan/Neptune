@@ -71,7 +71,10 @@ public final class Match {
 	 */
 	public static String selfTest(MinecraftServer server) {
 		ServerLevel level = server.overworld();
+		// load the chunk first, or the height map reads the bottom of the world
+		level.getChunk(0, 0);
 		int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, 0, 0);
+		GladeBot.LOGGER.info("[gladebot] selftest arena at y={}", y);
 		stop(server);
 		BotPlayer target = BotPlayer.spawn(server, level, new Vec3(0.5, y, 0.5), 0, "Dummy");
 		String msg = start(target);
@@ -149,11 +152,17 @@ public final class Match {
 	 * Called before a player in the match dies. A totem in either hand saves
 	 * them as usual; otherwise nobody dies: the match ends and they're healed.
 	 */
-	public static boolean allowDeath(LivingEntity entity) {
+	public static boolean allowDeath(LivingEntity entity, net.minecraft.world.damagesource.DamageSource source) {
 		if (state != State.FIGHT && state != State.COUNTDOWN) return true;
 		boolean isBot = entity == bot;
 		boolean isPlayer = entity instanceof ServerPlayer sp && sp.getUUID().equals(playerId);
 		if (!isBot && !isPlayer) return true;
+		GladeBot.LOGGER.info("[gladebot] {} took a fatal hit ({}) during {}", entity.getName().getString(), source.getMsgId(), state);
+		if (state == State.COUNTDOWN) {
+			// nothing counts before "Fight!"
+			entity.setHealth(entity.getMaxHealth());
+			return false;
+		}
 		if (entity.getMainHandItem().is(Items.TOTEM_OF_UNDYING) || entity.getOffhandItem().is(Items.TOTEM_OF_UNDYING)) return true;
 		entity.setHealth(entity.getMaxHealth());
 		entity.removeAllEffects();

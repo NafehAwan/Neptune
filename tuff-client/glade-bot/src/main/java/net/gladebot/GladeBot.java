@@ -31,7 +31,7 @@ public final class GladeBot implements ModInitializer {
 		Settings.load();
 		CommandRegistrationCallback.EVENT.register((dispatcher, registries, environment) -> register(dispatcher));
 		ServerTickEvents.END_SERVER_TICK.register(Match::tick);
-		ServerLivingEntityEvents.ALLOW_DEATH.register((entity, source, amount) -> Match.allowDeath(entity));
+		ServerLivingEntityEvents.ALLOW_DEATH.register((entity, source, amount) -> Match.allowDeath(entity, source));
 		ServerLifecycleEvents.SERVER_STOPPING.register(Match::stop);
 	}
 
