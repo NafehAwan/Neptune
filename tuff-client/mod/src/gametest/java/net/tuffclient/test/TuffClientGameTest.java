@@ -161,7 +161,7 @@ public class TuffClientGameTest implements FabricClientGameTest {
 		context.waitForScreen(TuffTitleScreen.class);
 
 		try (TestSingleplayerContext world = context.worldBuilder().create()) {
-			world.getConnection().waitForChunksRender();
+			waitForChunks(world);
 			context.runOnClient(client -> {
 				for (Module m : TuffClient.modules().all()) {
 					if (m.id.equals("keystrokes") || m.id.equals("effects") || m.id.equals("clock") || m.id.equals("crosshair")) m.setEnabled(true);
@@ -197,12 +197,12 @@ public class TuffClientGameTest implements FabricClientGameTest {
 			world.getServer().runCommand("/tp @a 0.5 -60 0.5 0 0");
 			context.waitTicks(5);
 			context.runOnClient(client -> {
-				client.player.sendSystemMessage(net.minecraft.network.chat.Component.literal("Hello from Glade"));
-				client.player.sendSystemMessage(net.minecraft.network.chat.Component.literal("Hello from Glade"));
-				client.player.sendSystemMessage(net.minecraft.network.chat.Component.literal("Hello from Glade"));
+				chat(client, "Hello from Glade");
+				chat(client, "Hello from Glade");
+				chat(client, "Hello from Glade");
 			});
 			context.waitTicks(20);
-			world.getConnection().waitForChunksRender();
+			waitForChunks(world);
 			context.takeScreenshot("glade-new-hud");
 			// Chroma wave text, chroma keys and the Clean look.
 			context.runOnClient(client -> {
@@ -293,12 +293,12 @@ public class TuffClientGameTest implements FabricClientGameTest {
 			world.getServer().runCommand("/tp @a 0.5 -60 0.5 0 0");
 			world.getServer().runCommand("/setblock 0 -59 12 minecraft:gold_block");
 			context.waitTicks(20);
-			world.getConnection().waitForChunksRender();
+			waitForChunks(world);
 			long normalGold = goldPixels(context.takeScreenshot("tuff-zoom-before"));
-			float normalFov = context.computeOnClient(client -> client.gameRenderer.mainCamera().getFov());
+			float normalFov = context.computeOnClient(TuffClientGameTest::cameraFov);
 			context.getInput().holdKey(TuffClient.zoomKey());
 			context.waitTicks(30);
-			float zoomedFov = context.computeOnClient(client -> client.gameRenderer.mainCamera().getFov());
+			float zoomedFov = context.computeOnClient(TuffClientGameTest::cameraFov);
 			long zoomedGold = goldPixels(context.takeScreenshot("tuff-zoom"));
 			context.getInput().releaseKey(TuffClient.zoomKey());
 			if (!(zoomedFov < normalFov * 0.5f)) {
@@ -342,7 +342,7 @@ public class TuffClientGameTest implements FabricClientGameTest {
 				for (var h : m.hud()) if (h.id.equals("armor")) h.setEnabled(true);
 			});
 			context.waitTicks(40);
-			world.getConnection().waitForChunksRender();
+			waitForChunks(world);
 			context.takeScreenshot("glade-visuals");
 			float rain = context.computeOnClient(client -> client.level.getRainLevel(1f));
 			context.runOnClient(client -> TuffClient.modules().timeWeather.weather.set(3));
@@ -356,5 +356,80 @@ public class TuffClientGameTest implements FabricClientGameTest {
 		context.waitForScreen(TuffTitleScreen.class);
 		context.runOnClient(client -> TuffClient.modules().titleScreen.setEnabled(false));
 		context.setScreen(TitleScreen::new);
+	}
+
+	// ---- calls that differ between Minecraft versions (1.21.11 and 26.x), found by name
+
+	/** Waits for the world's chunks to render: getConnection() on 26.x, getClientWorld() before. */
+	private static void waitForChunks(TestSingleplayerContext world) {
+		try {
+			// look methods up on the public interfaces: the implementations aren't public
+			java.lang.reflect.Method get;
+			try {
+				get = TestSingleplayerContext.class.getMethod("getConnection");
+			} catch (NoSuchMethodException e) {
+				get = TestSingleplayerContext.class.getMethod("getClientWorld");
+			}
+			Object target = get.invoke(world);
+			for (java.lang.reflect.Method m : get.getReturnType().getMethods()) {
+				if (m.getName().startsWith("waitForChunks") && m.getParameterCount() == 0) {
+					m.invoke(target);
+					return;
+				}
+			}
+		} catch (ReflectiveOperationException e) {
+			throw new AssertionError("Couldn't wait for chunks", e);
+		}
+		throw new AssertionError("No waitForChunks method on this Fabric API");
+	}
+
+	/** Puts a line in your own chat: sendSystemMessage on 26.x, displayClientMessage before. */
+	private static void chat(net.minecraft.client.Minecraft client, String text) {
+		var line = net.minecraft.network.chat.Component.literal(text);
+		for (java.lang.reflect.Method m : client.player.getClass().getMethods()) {
+			try {
+				if (m.getName().equals("sendSystemMessage") && m.getParameterCount() == 1) {
+					m.invoke(client.player, line);
+					return;
+				}
+				if (m.getName().equals("displayClientMessage") && m.getParameterCount() == 2) {
+					m.invoke(client.player, line, false);
+					return;
+				}
+			} catch (ReflectiveOperationException e) {
+				throw new AssertionError("Couldn't send a chat line", e);
+			}
+		}
+		throw new AssertionError("No chat method on LocalPlayer");
+	}
+
+	/** The camera's field of view: Camera.getFov() on 26.x, GameRenderer.getFov(Camera, float, boolean) before. */
+	private static float cameraFov(net.minecraft.client.Minecraft client) {
+		try {
+			Object renderer = client.gameRenderer;
+			java.lang.reflect.Method cam;
+			try {
+				cam = renderer.getClass().getMethod("mainCamera");
+			} catch (NoSuchMethodException e) {
+				cam = renderer.getClass().getMethod("getMainCamera");
+			}
+			Object camera = cam.invoke(renderer);
+			try {
+				return ((Number) camera.getClass().getMethod("getFov").invoke(camera)).floatValue();
+			} catch (NoSuchMethodException e) {
+				for (Class<?> c = renderer.getClass(); c != null; c = c.getSuperclass()) {
+					for (java.lang.reflect.Method m : c.getDeclaredMethods()) {
+						Class<?>[] p = m.getParameterTypes();
+						if (m.getName().equals("getFov") && p.length == 3 && p[1] == float.class && p[2] == boolean.class) {
+							m.setAccessible(true);
+							return ((Number) m.invoke(renderer, camera, 1f, true)).floatValue();
+						}
+					}
+				}
+			}
+		} catch (ReflectiveOperationException e) {
+			throw new AssertionError("Couldn't read the camera FOV", e);
+		}
+		throw new AssertionError("No FOV method on this Minecraft version");
 	}
 }
