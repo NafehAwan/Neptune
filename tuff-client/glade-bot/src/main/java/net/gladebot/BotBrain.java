@@ -172,6 +172,8 @@ public final class BotBrain {
 			}
 		}
 		oppWasEating = eating;
+		// defensive, but well fed: high saturation heals it fast, so it can afford to trade
+		if (play == Settings.Style.DEFENSIVE && bot.getFoodData().getSaturationLevel() >= 10) play = Settings.Style.AGGRESSIVE;
 		if (play != before) styleSwitches++;
 	}
 
