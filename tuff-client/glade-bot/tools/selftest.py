@@ -42,8 +42,16 @@ def send(cmd):
 ok = False
 
 def armour_even():
-    m = wait_for(r"\[gladebot\] armour after mending: (.*)", 1)
+    # the first mend the bot finishes after the test wore its armour down
+    worn = next((i for i, l in enumerate(lines) if "armour worn to 40%" in l), None)
+    m = None
+    if worn is not None:
+        for l in lines[worn + 1:]:
+            m = re.search(r"GladeBot mended: (.*)", l)
+            if m:
+                break
     if not m:
+        print("SELFTEST no mend after the armour was worn")
         return False
     vals = [int(v) for v in re.findall(r"=(\d+)/\d+", m.group(1))]
     print(f"SELFTEST armour after mending (durability points) {vals}")
