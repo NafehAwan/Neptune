@@ -307,12 +307,12 @@ public final class BotBrain {
 		}
 		// 3. gap in a safe window
 		// agro: gaps only when it needs the health (after a pop, or getting low), so it doesn't hand out free crits
-		// gap only when it needs the health (hurt, or recovering from a pop), at most every
-		// 10 seconds, and never while they're low: then it's time to hit, not eat
+		// gap when the absorption is gone and it's hurt (or just popped), at most every 8
+		// seconds; skip it only when they're nearly dead (then it's time to finish them)
 		boolean justPopped = age - lastPopTick < 120;
-		boolean wantsGap = (hp <= 14 || justPopped) && age - lastGap >= 200 && !opponentOpen();
-		if (wantsGap && bot.getOffhandItem().is(Items.GOLDEN_APPLE) && bot.getEffect(MobEffects.ABSORPTION) == null && hp > Settings.healAt(tier) && !threatened
-				&& (space || justPopped) && aggro == 0) {
+		boolean wantsGap = (hp <= 16 || justPopped) && age - lastGap >= 160 && opp.hp > 6;
+		if (wantsGap && bot.getOffhandItem().is(Items.GOLDEN_APPLE) && bot.getEffect(MobEffects.ABSORPTION) == null && hp > Settings.healAt(tier)
+				&& (!threatened || dist > 3 || justPopped)) {
 			lastGap = age;
 			enter(Mode.EAT);
 			return;
@@ -388,7 +388,8 @@ public final class BotBrain {
 			sprint = true;
 		}
 
-		boolean inReach = dist <= tier.reach && bot.hasLineOfSight(target);
+		// vanilla reach: 3 blocks from its eyes to your hitbox
+		boolean inReach = target.getBoundingBox().distanceToSqr(bot.getEyePosition()) <= 9.0 && bot.hasLineOfSight(target);
 		boolean jump = false;
 		boolean canHurt = target.invulnerableTime <= 10;
 

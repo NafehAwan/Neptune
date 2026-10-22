@@ -10,16 +10,16 @@ public enum Tier {
 	// (a burst at 2 hearts), keep a gapple in the offhand and swap a totem in when low,
 	// strafe in long runs (half a second to a second and a half each way, like a person).
 	//          reaction aimSpeed jitter reach  charge crit  wtap  strafe healAt burstAt burst potGap mendAt refill totemAt deivi strafeMin strafeMax jumpReset
-	LT3("LT3", 1, 55f, 1.0f, 3.25, 0.97f, 0.83f, 0.85f, 0.89f, 6f, 4f, 4, 2, 0.55f, 5, 9f, 0.70f, 10, 28, 0.35f),
-	MT3("MT3", 1, 62f, 0.8f, 3.30, 0.97f, 0.87f, 0.88f, 0.93f, 6f, 4f, 4, 2, 0.55f, 4, 9f, 0.75f, 9, 25, 0.50f),
-	HT3("HT3", 0, 70f, 0.6f, 3.35, 0.98f, 0.90f, 0.90f, 0.96f, 6f, 4f, 4, 2, 0.55f, 3, 10f, 0.80f, 8, 22, 0.65f);
+	LT3("LT3", 1, 55f, 1.0f, 3.0, 0.97f, 0.83f, 0.85f, 0.89f, 6f, 4f, 4, 2, 0.55f, 5, 9f, 0.70f, 10, 28, 0.35f),
+	MT3("MT3", 1, 62f, 0.8f, 3.0, 0.97f, 0.87f, 0.88f, 0.93f, 6f, 4f, 4, 2, 0.55f, 4, 9f, 0.75f, 9, 25, 0.50f),
+	HT3("HT3", 0, 70f, 0.6f, 3.0, 0.98f, 0.90f, 0.90f, 0.96f, 6f, 4f, 4, 2, 0.55f, 3, 10f, 0.80f, 8, 22, 0.65f);
 
 	public final String label;
 	/** Ticks between the player moving and the bot reacting. */
 	public final int reaction;
 	/** Most degrees the bot can turn in one tick, and random aim wobble. */
 	public final float aimSpeed, jitter;
-	/** Centre-to-centre distance the bot attacks from. */
+	/** Spacing distance (centre to centre); hits use vanilla reach, 3 blocks eye to hitbox, on every tier. */
 	public final double reach;
 	/** Sword charge (0..1) the bot waits for before hitting. */
 	public final float charge;
