@@ -111,6 +111,11 @@ public final class Match {
 			return;
 		}
 		ticks++;
+		if (Settings.clumps) {
+			clumps(player);
+			clumps(bot);
+			if (dummy != null) clumps(dummy);
+		}
 		switch (state) {
 			case COUNTDOWN -> {
 				if (ticks % 20 == 1) {
@@ -135,6 +140,15 @@ public final class Match {
 			}
 			default -> {
 			}
+		}
+	}
+
+	/** Clumps: every XP orb touching you is picked up at once, so mending is instant. */
+	private static void clumps(ServerPlayer p) {
+		if (p == null || p.isRemoved()) return;
+		for (net.minecraft.world.entity.ExperienceOrb orb : p.level().getEntitiesOfClass(net.minecraft.world.entity.ExperienceOrb.class, p.getBoundingBox().inflate(1.0))) {
+			p.takeXpDelay = 0;
+			orb.playerTouch(p);
 		}
 	}
 

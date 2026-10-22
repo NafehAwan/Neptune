@@ -44,6 +44,29 @@ public final class GladeBot implements ModInitializer {
 				return say(ctx, "Bot tier: " + t.label);
 			}));
 		}
+		LiteralArgumentBuilder<CommandSourceStack> set = Commands.literal("set");
+		set.then(toggle("jumpreset", v -> Settings.jumpReset = v, "Jump reset"));
+		set.then(toggle("wtap", v -> Settings.wtap = v, "W-tap"));
+		set.then(toggle("clumps", v -> Settings.clumps = v, "Clumps"));
+		LiteralArgumentBuilder<CommandSourceStack> deivi = Commands.literal("deivi");
+		for (int i = 0; i < Settings.DEIVI.length; i++) {
+			int level = i;
+			deivi.then(Commands.literal(Settings.DEIVI[i].toLowerCase()).executes(ctx -> {
+				Settings.deivi = level;
+				Settings.save();
+				return say(ctx, "Deivi pop: " + Settings.DEIVI[level]);
+			}));
+		}
+		set.then(deivi);
+		LiteralArgumentBuilder<CommandSourceStack> style = Commands.literal("style");
+		for (Settings.Style st : Settings.Style.values()) {
+			style.then(Commands.literal(st.name().toLowerCase()).executes(ctx -> {
+				Settings.style = st;
+				Settings.save();
+				return say(ctx, "Playstyle: " + st.label);
+			}));
+		}
+		set.then(style);
 		dispatcher.register(Commands.literal("bot")
 				.executes(ctx -> say(ctx, "Glade Bot (" + Settings.tier.label + ", " + (Settings.mend ? "mend" : "no mend")
 						+ "): /bot start, /bot stop, /bot tier lt3|ht3|lt2, /bot mend on|off, /bot kit save me|bot, /bot kit reset. Press B for settings."))
@@ -54,6 +77,7 @@ public final class GladeBot implements ModInitializer {
 					return say(ctx, "Match stopped.");
 				}))
 				.then(tier)
+				.then(set)
 				.then(Commands.literal("mend")
 						.then(Commands.literal("on").executes(ctx -> mend(ctx, true)))
 						.then(Commands.literal("off").executes(ctx -> mend(ctx, false))))
@@ -67,6 +91,20 @@ public final class GladeBot implements ModInitializer {
 							Settings.save();
 							return say(ctx, "Both kits are back to the default Neth Pot kit.");
 						}))));
+	}
+
+	private static LiteralArgumentBuilder<CommandSourceStack> toggle(String name, java.util.function.Consumer<Boolean> set, String label) {
+		return Commands.literal(name)
+				.then(Commands.literal("on").executes(ctx -> {
+					set.accept(true);
+					Settings.save();
+					return say(ctx, label + ": on");
+				}))
+				.then(Commands.literal("off").executes(ctx -> {
+					set.accept(false);
+					Settings.save();
+					return say(ctx, label + ": off");
+				}));
 	}
 
 	private static ServerPlayer player(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {

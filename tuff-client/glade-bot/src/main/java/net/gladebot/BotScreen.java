@@ -12,7 +12,7 @@ import net.minecraft.network.chat.Component;
  */
 public final class BotScreen extends Screen {
 	private static final int PANEL = 0xE0141A16, EDGE = 0xFF2C3A30, GREEN = 0xFF4FB07F, TEXT = 0xFFFFFFFF, MUTED = 0xFFA9B7AD;
-	private static final int W = 264, H = 232;
+	private static final int W = 264, H = 280;
 	private Tier tier = Settings.tier;
 	private boolean mend = Settings.mend;
 	private String status = "";
@@ -52,6 +52,41 @@ public final class BotScreen extends Screen {
 			status = mend ? "Mend on: XP in the kits, the bot repairs its armour" : "Mend off: no XP";
 			refreshLabels();
 		}).bounds(x, y, w, 20).build());
+		y += 24;
+		// play settings, two per row
+		int hw = (w - 4) / 2;
+		addRenderableWidget(Button.builder(onOff("Jump reset", Settings.jumpReset), b -> {
+			boolean v = !Settings.jumpReset;
+			command("bot set jumpreset " + (v ? "on" : "off"));
+			b.setMessage(onOff("Jump reset", v));
+			status = v ? "Jump reset on: it jumps as it gets hit" : "Jump reset off";
+		}).bounds(x, y, hw, 20).build());
+		addRenderableWidget(Button.builder(onOff("W-tap", Settings.wtap), b -> {
+			boolean v = !Settings.wtap;
+			command("bot set wtap " + (v ? "on" : "off"));
+			b.setMessage(onOff("W-tap", v));
+			status = v ? "W-tap on" : "W-tap off";
+		}).bounds(x + hw + 4, y, hw, 20).build());
+		y += 24;
+		addRenderableWidget(Button.builder(Component.literal("Deivi pop: " + Settings.DEIVI[Settings.deivi]), b -> {
+			int v = (Settings.deivi + 1) % Settings.DEIVI.length;
+			command("bot set deivi " + Settings.DEIVI[v].toLowerCase());
+			b.setMessage(Component.literal("Deivi pop: " + Settings.DEIVI[v]));
+			status = "Deivi pop: " + Settings.DEIVI[v];
+		}).bounds(x, y, hw, 20).build());
+		addRenderableWidget(Button.builder(Component.literal("Style: " + Settings.style.label), b -> {
+			Settings.Style v = Settings.Style.values()[(Settings.style.ordinal() + 1) % Settings.Style.values().length];
+			command("bot set style " + v.name().toLowerCase());
+			b.setMessage(Component.literal("Style: " + v.label));
+			status = v == Settings.Style.RANDOM ? "Style: changes as the fight goes" : "Style: " + v.label;
+		}).bounds(x + hw + 4, y, hw, 20).build());
+		y += 24;
+		addRenderableWidget(Button.builder(onOff("Clumps", Settings.clumps), b -> {
+			boolean v = !Settings.clumps;
+			command("bot set clumps " + (v ? "on" : "off"));
+			b.setMessage(onOff("Clumps", v));
+			status = v ? "Clumps on: XP is picked up all at once" : "Clumps off";
+		}).bounds(x, y, hw, 20).build());
 		y += 38;
 		int kw = (w - 8) / 3;
 		addRenderableWidget(Button.builder(Component.literal("Save mine"), b -> {
@@ -75,6 +110,10 @@ public final class BotScreen extends Screen {
 			command("bot stop");
 			status = "Match stopped";
 		}).bounds(x + w - 60, y, 60, 24).build());
+	}
+
+	private static Component onOff(String name, boolean on) {
+		return Component.literal(name + ": ").append(on ? Component.literal("On").withStyle(ChatFormatting.GREEN) : Component.literal("Off").withStyle(ChatFormatting.RED));
 	}
 
 	private Component tierLabel(Tier t) {
@@ -106,8 +145,8 @@ public final class BotScreen extends Screen {
 		g.drawString(font, Component.literal("Glade Bot").withStyle(ChatFormatting.BOLD), x, y + 10, TEXT);
 		g.drawString(font, "Neth Pot practice", x, y + 22, MUTED);
 		g.drawString(font, "Tier", x, y + 36, MUTED);
-		g.drawString(font, "Mend", x, y + 74, MUTED);
-		g.drawString(font, "Kits (from your inventory)", x, y + 112, MUTED);
+		g.drawString(font, "Mend and play", x, y + 74, MUTED);
+		g.drawString(font, "Kits (from your inventory)", x, y + 184, MUTED);
 		// the chosen tier gets a green frame
 		Button chosen = tierButtons[tier.ordinal()];
 		if (chosen != null) frame(g, chosen.getX() - 1, chosen.getY() - 1, chosen.getWidth() + 2, chosen.getHeight() + 2, GREEN);

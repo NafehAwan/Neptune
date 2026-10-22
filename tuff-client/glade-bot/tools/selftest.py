@@ -63,6 +63,8 @@ if wait_for(r"Done \(", 600):
             "punishes": both.get("punishes", 0) >= 1,
             "double pop when hit twice": bot.get("doublePops", 0) >= 1,
             "pots": both.get("pots", 0) > 0,
+            "jump resets": both.get("jumpResets", 0) >= 1,
+            "playstyle changes": both.get("styleSwitches", 0) >= 1,
         }
         for name, passed in checks.items():
             print(f"SELFTEST {'PASS' if passed else 'FAIL'} {name}")

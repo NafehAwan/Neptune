@@ -46,13 +46,16 @@ public final class BotBrain {
 	private Mode mode = Mode.READY;
 	private int modeTicks, busy, strafeDir = 1, strafeTicks, wtap, potsLeft, critTicks, aggro, retreat;
 	private boolean critJump, drinking, swingIsCrit, swingPicked, deiviCommit, lastOffTotem;
-	private int lastPopTick = -1000, age;
+	private int lastPopTick = -1000, age, lastDeivi = -100000, styleTicks;
+	private boolean oppWasEating, jumpNow;
+	/** The current playstyle (changes as the fight goes, see {@link #updateStyle}). */
+	private Settings.Style play = Settings.Style.AGGRESSIVE;
 	private float yawWobble, pitchWobble;
 	/** What to throw after a pop, in order. */
 	private final List<Predicate<ItemStack>> popQueue = new ArrayList<>();
 
 	// Stats, shown after a match and checked by the self test.
-	public int hits, crits, sprintHits, sweeps, pots, totemSwaps, pops, doublePops, deiviPops, gaps, punishes, strafeFlips, mends;
+	public int hits, crits, sprintHits, sweeps, pots, totemSwaps, pops, doublePops, deiviPops, gaps, punishes, strafeFlips, mends, jumpResets, styleSwitches;
 
 	public BotBrain(BotPlayer bot, ServerPlayer target) {
 		this.bot = bot;
@@ -73,7 +76,7 @@ public final class BotBrain {
 	public String stats() {
 		return "hits=" + hits + " crits=" + crits + " sprintHits=" + sprintHits + " sweeps=" + sweeps + " pots=" + pots + " gaps=" + gaps
 				+ " pops=" + pops + " doublePops=" + doublePops + " deiviPops=" + deiviPops + " punishes=" + punishes + " strafeFlips=" + strafeFlips
-				+ " mends=" + mends + " totemSwaps=" + totemSwaps;
+				+ " mends=" + mends + " totemSwaps=" + totemSwaps + " jumpResets=" + jumpResets + " styleSwitches=" + styleSwitches;
 	}
 
 	void tick() {
@@ -90,6 +93,12 @@ public final class BotBrain {
 		Vec3 where = seen.peekFirst().add(0, target.getBbHeight() * 0.8, 0);
 		double dist = bot.distanceTo(target);
 		opp.update(bot, target);
+		updateStyle();
+		// jump reset: jump the moment you're hit, to take less knockback
+		if (Settings.jumpReset && bot.hurtTime > 0 && bot.hurtTime == bot.hurtDuration && bot.onGround() && mode != Mode.READY
+				&& random.nextFloat() < 0.5f + 0.2f * tier.ordinal()) {
+			jumpNow = true;
+		}
 		modeTicks++;
 		watchPops(tier);
 		offhand(tier, dist);
@@ -104,6 +113,39 @@ public final class BotBrain {
 			case POP -> afterPop(tier, where);
 			default -> move(0, 0, false, false);
 		}
+		if (jumpNow) {
+			bot.setJumping(true);
+			jumpResets++;
+			jumpNow = false;
+		}
+	}
+
+	/**
+	 * Playstyle changes as the fight goes: crits while you're gapping, strafing
+	 * when you stop, and otherwise (on Random) a switch between aggressive,
+	 * crit-heavy and strafe-heavy every 5-15 seconds.
+	 */
+	private void updateStyle() {
+		Settings.Style before = play;
+		boolean eating = opp.eating;
+		if (eating) {
+			play = Settings.Style.CRIT;
+			styleTicks = 40;
+		} else if (oppWasEating) {
+			play = Settings.Style.STRAFE;
+			styleTicks = 60 + random.nextInt(60);
+		} else if (--styleTicks <= 0) {
+			if (Settings.style == Settings.Style.RANDOM) {
+				Settings.Style[] pick = {Settings.Style.AGGRESSIVE, Settings.Style.CRIT, Settings.Style.STRAFE};
+				play = pick[random.nextInt(pick.length)];
+				styleTicks = 100 + random.nextInt(200);
+			} else {
+				play = Settings.style;
+				styleTicks = 200;
+			}
+		}
+		oppWasEating = eating;
+		if (play != before) styleSwitches++;
 	}
 
 	private void enter(Mode next) {
@@ -196,9 +238,13 @@ public final class BotBrain {
 		// 1. low: pot (with space, or right away in an emergency), unless going for a deivi pop
 		if (hp <= tier.healAt && has(BotBrain::isHealing) && !deiviCommit) {
 			boolean totemReady = bot.getOffhandItem().is(Items.TOTEM_OF_UNDYING) || hotbar(s -> s.is(Items.TOTEM_OF_UNDYING)) >= 0;
-			if (hp <= tier.totemAt && totemReady && opp.hp <= 16 && random.nextFloat() < tier.deivi) {
+			float deiviChance = Settings.deivi == 0 ? 0 : Settings.deivi == 1 ? tier.deivi * 0.5f : tier.deivi;
+			int cooldown = Settings.deivi == 2 ? 400 : 1200;
+			float oppLow = Settings.deivi == 2 ? 16 : 12;
+			if (hp <= tier.totemAt && totemReady && opp.hp <= oppLow && age - lastDeivi > cooldown && random.nextFloat() < deiviChance) {
 				// fight on into the pop, then pot up and rush
 				deiviCommit = true;
+				lastDeivi = age;
 				GladeBot.LOGGER.info("[gladebot] {} commits to a deivi pop", bot.getName().getString());
 			} else {
 				enter(Mode.HEAL);
@@ -235,9 +281,11 @@ public final class BotBrain {
 		aim(where, tier.aimSpeed, tier.jitter);
 		boolean punish = opp.busy() || aggro > 0 || opp.hp < 8 || deiviCommit;
 
+		boolean strafeStyle = play == Settings.Style.STRAFE;
 		// strafing: full A/D, switching direction, and a dodge when they're about to swing
-		if (--strafeTicks <= 0 || (opp.charge > 0.95f && dist < 3.3 && random.nextFloat() < 0.08f)) {
-			strafeTicks = tier.strafeMin + random.nextInt(Math.max(1, tier.strafeMax - tier.strafeMin));
+		if (--strafeTicks <= 0 || (opp.charge > 0.95f && dist < 3.3 && random.nextFloat() < (strafeStyle ? 0.2f : 0.08f))) {
+			int min = strafeStyle ? Math.max(3, tier.strafeMin / 2) : tier.strafeMin, max = strafeStyle ? Math.max(min + 1, tier.strafeMax / 2) : tier.strafeMax;
+			strafeTicks = min + random.nextInt(Math.max(1, max - min));
 			strafeDir = -strafeDir;
 			strafeFlips++;
 		}
@@ -249,9 +297,13 @@ public final class BotBrain {
 			wtap--;
 			forward = 0;
 			sprint = false;
-		} else if (punish) {
+		} else if (punish || play == Settings.Style.AGGRESSIVE) {
 			forward = 1;
 			sprint = true;
+		} else if (strafeStyle && dist < 3.4 && dist > 2.2) {
+			// circle at the edge of reach instead of pressing in
+			forward = charge > 0.85f ? 1 : 0.3f;
+			sprint = charge > 0.85f;
 		} else if (charge < 0.6f && opp.charge > 0.8f && dist < 3.2) {
 			// not ready and they are: back off out of their reach
 			forward = -1;
@@ -279,7 +331,15 @@ public final class BotBrain {
 		// pick this swing: crit or sprint hit
 		if (!swingPicked && charge > 0.3f) {
 			swingPicked = true;
-			swingIsCrit = random.nextFloat() < tier.critChance;
+			float critShare = switch (play) {
+				case CRIT -> 0.95f;
+				case AGGRESSIVE -> tier.critChance * 0.5f;
+				case STRAFE -> tier.critChance * 0.8f;
+				default -> tier.critChance;
+			};
+			// they're eating: free crits
+			if (opp.eating) critShare = 1;
+			swingIsCrit = random.nextFloat() < critShare;
 		}
 		if (swingIsCrit && swingPicked) {
 			if (critJump) {
@@ -302,7 +362,7 @@ public final class BotBrain {
 			if (critJump) sprint = false;
 		} else if (swingPicked && inReach && charge >= tier.charge && canHurt && busy == 0 && bot.isSprinting() && wtap == 0) {
 			swing(true);
-			if (random.nextFloat() < tier.wtapChance) wtap = 1 + random.nextInt(2);
+			if (Settings.wtap && random.nextFloat() < tier.wtapChance) wtap = 1 + random.nextInt(2);
 			move(forward, strafe, sprint, false);
 			return;
 		}
