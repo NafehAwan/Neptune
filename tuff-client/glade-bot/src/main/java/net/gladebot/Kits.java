@@ -46,24 +46,25 @@ public final class Kits {
 		for (int i = 2; i <= 6; i++) kit[i] = potion(Items.SPLASH_POTION, Potions.STRONG_HEALING);
 		kit[7] = potion(Items.SPLASH_POTION, Potions.STRONG_STRENGTH);
 		kit[8] = new ItemStack(Items.TOTEM_OF_UNDYING);
-		// inventory: spare totems, buffs, XP, then healing
-		for (int i = 9; i <= 12; i++) kit[i] = new ItemStack(Items.TOTEM_OF_UNDYING);
-		kit[13] = potion(Items.SPLASH_POTION, Potions.STRONG_SWIFTNESS);
-		kit[14] = potion(Items.SPLASH_POTION, Potions.STRONG_SWIFTNESS);
-		kit[15] = potion(Items.SPLASH_POTION, Potions.STRONG_STRENGTH);
-		kit[16] = potion(Items.SPLASH_POTION, Potions.STRONG_STRENGTH);
-		kit[17] = potion(Items.SPLASH_POTION, Potions.LONG_FIRE_RESISTANCE);
-		int from = 18;
+		// inventory: 2 spare totems, buffs, XP, then healing
+		kit[9] = new ItemStack(Items.TOTEM_OF_UNDYING);
+		kit[10] = new ItemStack(Items.TOTEM_OF_UNDYING);
+		kit[11] = potion(Items.SPLASH_POTION, Potions.STRONG_SWIFTNESS);
+		kit[12] = potion(Items.SPLASH_POTION, Potions.STRONG_SWIFTNESS);
+		kit[13] = potion(Items.SPLASH_POTION, Potions.STRONG_STRENGTH);
+		kit[14] = potion(Items.SPLASH_POTION, Potions.STRONG_STRENGTH);
+		kit[15] = potion(Items.SPLASH_POTION, Potions.LONG_FIRE_RESISTANCE);
+		int from = 16;
 		if (mend) {
-			kit[18] = new ItemStack(Items.EXPERIENCE_BOTTLE, 64);
-			from = 19;
+			kit[16] = new ItemStack(Items.EXPERIENCE_BOTTLE, 64);
+			from = 17;
 		}
 		for (int i = from; i <= 35; i++) kit[i] = potion(Items.SPLASH_POTION, Potions.STRONG_HEALING);
 		kit[36] = armor(registries, Items.NETHERITE_BOOTS);
 		kit[37] = armor(registries, Items.NETHERITE_LEGGINGS);
 		kit[38] = armor(registries, Items.NETHERITE_CHESTPLATE);
 		kit[39] = armor(registries, Items.NETHERITE_HELMET);
-		kit[40] = new ItemStack(Items.GOLDEN_APPLE, 32);
+		kit[40] = new ItemStack(Items.GOLDEN_APPLE, 64);
 		return kit;
 	}
 

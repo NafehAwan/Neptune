@@ -201,6 +201,8 @@ jobs:
     name: Glade Bot (1.21.11)
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    permissions:
+      contents: write
     defaults:
       run:
         working-directory: tuff-client/glade-bot
@@ -238,6 +240,22 @@ jobs:
       - name: Show game log
         if: failure()
         run: find . -name latest.log -path '*logs*' -exec tail -n 200 {} \;
+      - name: Publish the bot (its own pre-release, so Glade's updater ignores it)
+        if: success() && github.event_name == 'push' && github.ref == 'refs/heads/claude/serene-euler-8ygwvm'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          J=$(ls build/libs/glade-bot-*.jar | grep -v -e sources -e dev | head -1)
+          V=$(unzip -p "$J" fabric.mod.json | jq -r .version); V=${V%%+*}
+          TAG="glade-bot-v$V"
+          cp "$J" glade-bot-1.21.11.jar
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" glade-bot-1.21.11.jar --clobber
+          else
+            gh release create "$TAG" glade-bot-1.21.11.jar --title "Glade Bot $V (Minecraft 1.21.11)" --prerelease --latest=false --target "$GITHUB_SHA" \
+              --notes "Neth Pot practice bot for singleplayer. Put glade-bot-1.21.11.jar in your mods folder next to Fabric API (Minecraft 1.21.11, Fabric). In a world press B, pick LT3/HT3/LT2 and mend, then Start fight (or /bot start)."
+          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
