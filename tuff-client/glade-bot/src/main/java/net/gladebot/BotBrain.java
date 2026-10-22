@@ -44,7 +44,7 @@ public final class BotBrain {
 	private final Opponent opp = new Opponent();
 	private ServerPlayer target;
 	private Mode mode = Mode.READY;
-	private int modeTicks, busy, strafeDir = 1, strafeTicks, wtap, potsLeft, critTicks, aggro, retreat;
+	private int modeTicks, busy, strafeDir = 1, strafeTicks, strafeRun, wtap, potsLeft, critTicks, aggro, retreat;
 	private boolean critJump, drinking, swingIsCrit, swingPicked, deiviCommit;
 	private int lastTotems = -1;
 	/** Armour taken off while mending so the XP goes to the pieces that need it (put back when mending stops). */
@@ -52,7 +52,7 @@ public final class BotBrain {
 	private int lastPopTick = -1000, age, lastDeivi = -100000, styleTicks;
 	private boolean oppWasEating, jumpNow;
 	/** XP bottles it allows itself this mend session, and ticks it's paused for (tests). */
-	private int mendBudget, paused;
+	private int mendBudget, paused, mendCooldown;
 	/** How long a mend fight opens defensively. */
 	private static final int OPENING = 600;
 	/** The current playstyle (changes as the fight goes, see {@link #updateStyle}). */
@@ -307,11 +307,12 @@ public final class BotBrain {
 			return;
 		}
 		// 4. mend when they're far or busy (not while they're low: keep the pressure on)
-		boolean armourLow = armorLeft() < tier.mendAt || averageArmor() < tier.mendAt + 0.1f;
-		if (Settings.mend && armourLow && has(s -> s.is(Items.EXPERIENCE_BOTTLE)) && hp > 10 && opp.hp > 10
-				&& (dist > 6 || opp.busy() && dist > 4 || play == Settings.Style.DEFENSIVE && dist > 5)) {
+		// mend on its own once the armour is low: make room first (sprint away), then mend
+		boolean armourLow = lowestPoints() < mendTarget() * tier.mendAt;
+		if (Settings.mend && armourLow && age >= mendCooldown && has(s -> s.is(Items.EXPERIENCE_BOTTLE)) && hp > 10 && !threatened) {
 			enter(Mode.MEND);
 			mendBudget = mendBudget();
+			retreat = dist > 6.5 || opp.busy() ? 0 : 50;
 			return;
 		}
 		// 5. hotbar almost out of pots: refill with room
@@ -325,12 +326,17 @@ public final class BotBrain {
 		boolean punish = opp.busy() || aggro > 0 || opp.hp < 8 || deiviCommit;
 
 		boolean strafeStyle = play == Settings.Style.STRAFE;
-		// strafing: full A/D, switching direction, and a dodge when they're about to swing
-		if (--strafeTicks <= 0 || (opp.charge > 0.95f && dist < 3.3 && random.nextFloat() < (strafeStyle ? 0.2f : 0.08f))) {
-			int min = strafeStyle ? Math.max(3, tier.strafeMin / 2) : tier.strafeMin, max = strafeStyle ? Math.max(min + 1, tier.strafeMax / 2) : tier.strafeMax;
+		// strafing: full A/D in long runs (a person holds A or D for half a second or more;
+		// switching every few ticks just looks like jitter), and now and then a switch to
+		// dodge when they're about to swing
+		strafeRun++;
+		boolean dodge = strafeRun >= 8 && opp.charge > 0.95f && dist < 3.3 && random.nextFloat() < (strafeStyle ? 0.08f : 0.04f);
+		if (--strafeTicks <= 0 || dodge) {
+			int min = strafeStyle ? Math.max(7, tier.strafeMin * 2 / 3) : tier.strafeMin, max = strafeStyle ? Math.max(min + 1, tier.strafeMax * 2 / 3) : tier.strafeMax;
 			strafeTicks = min + random.nextInt(Math.max(1, max - min));
 			strafeDir = -strafeDir;
 			strafeFlips++;
+			strafeRun = 0;
 		}
 		float charge = bot.getAttackStrengthScale(0.5f);
 		float strafe = strafeDir * (dist < 4.5 ? Settings.strafe(tier) : Settings.strafe(tier) * 0.6f);
@@ -545,13 +551,30 @@ public final class BotBrain {
 		drinking = true;
 	}
 
-	/** Back off and throw XP bottles down to repair armour. */
+	/**
+	 * Mend: sprint away to make room if needed, then throw XP down until every
+	 * piece is back up to the same durability (as high as the smallest piece
+	 * can go, a netherite helmet's 407) or this session's XP is spent.
+	 */
 	private void mend(Tier tier, Vec3 where, double dist) {
+		if (retreat > 0) {
+			retreat--;
+			turn(yawTo(where) + 180, 0, tier.aimSpeed * 2f);
+			move(1, strafeDir * 0.3f, true, false);
+			if (dist > 6.5) retreat = 0;
+			else if (retreat == 0) {
+				// couldn't get away: fight on, try again a bit later
+				mendCooldown = age + 100;
+				enter(Mode.FIGHT);
+			}
+			return;
+		}
 		turn(yawTo(where), 90, tier.aimSpeed * 2.5f);
-		move(-1, strafeDir * 0.4f, false, false);
-		boolean coming = dist < 4.5 && !opp.busy() || opp.approaching && dist < 5.5;
-		if (coming || armorLeft() > 0.97f || mendBudget <= 0 || modeTicks > 400) {
+		move(-0.6f, strafeDir * 0.4f, false, false);
+		boolean coming = !opp.busy() && (dist < 3.5 || opp.approaching && dist < 4.5);
+		if (coming || allMended() || mendBudget <= 0 || modeTicks > 500) {
 			GladeBot.LOGGER.info("[gladebot] {} mended: {}", bot.getName().getString(), armorReport());
+			if (coming) mendCooldown = age + 60;
 			enter(Mode.FIGHT);
 			return;
 		}
@@ -766,28 +789,58 @@ public final class BotBrain {
 		return s.isEmpty() || s.getMaxDamage() <= 0 ? 1 : 1 - s.getDamageValue() / (float) s.getMaxDamage();
 	}
 
+	/** Durability points left on a piece. */
+	private static int points(ItemStack s) {
+		return s.isEmpty() || s.getMaxDamage() <= 0 ? Integer.MAX_VALUE : s.getMaxDamage() - s.getDamageValue();
+	}
+
+	/** Every piece is mended up to the same points: the smallest piece's maximum (407 for netherite). */
+	private int mendTarget() {
+		int t = Integer.MAX_VALUE;
+		for (EquipmentSlot slot : ARMOR) {
+			ItemStack s = piece(slot);
+			if (!s.isEmpty() && s.getMaxDamage() > 0) t = Math.min(t, s.getMaxDamage());
+		}
+		return t == Integer.MAX_VALUE ? 0 : t;
+	}
+
+	private int lowestPoints() {
+		int low = Integer.MAX_VALUE;
+		for (EquipmentSlot slot : ARMOR) low = Math.min(low, points(piece(slot)));
+		return low == Integer.MAX_VALUE ? 0 : low;
+	}
+
+	private boolean allMended() {
+		return lowestPoints() >= mendTarget() - 2;
+	}
+
 	/**
-	 * Mending puts each XP orb on a random damaged piece, so bigger pieces fall
-	 * behind. While mending, a piece that's well ahead of the worst one comes
-	 * off into the inventory (so the XP goes elsewhere) and goes back on as soon
-	 * as the others catch up or mending stops.
+	 * Mending puts each XP orb on a random damaged piece you're wearing, so
+	 * pieces drift apart. While mending, a piece that's ahead (more points than
+	 * the lowest one, or already at the target) comes off into the inventory so
+	 * the XP goes to the others, and goes back on once they've caught up. So
+	 * every piece comes back to the same points.
 	 */
 	private void balanceArmor() {
 		var inv = bot.getInventory();
+		int lowestWorn = Integer.MAX_VALUE;
+		for (EquipmentSlot slot : ARMOR) if (!stashed.containsKey(slot)) lowestWorn = Math.min(lowestWorn, points(bot.getItemBySlot(slot)));
+		int target = mendTarget();
 		// put back pieces the others have caught up with
 		for (var it = stashed.entrySet().iterator(); it.hasNext();) {
 			var e = it.next();
 			ItemStack piece = inv.getItem(e.getValue());
-			if (left(piece) <= armorLeft() + 0.03f || armorLeft() > 0.9f) {
+			if (points(piece) <= lowestWorn + 4 && points(piece) < target) {
 				bot.setItemSlot(e.getKey(), piece);
 				inv.setItem(e.getValue(), ItemStack.EMPTY);
 				it.remove();
 			}
 		}
-		float worst = armorLeft();
 		for (EquipmentSlot slot : ARMOR) {
 			ItemStack piece = bot.getItemBySlot(slot);
-			if (piece.isEmpty() || left(piece) < worst + 0.08f) continue;
+			if (piece.isEmpty() || stashed.containsKey(slot)) continue;
+			int p = points(piece);
+			if (p < lowestWorn + 12 && p < target) continue;
 			int free = -1;
 			for (int i = 9; i < 36 && free < 0; i++) if (inv.getItem(i).isEmpty()) free = i;
 			if (free < 0) return;
@@ -831,8 +884,8 @@ public final class BotBrain {
 	 * there's XP for later in the fight.
 	 */
 	private int mendBudget() {
-		int missing = 0;
-		for (EquipmentSlot slot : ARMOR) missing += bot.getItemBySlot(slot).getDamageValue();
+		int missing = 0, target = mendTarget();
+		for (EquipmentSlot slot : ARMOR) missing += Math.max(0, target - points(bot.getItemBySlot(slot)));
 		int need = (int) Math.ceil(missing / 14.0);
 		int bottles = 0;
 		var inv = bot.getInventory();
@@ -846,7 +899,7 @@ public final class BotBrain {
 		for (EquipmentSlot slot : ARMOR) {
 			ItemStack s = piece(slot);
 			if (s.isEmpty() || s.getMaxDamage() <= 0) continue;
-			b.append(slot.getName()).append('=').append(Math.round(100 * (1 - s.getDamageValue() / (float) s.getMaxDamage()))).append("% ");
+			b.append(slot.getName()).append('=').append(points(s)).append('/').append(s.getMaxDamage()).append(' ');
 		}
 		return b.toString().trim();
 	}

@@ -61,7 +61,7 @@ public final class Settings {
 
 	public static float jumpResetChance(Tier t) {
 		if (!jumpReset) return 0;
-		return jumpResetPct >= 0 ? jumpResetPct / 100f : 0.5f + 0.2f * t.ordinal();
+		return jumpResetPct >= 0 ? jumpResetPct / 100f : t.jumpReset;
 	}
 
 	public static float strafe(Tier t) {

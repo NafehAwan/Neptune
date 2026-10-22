@@ -45,9 +45,10 @@ def armour_even():
     m = wait_for(r"\[gladebot\] armour after mending: (.*)", 1)
     if not m:
         return False
-    vals = [int(v) for v in re.findall(r"=(\d+)%", m.group(1))]
-    print(f"SELFTEST armour after mending {vals}")
-    return len(vals) == 4 and min(vals) >= 50 and max(vals) - min(vals) <= 12
+    vals = [int(v) for v in re.findall(r"=(\d+)/\d+", m.group(1))]
+    print(f"SELFTEST armour after mending (durability points) {vals}")
+    # every piece back to the same points (within a few XP orbs), and higher than the worn 163-237
+    return len(vals) == 4 and max(vals) - min(vals) <= 30 and min(vals) >= 240
 
 def stats(text):
     return {k: int(v) for k, v in re.findall(r"(\w+)=(\d+)", text)}
