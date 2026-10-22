@@ -196,6 +196,55 @@ jobs:
         if: failure()
         run: find . -name latest.log -path '*logs*' -exec tail -n 200 {} \;
 
+  bot:
+    # Glade Bot: the Neth Pot practice bot (a separate mod for now, 1.21.11 only).
+    name: Glade Bot (1.21.11)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: tuff-client/glade-bot
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build
+        run: |
+          ./gradlew buildAndCollect 2>&1 | tee build.log; status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then echo "=== COMPILE ERRORS"; grep -E "error:|What went wrong|^> |Could not" -A3 build.log | head -300; exit 1; fi
+          ls build/libs
+      - name: Dump the Minecraft APIs the bot uses
+        if: always()
+        run: |
+          ./gradlew gladeClasspath -q || true
+          python3 tools/apidump.py 1.21.11
+      - name: Install software rendering drivers
+        run: sudo apt-get update && sudo apt-get install -y mesa-vulkan-drivers libgl1-mesa-dri libglx-mesa0 libegl-mesa0 xvfb imagemagick
+      - name: Run the bot game test
+        run: |
+          timeout 20m xvfb-run -a -s "-screen 0 1920x1080x24 +extension GLX +render -noreset" ./gradlew :1.21.11:runClientGameTest --stacktrace 2>&1 | tee test.log; status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then echo "=== COMPILE ERRORS"; grep -E "error:|What went wrong" -A3 test.log | head -200; fi
+          exit $status
+      - name: Print screenshot previews
+        if: always()
+        run: |
+          for f in $(find . -path '*screenshots*' -name '*.png' | sort); do
+            convert "$f" -resize 960x -quality 70 /tmp/preview.jpg || continue
+            echo "SHOT $(basename "$f") $(base64 -w0 /tmp/preview.jpg)"
+          done
+      - name: Show game log
+        if: failure()
+        run: find . -name latest.log -path '*logs*' -exec tail -n 200 {} \;
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: glade-bot
+          path: tuff-client/glade-bot/build/libs/glade-bot-*.jar
+          if-no-files-found: warn
+
   loaders:
     name: Launcher loaders (install and start)
     needs: [mod, mod-legacy]
