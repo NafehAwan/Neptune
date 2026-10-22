@@ -48,6 +48,18 @@ public final class GladeBot implements ModInitializer {
 		set.then(toggle("jumpreset", v -> Settings.jumpReset = v, "Jump reset"));
 		set.then(toggle("wtap", v -> Settings.wtap = v, "W-tap"));
 		set.then(toggle("clumps", v -> Settings.clumps = v, "Clumps"));
+		set.then(Commands.literal("fight")
+				.then(Commands.literal("agro").executes(ctx -> mend(ctx, false)))
+				.then(Commands.literal("mend").executes(ctx -> mend(ctx, true))));
+		set.then(percent("crit", v -> Settings.critPct = v, "Crit chance", 100));
+		set.then(percent("jumpresetchance", v -> Settings.jumpResetPct = v, "Jump reset chance", 100));
+		set.then(percent("strafe", v -> Settings.strafePct = v, "Strafe", 100));
+		set.then(percent("potat", v -> Settings.potAtHearts = v, "Pot at (hearts)", 10));
+		set.then(Commands.literal("reset").executes(ctx -> {
+			Settings.resetTuning();
+			Settings.save();
+			return say(ctx, "Tuning back to the " + Settings.tier.label + " defaults.");
+		}));
 		LiteralArgumentBuilder<CommandSourceStack> deivi = Commands.literal("deivi");
 		for (int i = 0; i < Settings.DEIVI.length; i++) {
 			int level = i;
@@ -107,6 +119,21 @@ public final class GladeBot implements ModInitializer {
 				}));
 	}
 
+	private static LiteralArgumentBuilder<CommandSourceStack> percent(String name, java.util.function.IntConsumer set, String label, int max) {
+		return Commands.literal(name)
+				.then(Commands.literal("default").executes(ctx -> {
+					set.accept(-1);
+					Settings.save();
+					return say(ctx, label + ": tier default");
+				}))
+				.then(Commands.argument("value", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, max)).executes(ctx -> {
+					int v = com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "value");
+					set.accept(v);
+					Settings.save();
+					return say(ctx, label + ": " + v);
+				}));
+	}
+
 	private static ServerPlayer player(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
 		return ctx.getSource().getPlayerOrException();
 	}
@@ -114,7 +141,7 @@ public final class GladeBot implements ModInitializer {
 	private static int mend(CommandContext<CommandSourceStack> ctx, boolean on) {
 		Settings.mend = on;
 		Settings.save();
-		return say(ctx, on ? "Mend on: XP bottles in the kits, and the bot repairs its armour." : "Mend off: no XP bottles.");
+		return say(ctx, on ? "Fight: Mend (XP in the kits, defensive opening, the bot mends its armour)" : "Fight: Agro (no XP: a durability war, few gaps, strafe and crit)");
 	}
 
 	private static int saveKit(CommandContext<CommandSourceStack> ctx, boolean bot) throws CommandSyntaxException {

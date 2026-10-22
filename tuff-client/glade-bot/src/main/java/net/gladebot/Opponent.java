@@ -18,6 +18,8 @@ final class Opponent {
 	private Vec3 last;
 	boolean eating, potting, mending, critJump, retreating, approaching;
 	float charge, hp;
+	/** Their armour's average durability left, 0..1. */
+	float dura = 1;
 	/** Ticks since they were last busy (potting, eating or mending). */
 	int sinceBusy = 100;
 
@@ -47,6 +49,7 @@ final class Opponent {
 		// in the air, coming in, sword charged: going for a crit (a jump reset hop isn't)
 		critJump = !p.onGround() && d < 4.5 && approaching && charge > 0.8f;
 		hp = p.getHealth() + p.getAbsorptionAmount();
+		dura = Match.armor(p);
 		sinceBusy = busy() ? 0 : sinceBusy + 1;
 	}
 

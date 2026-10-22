@@ -21,6 +21,8 @@ public final class Settings {
 	public static boolean mend = true;
 	/** Jump as it gets hit, to take less knockback. */
 	public static boolean jumpReset = true;
+	/** Fine tuning; -1 means the tier's own value. */
+	public static int critPct = -1, jumpResetPct = -1, strafePct = -1, potAtHearts = -1;
 	/** Let go of W for a tick or two after a sprint hit. */
 	public static boolean wtap = true;
 	/** Deivi pops: 0 off, 1 rare, 2 often. */
@@ -47,6 +49,34 @@ public final class Settings {
 
 	public static final String[] DEIVI = {"Off", "Rare", "Often"};
 
+	/** Fight type: Mend (XP in the kits, defensive opening, mends) or Agro (no XP, a durability war). */
+	public static String fight() {
+		return mend ? "Mend" : "Agro";
+	}
+
+	/** Crit share for this tier, as set. */
+	public static float crit(Tier t) {
+		return critPct >= 0 ? critPct / 100f : t.critChance;
+	}
+
+	public static float jumpResetChance(Tier t) {
+		if (!jumpReset) return 0;
+		return jumpResetPct >= 0 ? jumpResetPct / 100f : 0.5f + 0.2f * t.ordinal();
+	}
+
+	public static float strafe(Tier t) {
+		return strafePct >= 0 ? strafePct / 100f : t.strafe;
+	}
+
+	public static float healAt(Tier t) {
+		return potAtHearts > 0 ? potAtHearts * 2f : t.healAt;
+	}
+
+	/** Back to the tier's own values. */
+	public static void resetTuning() {
+		critPct = jumpResetPct = strafePct = potAtHearts = -1;
+	}
+
 	/** Saved kits (null = the default Neth Pot kit). */
 	public static JsonElement playerKit, botKit;
 
@@ -70,6 +100,10 @@ public final class Settings {
 				if (st != null) style = st;
 			}
 			if (o.has("clumps")) clumps = o.get("clumps").getAsBoolean();
+			if (o.has("critPct")) critPct = o.get("critPct").getAsInt();
+			if (o.has("jumpResetPct")) jumpResetPct = o.get("jumpResetPct").getAsInt();
+			if (o.has("strafePct")) strafePct = o.get("strafePct").getAsInt();
+			if (o.has("potAtHearts")) potAtHearts = o.get("potAtHearts").getAsInt();
 			playerKit = o.has("playerKit") ? o.get("playerKit") : null;
 			botKit = o.has("botKit") ? o.get("botKit") : null;
 		} catch (IOException | RuntimeException e) {
@@ -86,6 +120,10 @@ public final class Settings {
 		o.addProperty("deivi", deivi);
 		o.addProperty("style", style.name());
 		o.addProperty("clumps", clumps);
+		o.addProperty("critPct", critPct);
+		o.addProperty("jumpResetPct", jumpResetPct);
+		o.addProperty("strafePct", strafePct);
+		o.addProperty("potAtHearts", potAtHearts);
 		if (playerKit != null) o.add("playerKit", playerKit);
 		if (botKit != null) o.add("botKit", botKit);
 		try {

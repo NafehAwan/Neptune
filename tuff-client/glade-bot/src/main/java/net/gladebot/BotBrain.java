@@ -112,8 +112,8 @@ public final class BotBrain {
 		opp.update(bot, target);
 		updateStyle();
 		// jump reset: jump the moment you're hit, to take less knockback
-		if (Settings.jumpReset && bot.hurtTime > 0 && bot.hurtTime == bot.hurtDuration && bot.onGround() && mode != Mode.READY
-				&& random.nextFloat() < 0.5f + 0.2f * tier.ordinal()) {
+		if (bot.hurtTime > 0 && bot.hurtTime == bot.hurtDuration && bot.onGround() && mode != Mode.READY
+				&& random.nextFloat() < Settings.jumpResetChance(tier)) {
 			jumpNow = true;
 		}
 		modeTicks++;
@@ -159,6 +159,12 @@ public final class BotBrain {
 			if (Settings.style == Settings.Style.RANDOM) {
 				Settings.Style[] pick = {Settings.Style.AGGRESSIVE, Settings.Style.CRIT, Settings.Style.STRAFE};
 				play = pick[random.nextInt(pick.length)];
+				if (!Settings.mend) {
+					// agro is a durability war: ahead on durability, push with crits; behind, strafe and don't trade
+					float mine = averageArmor(), theirs = opp.dura;
+					if (theirs < mine - 0.05f) play = random.nextBoolean() ? Settings.Style.CRIT : Settings.Style.AGGRESSIVE;
+					else if (mine < theirs - 0.05f) play = Settings.Style.STRAFE;
+				}
 				styleTicks = 100 + random.nextInt(200);
 			} else {
 				play = Settings.style;
@@ -267,7 +273,7 @@ public final class BotBrain {
 		boolean space = dist > 3.5 || opp.busy() || opp.retreating;
 
 		// 1. low: pot (with space, or right away in an emergency), unless going for a deivi pop
-		if (hp <= tier.healAt && has(BotBrain::isHealing) && !deiviCommit) {
+		if (hp <= Settings.healAt(tier) && has(BotBrain::isHealing) && !deiviCommit) {
 			boolean totemReady = bot.getOffhandItem().is(Items.TOTEM_OF_UNDYING) || hotbar(s -> s.is(Items.TOTEM_OF_UNDYING)) >= 0;
 			float deiviChance = Settings.deivi == 0 ? 0 : Settings.deivi == 1 ? tier.deivi * 0.5f : tier.deivi;
 			int cooldown = Settings.deivi == 2 ? 400 : 1200;
@@ -291,7 +297,9 @@ public final class BotBrain {
 			return;
 		}
 		// 3. gap in a safe window
-		if (bot.getOffhandItem().is(Items.GOLDEN_APPLE) && bot.getEffect(MobEffects.ABSORPTION) == null && hp > tier.healAt && !threatened
+		// agro: gaps only when it needs the health (after a pop, or getting low), so it doesn't hand out free crits
+		boolean wantsGap = Settings.mend || hp <= 12 || age - lastPopTick < 120;
+		if (wantsGap && bot.getOffhandItem().is(Items.GOLDEN_APPLE) && bot.getEffect(MobEffects.ABSORPTION) == null && hp > Settings.healAt(tier) && !threatened
 				&& (space || age - lastPopTick < 120) && aggro == 0) {
 			enter(Mode.EAT);
 			return;
@@ -323,7 +331,7 @@ public final class BotBrain {
 			strafeFlips++;
 		}
 		float charge = bot.getAttackStrengthScale(0.5f);
-		float strafe = strafeDir * (dist < 4.5 ? tier.strafe : tier.strafe * 0.6f);
+		float strafe = strafeDir * (dist < 4.5 ? Settings.strafe(tier) : Settings.strafe(tier) * 0.6f);
 		float forward;
 		boolean sprint;
 		if (wtap > 0) {
@@ -385,12 +393,14 @@ public final class BotBrain {
 		// pick this swing: crit or sprint hit
 		if (!swingPicked && charge > 0.3f) {
 			swingPicked = true;
-			float critShare = switch (play) {
+			float base = Settings.crit(tier);
+			if (!Settings.mend && Settings.critPct < 0) base = Math.min(0.95f, base + 0.1f);
+			float critShare = Settings.critPct >= 0 ? base : switch (play) {
 				case CRIT -> 0.95f;
-				case AGGRESSIVE -> tier.critChance * 0.75f;
-				case STRAFE -> tier.critChance * 0.9f;
-				case DEFENSIVE -> tier.critChance * 0.85f;
-				default -> tier.critChance;
+				case AGGRESSIVE -> base * 0.75f;
+				case STRAFE -> base * 0.9f;
+				case DEFENSIVE -> base * 0.85f;
+				default -> base;
 			};
 			// they're eating: free crits
 			if (opp.eating) critShare = 1;
@@ -468,7 +478,7 @@ public final class BotBrain {
 		Predicate<ItemStack> buff = neededBuff(false);
 		boolean splash = buff != null && bot.getMainHandItem().is(Items.SPLASH_POTION) && buff.test(bot.getMainHandItem());
 		turn(yawTo(where), splash ? 90 : 0, tier.aimSpeed * (splash ? 2.5f : 1));
-		move(-0.6f, strafeDir * tier.strafe, false, false);
+		move(-0.6f, strafeDir * Settings.strafe(tier), false, false);
 		if ((dist < 3.2 && !opp.busy()) || modeTicks > 80) {
 			bot.stopUsingItem();
 			enter(Mode.FIGHT);
@@ -509,8 +519,8 @@ public final class BotBrain {
 			strafeDir = -strafeDir;
 			strafeFlips++;
 		}
-		move(dist < 3.5 ? -0.8f : 0, strafeDir * tier.strafe, false, false);
-		boolean rushed = dist < 2.8 && opp.charge > 0.8f && bot.getHealth() <= tier.healAt + 4;
+		move(dist < 3.5 ? -0.8f : 0, strafeDir * Settings.strafe(tier), false, false);
+		boolean rushed = dist < 2.8 && opp.charge > 0.8f && bot.getHealth() <= Settings.healAt(tier) + 4;
 		if (bot.getHealth() <= tier.burstAt || rushed || modeTicks > 60) {
 			bot.stopUsingItem();
 			enter(Mode.FIGHT);

@@ -234,7 +234,23 @@ public final class Match {
 		}
 		boolean won = who.equals("you");
 		title(player, Component.literal(won ? "You win!" : "GladeBot wins").withStyle(won ? ChatFormatting.GREEN : ChatFormatting.RED));
-		player.sendSystemMessage(Component.literal("GladeBot (" + Settings.tier.label + ") landed " + brain.hits + " hits and threw " + brain.pots + " pots."));
+		player.sendSystemMessage(Component.literal("GladeBot (" + Settings.tier.label + ", " + Settings.fight() + ") landed " + brain.hits + " hits (" + brain.crits
+				+ " crits) and threw " + brain.pots + " pots."));
+		player.sendSystemMessage(Component.literal("Armour durability: you " + Math.round(armor(player) * 100) + "% · GladeBot " + Math.round(armor(bot) * 100) + "%"));
+	}
+
+	/** A player's armour, average durability left, 0..1. */
+	public static float armor(net.minecraft.world.entity.LivingEntity p) {
+		float sum = 0;
+		int n = 0;
+		for (var slot : new net.minecraft.world.entity.EquipmentSlot[] {net.minecraft.world.entity.EquipmentSlot.HEAD, net.minecraft.world.entity.EquipmentSlot.CHEST,
+				net.minecraft.world.entity.EquipmentSlot.LEGS, net.minecraft.world.entity.EquipmentSlot.FEET}) {
+			var s = p.getItemBySlot(slot);
+			if (s.isEmpty() || s.getMaxDamage() <= 0) continue;
+			sum += 1 - s.getDamageValue() / (float) s.getMaxDamage();
+			n++;
+		}
+		return n == 0 ? 1 : sum / n;
 	}
 
 	private static void refresh(ServerPlayer p) {
