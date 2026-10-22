@@ -518,7 +518,7 @@ public final class BotBrain {
 		drinking = true;
 	}
 
-	/** Eat the offhand gapple, sword still in hand, strafing (never holding S). */
+	/** Eat the offhand gapple, sword still in hand, standing still. */
 	private void eat(Tier tier, Vec3 where, double dist) {
 		selectSword();
 		aim(where, tier.aimSpeed, tier.jitter);
@@ -527,8 +527,8 @@ public final class BotBrain {
 			strafeDir = -strafeDir;
 			strafeFlips++;
 		}
-		// gapping: strafe only, no S (backing off while eating is easy to punish and looks wrong)
-		move(0, strafeDir * Settings.strafe(tier), false, false);
+		// gapping: stand still, no W/A/S/D
+		move(0, 0, false, false);
 		boolean rushed = dist < 2.8 && opp.charge > 0.8f && bot.getHealth() <= Settings.healAt(tier) + 4;
 		if (bot.getHealth() <= tier.burstAt || rushed || modeTicks > 60) {
 			bot.stopUsingItem();
