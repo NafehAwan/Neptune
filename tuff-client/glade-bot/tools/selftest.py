@@ -76,6 +76,7 @@ if wait_for(r"Done \(", 600):
             "no sweep hits": both.get("sweeps", 1) == 0,
             "at least half the hits are crits": both.get("hits", 0) > 0 and both.get("crits", 0) * 2 >= both.get("hits", 0),
             "strafes (10+ direction changes)": both.get("strafeFlips", 0) >= 10,
+            "really moves sideways (30+ blocks each)": bot.get("strafeBlocks", 0) >= 30 and other.get("strafeBlocks", 0) >= 30,
             "gaps": both.get("gaps", 0) >= 1,
             "punishes": both.get("punishes", 0) >= 1,
             "double pop when hit twice": bot.get("doublePops", 0) >= 1,

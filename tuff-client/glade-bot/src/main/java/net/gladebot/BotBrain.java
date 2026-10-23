@@ -63,6 +63,8 @@ public final class BotBrain {
 
 	// Stats, shown after a match and checked by the self test.
 	public int misses;
+	/** Blocks moved sideways relative to the opponent (strafing), for the self test. */
+	public double strafeDist;
 	public int hits, crits, sprintHits, sweeps, pots, totemSwaps, pops, doublePops, deiviPops, gaps, punishes, strafeFlips, mends, jumpResets, styleSwitches;
 
 	public BotBrain(BotPlayer bot, ServerPlayer target) {
@@ -92,7 +94,7 @@ public final class BotBrain {
 	}
 
 	public String stats() {
-		return "hits=" + hits + " misses=" + misses + " crits=" + crits + " sprintHits=" + sprintHits + " sweeps=" + sweeps + " pots=" + pots + " gaps=" + gaps
+		return "hits=" + hits + " misses=" + misses + " strafeBlocks=" + Math.round(strafeDist) + " crits=" + crits + " sprintHits=" + sprintHits + " sweeps=" + sweeps + " pots=" + pots + " gaps=" + gaps
 				+ " pops=" + pops + " doublePops=" + doublePops + " deiviPops=" + deiviPops + " punishes=" + punishes + " strafeFlips=" + strafeFlips
 				+ " mends=" + mends + " totemSwaps=" + totemSwaps + " jumpResets=" + jumpResets + " styleSwitches=" + styleSwitches;
 	}
@@ -117,6 +119,13 @@ public final class BotBrain {
 		double dist = bot.distanceTo(target);
 		opp.update(bot, target);
 		updateStyle();
+		// how far it moves sideways relative to you (the self test checks it really strafes)
+		Vec3 to = target.position().subtract(bot.position());
+		double len = to.horizontalDistance();
+		if (len > 1e-3) {
+			Vec3 v = bot.getDeltaMovement();
+			strafeDist += Math.abs(v.x * (-to.z / len) + v.z * (to.x / len));
+		}
 		// jump reset: jump the moment you're hit, to take less knockback
 		if (bot.hurtTime > 0 && bot.hurtTime == bot.hurtDuration && bot.onGround() && mode != Mode.READY
 				&& random.nextFloat() < Settings.jumpResetChance(tier)) {
@@ -387,6 +396,17 @@ public final class BotBrain {
 		} else {
 			forward = 1;
 			sprint = true;
+		}
+
+		// the combo loop, in every style: close in with W, hit (W-tap after), then let go
+		// of W and strafe hard while the sword recharges, keeping them at the edge of reach,
+		// and go back in with W when it's charged. Holding W the whole time turned the
+		// strafe into a slight diagonal that didn't look like strafing at all.
+		boolean recharging = charge < 0.75f && wtap == 0 && dist < 4.2;
+		if (recharging && !(punish && opp.busy())) {
+			forward = dist < 2.4 ? -0.4f : dist > 3.3 ? 0.5f : 0.1f;
+			sprint = false;
+			strafe = strafeDir * Math.max(0.8f, Settings.strafe(tier));
 		}
 
 		// vanilla reach: 3 blocks from its eyes to your hitbox
