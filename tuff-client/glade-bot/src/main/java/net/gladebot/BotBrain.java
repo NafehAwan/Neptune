@@ -62,6 +62,7 @@ public final class BotBrain {
 	private final List<Predicate<ItemStack>> popQueue = new ArrayList<>();
 
 	// Stats, shown after a match and checked by the self test.
+	public int misses;
 	public int hits, crits, sprintHits, sweeps, pots, totemSwaps, pops, doublePops, deiviPops, gaps, punishes, strafeFlips, mends, jumpResets, styleSwitches;
 
 	public BotBrain(BotPlayer bot, ServerPlayer target) {
@@ -91,7 +92,7 @@ public final class BotBrain {
 	}
 
 	public String stats() {
-		return "hits=" + hits + " crits=" + crits + " sprintHits=" + sprintHits + " sweeps=" + sweeps + " pots=" + pots + " gaps=" + gaps
+		return "hits=" + hits + " misses=" + misses + " crits=" + crits + " sprintHits=" + sprintHits + " sweeps=" + sweeps + " pots=" + pots + " gaps=" + gaps
 				+ " pops=" + pops + " doublePops=" + doublePops + " deiviPops=" + deiviPops + " punishes=" + punishes + " strafeFlips=" + strafeFlips
 				+ " mends=" + mends + " totemSwaps=" + totemSwaps + " jumpResets=" + jumpResets + " styleSwitches=" + styleSwitches;
 	}
@@ -602,7 +603,8 @@ public final class BotBrain {
 			use();
 			mends++;
 			mendBudget--;
-			busy = 1;
+			// the mend rate setting: bottles a second
+			busy = Math.max(1, Math.round(20f / Settings.mendRate) - 1);
 		}
 	}
 
@@ -625,6 +627,14 @@ public final class BotBrain {
 	private void swing(boolean sprintHit) {
 		boolean crit = bot.fallDistance > 0 && !bot.onGround() && !bot.isSprinting();
 		boolean sprinting = bot.isSprinting();
+		// the miss rate setting: swing at the air instead (still uses up the swing)
+		if (Settings.missPct > 0 && random.nextInt(100) < Settings.missPct) {
+			bot.swing(InteractionHand.MAIN_HAND);
+			bot.resetAttackStrengthTicker();
+			misses++;
+			swingPicked = false;
+			return;
+		}
 		if (crit) crits++;
 		else if (sprinting) sprintHits++;
 		else sweeps++;

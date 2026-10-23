@@ -57,6 +57,16 @@ public final class GladeBot implements ModInitializer {
 		set.then(percent("jumpresetchance", v -> Settings.jumpResetPct = v, "Jump reset chance", 100));
 		set.then(percent("strafe", v -> Settings.strafePct = v, "Strafe", 100));
 		set.then(percent("potat", v -> Settings.potAtHearts = v, "Pot at (hearts)", 10));
+		set.then(Commands.literal("mendrate").then(Commands.argument("value", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 10)).executes(ctx -> {
+			Settings.mendRate = com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "value");
+			Settings.save();
+			return say(ctx, "Mend rate: " + Settings.mendRate + " bottles a second");
+		})));
+		set.then(Commands.literal("miss").then(Commands.argument("value", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 100)).executes(ctx -> {
+			Settings.missPct = com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "value");
+			Settings.save();
+			return say(ctx, "Miss rate: " + Settings.missPct + "%");
+		})));
 		set.then(Commands.literal("reset").executes(ctx -> {
 			Settings.resetTuning();
 			Settings.save();

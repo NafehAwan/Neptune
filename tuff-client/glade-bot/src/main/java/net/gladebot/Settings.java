@@ -23,6 +23,10 @@ public final class Settings {
 	public static boolean jumpReset = true;
 	/** Fine tuning; -1 means the tier's own value. */
 	public static int critPct = -1, jumpResetPct = -1, strafePct = -1, potAtHearts = -1;
+	/** XP bottles thrown per second while mending (1-10). */
+	public static int mendRate = 4;
+	/** Chance (0-100) a swing misses: it swings at the air instead of hitting. */
+	public static int missPct = 0;
 	/** Let go of W for a tick or two after a sprint hit. */
 	public static boolean wtap = true;
 	/** Deivi pops: 0 off, 1 rare, 2 often. */
@@ -75,6 +79,8 @@ public final class Settings {
 	/** Back to the tier's own values. */
 	public static void resetTuning() {
 		critPct = jumpResetPct = strafePct = potAtHearts = -1;
+		mendRate = 4;
+		missPct = 0;
 	}
 
 	/** Saved kits (null = the default Neth Pot kit). */
@@ -104,6 +110,8 @@ public final class Settings {
 			if (o.has("jumpResetPct")) jumpResetPct = o.get("jumpResetPct").getAsInt();
 			if (o.has("strafePct")) strafePct = o.get("strafePct").getAsInt();
 			if (o.has("potAtHearts")) potAtHearts = o.get("potAtHearts").getAsInt();
+			if (o.has("mendRate")) mendRate = Math.max(1, Math.min(10, o.get("mendRate").getAsInt()));
+			if (o.has("missPct")) missPct = Math.max(0, Math.min(100, o.get("missPct").getAsInt()));
 			playerKit = o.has("playerKit") ? o.get("playerKit") : null;
 			botKit = o.has("botKit") ? o.get("botKit") : null;
 		} catch (IOException | RuntimeException e) {
@@ -124,6 +132,8 @@ public final class Settings {
 		o.addProperty("jumpResetPct", jumpResetPct);
 		o.addProperty("strafePct", strafePct);
 		o.addProperty("potAtHearts", potAtHearts);
+		o.addProperty("mendRate", mendRate);
+		o.addProperty("missPct", missPct);
 		if (playerKit != null) o.add("playerKit", playerKit);
 		if (botKit != null) o.add("botKit", botKit);
 		try {

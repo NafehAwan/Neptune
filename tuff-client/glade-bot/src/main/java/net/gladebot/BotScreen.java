@@ -20,7 +20,7 @@ import net.minecraft.network.chat.Component;
  */
 public final class BotScreen extends Screen {
 	private static final int PANEL = 0xE0141A16, EDGE = 0xFF2C3A30, GREEN = 0xFF4FB07F, TEXT = 0xFFFFFFFF, MUTED = 0xFFA9B7AD;
-	private static final int W = 300, H = 300;
+	private static final int W = 300, H = 324;
 	private Tier tier = Settings.tier;
 	private String status = "";
 	private final Button[] tierButtons = new Button[Tier.values().length];
@@ -78,6 +78,11 @@ public final class BotScreen extends Screen {
 				v -> Settings.strafePct = v, v -> v + "%"));
 		addRenderableWidget(slider(x + hw + 4, y, hw, "Pot at", () -> Settings.potAtHearts > 0 ? Settings.potAtHearts : Math.round(tier.healAt / 2), 10,
 				v -> Settings.potAtHearts = Math.max(1, v), v -> Math.max(1, v) + " hearts"));
+		y += 24;
+		addRenderableWidget(slider(x, y, hw, "Mend rate", () -> Settings.mendRate, 10,
+				v -> Settings.mendRate = Math.max(1, v), v -> Math.max(1, v) + "/s"));
+		addRenderableWidget(slider(x + hw + 4, y, hw, "Miss", () -> Settings.missPct, 100,
+				v -> Settings.missPct = v, v -> v + "%"));
 		y += 24;
 		addRenderableWidget(Button.builder(Component.literal("Reset sliders to " + tier.label), b -> {
 			command("bot set reset");
@@ -191,7 +196,7 @@ public final class BotScreen extends Screen {
 		g.drawString(font, Component.literal("Glade Bot").withStyle(ChatFormatting.BOLD), x, y + 10, TEXT);
 		g.drawString(font, "Neth Pot practice", x, y + 22, MUTED);
 		g.drawString(font, "Tuning", x, y + 84, MUTED);
-		g.drawString(font, "Kits (from your inventory)", x, y + 212, MUTED);
+		g.drawString(font, "Kits (from your inventory)", x, y + 236, MUTED);
 		Button chosen = tierButtons[tier.ordinal()];
 		if (chosen != null) frame(g, chosen.getX() - 1, chosen.getY() - 1, chosen.getWidth() + 2, chosen.getHeight() + 2, GREEN);
 		String line = status.isEmpty() ? "B opens this screen.  /bot works too." : status;
