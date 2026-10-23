@@ -5,14 +5,14 @@ package net.gladebot;
  * clips of real players at each tier.
  */
 public enum Tier {
-	// LT3 is the old LT2 with the settings tuned in game (crit 83%, jump reset 35%,
-	// strafe 89%, pots at 3 hearts); MT3 and HT3 step up from it. All of them pot late
+	// Crit and strafe per tier as tuned in game: LT3 50% / 80%, MT3 67% / 87%,
+	// HT3 75% / 92%; jump reset 35 / 50 / 65%, pots at 3 hearts. All of them pot late
 	// (a burst at 2 hearts), keep a gapple in the offhand and swap a totem in when low,
 	// strafe in long runs (half a second to a second and a half each way, like a person).
 	//          reaction aimSpeed jitter reach  charge crit  wtap  strafe healAt burstAt burst potGap mendAt refill totemAt deivi strafeMin strafeMax jumpReset
-	LT3("LT3", 1, 55f, 1.0f, 3.0, 0.97f, 0.83f, 0.85f, 0.89f, 6f, 4f, 4, 2, 0.55f, 5, 9f, 0.70f, 10, 28, 0.35f),
-	MT3("MT3", 1, 62f, 0.8f, 3.0, 0.97f, 0.87f, 0.88f, 0.93f, 6f, 4f, 4, 2, 0.55f, 4, 9f, 0.75f, 9, 25, 0.50f),
-	HT3("HT3", 0, 70f, 0.6f, 3.0, 0.98f, 0.90f, 0.90f, 0.96f, 6f, 4f, 4, 2, 0.55f, 3, 10f, 0.80f, 8, 22, 0.65f);
+	LT3("LT3", 1, 55f, 1.0f, 3.0, 0.97f, 0.50f, 0.85f, 0.80f, 6f, 4f, 4, 2, 0.55f, 5, 9f, 0.70f, 10, 28, 0.35f),
+	MT3("MT3", 1, 62f, 0.8f, 3.0, 0.97f, 0.67f, 0.88f, 0.87f, 6f, 4f, 4, 2, 0.55f, 4, 9f, 0.75f, 9, 25, 0.50f),
+	HT3("HT3", 0, 70f, 0.6f, 3.0, 0.98f, 0.75f, 0.90f, 0.92f, 6f, 4f, 4, 2, 0.55f, 3, 10f, 0.80f, 8, 22, 0.65f);
 
 	public final String label;
 	/** Ticks between the player moving and the bot reacting. */
