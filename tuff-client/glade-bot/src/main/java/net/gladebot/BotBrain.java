@@ -398,15 +398,11 @@ public final class BotBrain {
 			sprint = true;
 		}
 
-		// the combo loop, in every style: close in with W, hit (W-tap after), then let go
-		// of W and strafe hard while the sword recharges, keeping them at the edge of reach,
-		// and go back in with W when it's charged. Holding W the whole time turned the
-		// strafe into a slight diagonal that didn't look like strafing at all.
-		boolean recharging = charge < 0.75f && wtap == 0 && dist < 4.2;
+		// while the sword recharges in range, ease off W a little so the strafe shows: the
+		// strafe setting decides how much (keeps the pressure, unlike letting go of W)
+		boolean recharging = charge < 0.75f && wtap == 0 && dist < 3.6 && forward > 0.5f;
 		if (recharging && !(punish && opp.busy())) {
-			forward = dist < 2.4 ? -0.4f : dist > 3.3 ? 0.5f : 0.1f;
-			sprint = false;
-			strafe = strafeDir * Math.max(0.8f, Settings.strafe(tier));
+			forward = Math.max(0.55f, 1 - 0.45f * Settings.strafe(tier));
 		}
 
 		// vanilla reach: 3 blocks from its eyes to your hitbox
