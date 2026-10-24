@@ -31,6 +31,7 @@ export interface Settings {
   discordAppId: string | null;
   activeAccount: string | null;
   selectedProfile: string | null;
+  gladeHoodie: boolean;
 }
 
 export interface AppInfo {

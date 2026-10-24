@@ -1,3 +1,9 @@
+Glade 1.8.1
+- Your character on Home now wears the Glade hoodie and headphones over your own skin. Turn it off in Settings ("Glade hoodie").
+- Home matches the new design: green markers on news cards, a featured server card you can join in one click, the mod count under Play, and Friends with an "Add a friend" button (friends are coming soon).
+- The sidebar now has Play, Mods, Servers, Profiles and Store up top, and Wardrobe, Screenshots, Console and Settings at the bottom.
+- The account button shows your face, and a new mail button opens what's new.
+
 Glade 1.8.0
 - A new look for the launcher: a dark theme, a slim menu on the left, and new art throughout.
 - Home: your character in 3D with proper lighting and 3D skin layers (hats, hoodies and hair stand out). Non-premium accounts show Steve.

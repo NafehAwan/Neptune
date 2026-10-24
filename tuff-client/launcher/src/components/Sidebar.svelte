@@ -1,25 +1,32 @@
 <script lang="ts">
   import logo from "../assets/brand/leaf.png";
   import { app, go, type Route } from "../lib/state.svelte";
+  import { toast } from "../lib/toast.svelte";
   import Icon from "./Icon.svelte";
 
-  const items: { route: Route; icon: string; label: string }[] = [
-    { route: "home", icon: "home", label: "Home" },
-    { route: "library", icon: "library", label: "Library" },
+  type Item = { route: Route | "store"; icon: string; label: string };
+  const items: Item[] = [
+    { route: "home", icon: "gamepad", label: "Play" },
     { route: "browse", icon: "cube", label: "Mods" },
     { route: "servers", icon: "server", label: "Servers" },
+    { route: "library", icon: "grid", label: "Profiles" },
+    { route: "store", icon: "cart", label: "Store (coming soon)" },
+  ];
+  const bottom: Item[] = [
     { route: "wardrobe", icon: "shirt", label: "Wardrobe" },
     { route: "screenshots", icon: "camera", label: "Screenshots" },
-  ];
-  const bottom: { route: Route; icon: string; label: string }[] = [
     { route: "console", icon: "console", label: "Console" },
     { route: "settings", icon: "gear", label: "Settings" },
   ];
+  function open(i: Item) {
+    if (i.route === "store") toast("The Glade Store is coming soon");
+    else go(i.route);
+  }
 </script>
 
-{#snippet item(i: { route: Route; icon: string; label: string }, n: number)}
-  <button class="nav" class:active={app.route === i.route} onclick={() => go(i.route)} aria-label={i.label} title="{i.label}  (Ctrl+{n})">
-    <Icon name={i.icon} size={20} />
+{#snippet item(i: Item)}
+  <button class="nav" class:active={app.route === i.route} onclick={() => open(i)} aria-label={i.label}>
+    <Icon name={i.icon} size={22} />
     {#if i.route === "console" && app.running}<span class="live"></span>{/if}
     <span class="tip">{i.label}</span>
   </button>
@@ -30,10 +37,10 @@
     <img src={logo} alt="" width="32" height="32" />
   </button>
   <div class="group">
-    {#each items as i, n}{@render item(i, n + 1)}{/each}
+    {#each items as i}{@render item(i)}{/each}
   </div>
   <div class="group bottom">
-    {#each bottom as i, n}{@render item(i, items.length + n + 1)}{/each}
+    {#each bottom as i}{@render item(i)}{/each}
     <span class="ver">v{app.info?.version ?? ""}</span>
   </div>
 </nav>
@@ -45,6 +52,7 @@
   .logo img { display: block; }
   .group { display: grid; gap: 4px; justify-items: center; }
   .bottom { margin-top: auto; }
+  .bottom .nav { width: 40px; height: 38px; }
   .nav { position: relative; width: 44px; height: 44px; display: grid; place-items: center; background: transparent; border: 0; border-radius: 11px; color: var(--muted); cursor: pointer; transition: color var(--fast), background var(--fast); }
   .nav:hover { color: var(--text); background: var(--surface); }
   .nav.active { color: #fff; background: var(--surface-3); }

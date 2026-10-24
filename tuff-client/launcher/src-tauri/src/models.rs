@@ -72,6 +72,8 @@ pub struct Settings {
     pub discord_app_id: Option<String>,
     pub active_account: Option<String>,
     pub selected_profile: Option<String>,
+    /// The Glade hoodie drawn over the player's skin on Home.
+    pub glade_hoodie: bool,
 }
 
 impl Default for Settings {
@@ -88,6 +90,7 @@ impl Default for Settings {
             discord_app_id: None,
             active_account: None,
             selected_profile: None,
+            glade_hoodie: true,
         }
     }
 }

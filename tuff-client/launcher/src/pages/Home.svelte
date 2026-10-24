@@ -21,6 +21,8 @@
   import { skinOf } from "../lib/skins.svelte";
   import { activeAccount, app, go, play, selectProfile, selectedProfile } from "../lib/state.svelte";
   import { toast } from "../lib/toast.svelte";
+  import { QUICK_SERVERS, loadQuickPlay, pings } from "../lib/quickplay.svelte";
+  loadQuickPlay();
 
   const profile = $derived(selectedProfile());
   const account = $derived(activeAccount());
@@ -30,6 +32,14 @@
   const percent = $derived(fraction === null ? null : Math.floor(fraction * 100));
 
   let picker = $state(false);
+  let modCount = $state<number | null>(null);
+  $effect(() => {
+    const id = profile?.id;
+    modCount = null;
+    if (id) api.contentList(id, "mod").then((m) => { if (profile?.id === id) modCount = m.length; }).catch(() => {});
+  });
+  const featured = QUICK_SERVERS[1];
+  const featuredPing = $derived(pings[featured.address]);
   let creating = $state(false);
   let picking = $state(false);
 
@@ -50,7 +60,7 @@
 <section class="home">
   <div class="banner" style:background-image="url({banner})">
     <div class="player">
-      <Player3D skin={skinOf(account)} still={!!app.settings?.lowMotion} />
+      <Player3D skin={skinOf(account)} hoodie={app.settings?.gladeHoodie ?? true} still={!!app.settings?.lowMotion} />
     </div>
 
     <div class="launch">
@@ -82,7 +92,7 @@
             <DownloadCard inline />
           {:else}
             <button class="pill" onclick={() => (picker = !picker)} aria-haspopup="listbox" aria-expanded={picker}>
-              <ProfileIcon name={profile.icon} size={20} /> {profile.name} <em>· {profile.isTuff ? "Glade" : loaderName(profile.loader)}</em>
+              <ProfileIcon name={profile.icon} size={20} /> {profile.name} <em>· {modCount === null ? loaderName(profile.loader) : `${modCount} mods`}</em>
             </button>
           {/if}
           {#if picker}
@@ -109,34 +119,48 @@
     <div class="col">
       <div class="head"><h2>Latest news</h2><button class="link" onclick={() => open(RELEASES)}>View all News</button></div>
       <div class="news">
-        <button class="nc" onclick={() => open(RELEASES)}>
-          <span class="art" style:background-image="url({newversion})" style:background-position="right -40px center"></span>
-          <span class="txt"><small>NEW VERSION</small><b>GLADE {app.info?.version ?? ""}</b><em>IS NOW AVAILABLE TO PLAY!</em></span>
-          <span class="arrow">→</span>
-        </button>
-        <button class="nc poster" onclick={() => open(RELEASES)}>
-          <img src={clips} alt="Kill clips" />
-          <span class="tag">● New</span><span class="lbl">KILL CLIPS</span><span class="arrow">→</span>
-        </button>
-        <button class="nc poster" onclick={discord}>
-          <img src={giveaways} alt="Weekly giveaways" />
-          <span class="lbl">WEEKLY GIVEAWAYS</span><span class="arrow">→</span>
-        </button>
-        <button class="nc" onclick={() => open(GLADE_BOT)}>
-          <span class="art" style:background-image="url({launching})" style:background-position="right 10px center"></span>
-          <span class="txt"><small>PRACTICE</small><b>GLADE BOT</b><em>NETH POT AGAINST A BOT · LT3 TO HT3</em></span>
-          <span class="arrow">→</span>
-        </button>
+        <div class="slot"><span class="gd"></span>
+          <button class="nc" onclick={() => open(RELEASES)}>
+            <span class="art" style:background-image="url({newversion})" style:background-position="right -40px center"></span>
+            <span class="txt"><small>NEW VERSION</small><b>GLADE {app.info?.version ?? ""}</b><em>IS NOW AVAILABLE TO PLAY!</em></span>
+            <span class="arrow">→</span>
+          </button>
+        </div>
+        <div class="slot"><span class="gd"></span>
+          <button class="nc poster hot" onclick={() => open(RELEASES)}>
+            <img src={clips} alt="Kill clips" />
+            <span class="tag">● New</span><span class="lbl">KILL CLIPS</span><span class="arrow">→</span>
+          </button>
+        </div>
+        <div class="slot"><span class="gd"></span>
+          <button class="nc poster" onclick={discord}>
+            <img src={giveaways} alt="Weekly giveaways" />
+            <span class="lbl">WEEKLY GIVEAWAYS</span><span class="arrow">→</span>
+          </button>
+        </div>
+        <div class="slot"><span class="gd"></span>
+          <button class="nc server" onclick={() => profile && !busy && !running && play(profile.id, featured.address)} disabled={!profile}>
+            <span class="art blur" style:background-image="url({banner})"></span>
+            <span class="center">
+              {#if featuredPing && featuredPing !== "offline" && featuredPing.favicon}<img class="logo" src={featuredPing.favicon} alt="" />{:else}<span class="logo letter">{featured.name[0]}</span>{/if}
+              <small>FEATURED SERVER</small>
+              <b>{featured.name.toUpperCase()}</b>
+              <em>PLAY NOW · {featured.address.toUpperCase()}</em>
+            </span>
+            <span class="arrow">→</span>
+          </button>
+        </div>
       </div>
     </div>
 
     <div class="side">
-      <div class="head"><h2>Friends</h2></div>
+      <div class="head"><h2>Friends</h2><button class="link" onclick={() => toast("Friends are coming soon")}>View Friends List</button></div>
       <div class="friends">
         <img src={nofriends} alt="" />
         <b>Friends are coming soon</b>
         <span>See who's online, send invites and join their servers.</span>
       </div>
+      <button class="addf" onclick={() => toast("Friends are coming soon")}><Icon name="plus" size={14} /> Add a friend</button>
       <div class="mini">
         <button class="dc" onclick={discord}>
           <svg width="22" height="22" viewBox="0 0 24 24"><path fill="currentColor" d="M20.3 4.4A19.8 19.8 0 0 0 15.4 3l-.6 1.3a18.3 18.3 0 0 0-5.5 0L8.7 3a19.7 19.7 0 0 0-4.9 1.5C.7 9.1-.2 13.6.3 18a19.9 19.9 0 0 0 6 3l1.3-2a12.9 12.9 0 0 1-2-1l.5-.4a14.2 14.2 0 0 0 12.2 0l.5.4c-.6.4-1.3.7-2 1l1.3 2a19.8 19.8 0 0 0 6-3c.5-5.1-.9-9.6-3.8-13.6ZM8 15.3c-1.2 0-2.2-1.1-2.2-2.4S6.8 10.5 8 10.5s2.2 1.1 2.2 2.4-1 2.4-2.2 2.4Zm8 0c-1.2 0-2.2-1.1-2.2-2.4s1-2.4 2.2-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4Z" /></svg>
@@ -164,7 +188,7 @@
 
   .banner { position: relative; border-radius: 14px; overflow: hidden; border: 1px solid var(--border); background: center 22% / cover no-repeat #0b100d; }
   .banner::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.45)); }
-  .player { position: absolute; left: 9%; bottom: -6px; z-index: 2; }
+  .player { position: absolute; left: 13%; bottom: -6px; z-index: 2; }
 
   .launch { position: absolute; left: 50%; top: 47%; transform: translate(-50%, -50%); z-index: 3; display: grid; justify-items: center; gap: 18px; }
   .btnrow { display: flex; }
@@ -209,8 +233,21 @@
   .head h2 { font: 800 14px var(--font); text-transform: uppercase; letter-spacing: 0.01em; }
   .link { background: none; border: 0; color: var(--muted); font: 500 11px var(--font); cursor: pointer; }
   .link:hover { color: var(--text); }
-  .news { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 12px; }
-  .nc { position: relative; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: #2b2b2f; padding: 0; cursor: pointer; text-align: left; color: #fff; transition: transform var(--med) var(--spring), border-color var(--fast); }
+  .news { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 16px 14px; padding: 5px 0 0 5px; }
+  .slot { position: relative; min-height: 0; }
+  .gd { position: absolute; left: -5px; top: -5px; width: 11px; height: 11px; border-radius: 50%; background: var(--online); box-shadow: 0 0 0 3px var(--bg); z-index: 3; }
+  .nc { position: absolute; inset: 0; width: 100%; border-radius: 10px; overflow: hidden; border: 2px solid #25282d; background: #2b2b2f; padding: 0; cursor: pointer; text-align: left; color: #fff; transition: transform var(--med) var(--spring), border-color var(--fast); }
+  .nc.hot { border-color: var(--accent); }
+  .nc:disabled { cursor: default; }
+  .art.blur { background-size: cover; background-position: center; filter: blur(3px) brightness(0.5) saturate(1.2); transform: scale(1.08); }
+  .center { position: absolute; inset: 0; display: grid; place-items: center; align-content: center; text-align: center; gap: 2px; }
+  .center .logo { width: 46px; height: 46px; border-radius: 10px; margin-bottom: 8px; image-rendering: auto; object-fit: contain; }
+  .center .letter { display: grid; place-items: center; background: #d11fd1; font: 800 22px var(--brand); color: #fff; }
+  .center small { font: 600 10px var(--font); letter-spacing: 0.3em; color: #e8ffe9; opacity: 0.85; }
+  .center b { font: 800 clamp(18px, 2.4vw, 28px)/1.1 var(--brand); margin: 4px 0 8px; }
+  .center em { font: 800 8px var(--font); font-style: normal; letter-spacing: 0.14em; background: rgba(255, 255, 255, 0.92); color: #1b1b1b; padding: 3px 9px; border-radius: 3px; }
+  .addf { margin-top: 10px; height: 38px; border-radius: 9px; background: var(--surface); border: 1px dashed #33363c; display: flex; align-items: center; justify-content: center; gap: 8px; color: #b9bdc5; font: 600 12.5px var(--font); cursor: pointer; }
+  .addf:hover { color: var(--text); border-color: var(--border-strong); }
   .nc:hover { transform: translateY(-2px); border-color: rgba(47, 191, 106, 0.6); }
   .nc .art { position: absolute; inset: 0; background-size: auto 150%; background-repeat: no-repeat; }
   .nc img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; }
@@ -223,7 +260,7 @@
   .lbl { position: absolute; left: 10px; bottom: 10px; font: 700 10px var(--font); letter-spacing: 0.06em; padding: 4px 9px; border-radius: 6px; background: rgba(10, 12, 14, 0.75); }
 
   .friends { flex: 1; min-height: 0; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); display: grid; align-content: center; justify-items: center; text-align: center; padding: 10px 16px; overflow: hidden; }
-  .friends img { width: min(210px, 80%); height: auto; -webkit-mask-image: radial-gradient(closest-side, #000 55%, transparent 100%); mask-image: radial-gradient(closest-side, #000 55%, transparent 100%); }
+  .friends img { width: 150px; height: auto; height: auto; -webkit-mask-image: radial-gradient(closest-side, #000 55%, transparent 100%); mask-image: radial-gradient(closest-side, #000 55%, transparent 100%); }
   .friends b { font: 700 14px var(--font); margin-top: 6px; }
   .friends span { color: var(--muted); font-size: 12px; margin-top: 3px; max-width: 220px; }
   .mini { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }

@@ -1,15 +1,17 @@
 <script lang="ts">
   // The signed-in player in 3D (Steve when the account isn't premium).
   import { onDestroy, onMount } from "svelte";
-  import { POSES, studioLights, voxelLayers } from "../lib/character3d";
+  import hoodieOverlay from "../assets/glade/hoodie.png";
+  import { POSES, studioLights, voxelLayers, withHoodie } from "../lib/character3d";
 
-  let { skin, width = 300, height = 300, still = false }: { skin: string; width?: number; height?: number; still?: boolean } = $props();
+  let { skin, hoodie = true, width = 300, height = 300, still = false }: { skin: string; hoodie?: boolean; width?: number; height?: number; still?: boolean } = $props();
   let canvas: HTMLCanvasElement;
   let viewer: import("skinview3d").SkinViewer | null = null;
   let frame = 0;
   let loaded = "";
 
-  async function build(url: string) {
+  async function build(base: string, withOutfit: boolean) {
+    const url = withOutfit ? await withHoodie(base, hoodieOverlay).catch(() => base) : base;
     const s = await import("skinview3d");
     viewer?.dispose();
     const v = new s.SkinViewer({ canvas, width, height });
@@ -36,7 +38,7 @@
   }
 
   onMount(() => { if (!still) frame = requestAnimationFrame(tick); });
-  $effect(() => { if (skin && skin !== loaded) { loaded = skin; build(skin); } });
+  $effect(() => { const key = `${skin}|${hoodie}`; if (skin && key !== loaded) { loaded = key; build(skin, hoodie); } });
   onDestroy(() => { cancelAnimationFrame(frame); viewer?.dispose(); viewer = null; });
 </script>
 

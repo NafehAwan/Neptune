@@ -6,6 +6,7 @@
   import { activeAccount, app, go, refreshAccounts } from "../lib/state.svelte";
   import { toast } from "../lib/toast.svelte";
   import AccountModal from "./AccountModal.svelte";
+  import Face from "./Face.svelte";
   import Head3D from "./Head3D.svelte";
   import Icon from "./Icon.svelte";
 
@@ -66,12 +67,11 @@
 <div class="wrap" use:outside>
   <button class="chip-btn" class:open class:out={!current} onclick={() => (open = !open)} aria-haspopup="menu" aria-expanded={open}>
     {#if current}
-      <Head3D skin={skinOf(current)} size={30} />
+      <Face skin={skinOf(current)} size={32} />
     {:else}
       <span class="nohead"><Icon name="user" size={14} /></span>
     {/if}
     <span class="who2"><small>{current ? (current.kind === "msa" ? "Signed in" : "Offline") : "Not signed in"}</small><span class="name ellipsis">{current?.name ?? "Add account"}</span></span>
-    <Icon name="chevron" size={14} />
   </button>
 
   {#if open}

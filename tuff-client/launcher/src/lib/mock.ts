@@ -1,4 +1,3 @@
-import sampleSkin from "../assets/skins/sample.png";
 // Sample data for running the UI in a plain browser (`npm run dev`) where the
 // Rust backend isn't available. Never loaded inside the desktop app.
 import type * as T from "./types";
@@ -23,7 +22,7 @@ const PRESETS: T.Preset[] = [
 const now = Math.floor(Date.now() / 1000);
 let settings: T.Settings = {
   defaultMemoryMb: 4096, onLaunch: "minimize", lowMotion: false, discordRpc: true, showSnapshots: false,
-  javaPath: null, concurrentDownloads: 16, msClientId: null, discordAppId: null, activeAccount: "a1", selectedProfile: "p1",
+  javaPath: null, concurrentDownloads: 16, msClientId: null, discordAppId: null, activeAccount: "a1", selectedProfile: "p1", gladeHoodie: true,
 };
 let profiles: T.Profile[] = [
   { id: "glade-performance", preset: "performance", name: "Glade Performance", icon: "tuff", gameVersion: "26.3", loader: "fabric", loaderVersion: "0.19.5", memoryMb: 4096, jvmArgs: "", javaPath: null, resolution: null, created: now - 86400 * 9, lastPlayed: now - 3600 * 3, playTimeSecs: 3600 * 14 + 1260, isTuff: true },
@@ -85,7 +84,7 @@ export async function mockCall(cmd: string, args: Record<string, any> = {}): Pro
     }
     // browser preview only: ?signin shows the first-run sign-in screen
     case "list_accounts": return location.search.includes("signin") ? { accounts: [], active: null } : { accounts, active: settings.activeAccount };
-    case "account_skin": return accounts.find((a) => a.id === args.id)?.kind === "msa" ? sampleSkin : null;
+    case "account_skin": return null;
     case "default_skin": return null;
     case "set_active_account": settings.activeAccount = args.id; return null;
     case "add_offline_account": { const a = { id: crypto.randomUUID(), name: args.name, kind: "offline" }; accounts = [...accounts, a as T.Account]; return a; }

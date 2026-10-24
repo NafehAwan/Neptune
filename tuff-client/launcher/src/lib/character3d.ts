@@ -58,7 +58,7 @@ export async function voxelLayers(v: SkinViewer, url: string, slim: boolean) {
   const mat = (rgb: number[]) => {
     const key = rgb.join(",");
     let m = mats.get(key);
-    if (!m) { m = new Mat(); m.color.setRGB(rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, "srgb"); mats.set(key, m); }
+    if (!m) { m = new Mat(); m.color.setRGB(rgb[0] / 255, rgb[1] / 255, rgb[2] / 255); m.color.convertSRGBToLinear(); mats.set(key, m); }
     return m;
   };
   for (const [name, part0] of Object.entries(PARTS)) {
@@ -86,4 +86,19 @@ export async function voxelLayers(v: SkinViewer, url: string, slim: boolean) {
       add(at(u + D + W + i, vv + j), -W / 2 + i + .5, -H / 2 - o, D / 2 - j - .5);           // bottom
     }
   }
+}
+
+/** The skin with the Glade hoodie (hoodie, hood, headphones, fringe, shoes) drawn over
+ *  its outer layer. Old 64x32 skins have no outer layer, so they stay as they are. */
+export async function withHoodie(url: string, hoodie: string): Promise<string> {
+  const load = (src: string) => new Promise<HTMLImageElement>((resolve, reject) => {
+    const i = new Image(); i.onload = () => resolve(i); i.onerror = reject; i.src = src;
+  });
+  const [skin, over] = await Promise.all([load(url), load(hoodie)]);
+  if (skin.width !== 64 || skin.height !== 64) return url;
+  const c = document.createElement("canvas"); c.width = 64; c.height = 64;
+  const g = c.getContext("2d")!;
+  g.drawImage(skin, 0, 0);
+  g.drawImage(over, 0, 0);
+  return c.toDataURL("image/png");
 }

@@ -55,7 +55,8 @@
           {#each launchOptions as o}<button class:on={s.onLaunch === o.id} onclick={() => updateSettings({ onLaunch: o.id })}>{o.label}</button>{/each}
         </div>
       </div>
-      {@render toggle("Reduce motion", "Pauses the title screen animation and shortens transitions.", s.lowMotion, (v) => updateSettings({ lowMotion: v }))}
+      {@render toggle("Glade hoodie", "Dress your character on Home in the Glade hoodie and headphones, over any skin.", s.gladeHoodie, (v) => updateSettings({ gladeHoodie: v }))}
+      {@render toggle("Reduce motion", "Stops the character animation and shortens transitions.", s.lowMotion, (v) => updateSettings({ lowMotion: v }))}
       {@render toggle("Show snapshots", "List snapshot versions when creating profiles.", s.showSnapshots, (v) => updateSettings({ showSnapshots: v }))}
     </section>
 
