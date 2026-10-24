@@ -1,3 +1,9 @@
+Glade 1.8.3
+- Microsoft sign-in fixed: it always opens Microsoft's own sign-in page in a window, with no code to type. A client ID saved by older versions used to switch it to the code method, which couldn't sign in; that setting is gone.
+- The sign-in window is private, so you can add a different Microsoft account each time.
+- "Add Microsoft account" in the account menu opens the sign-in window straight away.
+- If an account added with an old client ID says its session expired, remove it and sign in again.
+
 Glade 1.8.2
 - A start screen: Glade checks for a launcher update before opening. If there is one, it installs first; offline or slow checks give up after a few seconds so the launcher still opens.
 - Darker backdrops behind dialogs, to match the new look.

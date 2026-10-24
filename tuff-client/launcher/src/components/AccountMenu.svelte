@@ -3,7 +3,7 @@
   import { fly, scale } from "svelte/transition";
   import { api } from "../lib/api";
   import { skinOf } from "../lib/skins.svelte";
-  import { activeAccount, app, go, refreshAccounts } from "../lib/state.svelte";
+  import { activeAccount, app, go, refreshAccounts, signInMicrosoft } from "../lib/state.svelte";
   import { toast } from "../lib/toast.svelte";
   import AccountModal from "./AccountModal.svelte";
   import Face from "./Face.svelte";
@@ -21,6 +21,15 @@
     document.body.classList.toggle("account-open", open);
     return () => document.body.classList.remove("account-open");
   });
+
+  async function microsoft() {
+    open = false;
+    try {
+      await signInMicrosoft();
+    } catch (e) {
+      if (!String(e).includes("window closed")) toast(e, "error", 9000);
+    }
+  }
 
   async function choose(id: string) {
     await api.setActiveAccount(id);
@@ -107,8 +116,8 @@
       {/each}
 
       <div class="sep"></div>
-      <button class="action" onclick={() => { open = false; app.accountModal = true; }}>
-        <span class="ai"><Icon name="plus" size={16} /></span> Add Microsoft account
+      <button class="action" onclick={microsoft} disabled={app.signingIn}>
+        <span class="ai">{#if app.signingIn}<span class="spinner"></span>{:else}<Icon name="plus" size={16} />{/if}</span> {app.signingIn ? "Waiting for Microsoft…" : "Add Microsoft account"}
       </button>
       <button class="action" class:on={adding} onclick={() => { adding = !adding; error = ""; }}>
         <span class="ai"><Icon name="user-plus" size={16} /></span> Add offline account

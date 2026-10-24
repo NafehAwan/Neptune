@@ -1,34 +1,21 @@
 <script lang="ts">
   import { api } from "../lib/api";
-  import { app, go, refreshAccounts } from "../lib/state.svelte";
+  import { app, refreshAccounts, signInMicrosoft } from "../lib/state.svelte";
   import { toast } from "../lib/toast.svelte";
-  import type { DeviceCode } from "../lib/types";
-  import Icon from "./Icon.svelte";
   import Modal from "./Modal.svelte";
 
   let { onclose }: { onclose: () => void } = $props();
   let tab = $state<"msa" | "offline">("msa");
-  let code = $state<DeviceCode | null>(null);
-  let busy = $state(false);
   let name = $state("");
   let error = $state("");
 
   async function microsoft() {
-    busy = true;
     error = "";
     try {
-      // the built-in sign-in opens Microsoft's page in a window; an own Azure app uses a code
-      const account = app.settings?.msClientId
-        ? await api.msLoginFinish((code = await api.msLoginStart()))
-        : await api.msLoginWindow();
-      await refreshAccounts();
-      toast(`Signed in as ${account.name}`, "success");
+      await signInMicrosoft();
       onclose();
     } catch (e) {
       error = String(e);
-      code = null;
-    } finally {
-      busy = false;
     }
   }
 
@@ -44,11 +31,6 @@
       error = String(e);
     }
   }
-
-  async function copy() {
-    if (code) await navigator.clipboard.writeText(code.user_code);
-    toast("Code copied");
-  }
 </script>
 
 <Modal title="Add account" {onclose} width={440}>
@@ -58,25 +40,10 @@
   </div>
 
   {#if tab === "msa"}
-    {#if code}
-      <p class="muted">Enter this code on the Microsoft page that just opened in your browser.</p>
-      <button class="code" onclick={copy} title="Copy code">
-        <span class="pixel">{code.user_code}</span>
-        <Icon name="copy" size={14} />
-      </button>
-      <div class="row muted waiting"><span class="spinner"></span> Waiting for you to sign in…</div>
-      <button class="btn ghost small" onclick={() => code && api.openUrl(code.verification_uri)}>
-        <Icon name="link" size={12} /> Open {code.verification_uri.replace("https://", "")}
-      </button>
-    {:else if app.info && !app.info.msLoginConfigured}
-      <p class="muted">Microsoft sign-in needs an Azure app client ID. Add yours in Settings → Accounts, or use an offline account for singleplayer.</p>
-      <button class="btn" onclick={() => { onclose(); go("settings"); }}>Open settings</button>
-    {:else}
-      <p class="muted">{busy ? "Sign in in the Microsoft window. It closes by itself when you're done." : "You'll sign in on Microsoft's own page. Glade never sees your password."}</p>
-      <button class="btn primary big" onclick={microsoft} disabled={busy}>
-        {#if busy}<span class="spinner"></span>{/if} Sign in with Microsoft
-      </button>
-    {/if}
+    <p class="muted">{app.signingIn ? "Sign in in the Microsoft window. It closes by itself when you're done." : "Microsoft's own sign-in page opens in a window. No code to type, and Glade never sees your password."}</p>
+    <button class="btn primary big" onclick={microsoft} disabled={app.signingIn}>
+      {#if app.signingIn}<span class="spinner"></span> Waiting for Microsoft…{:else}Sign in with Microsoft{/if}
+    </button>
   {:else}
     <form onsubmit={offline}>
       <label class="field">
@@ -95,13 +62,6 @@
 <style>
   .seg { width: 100%; }
   .seg button { flex: 1; }
-  .code {
-    display: flex; align-items: center; justify-content: center; gap: 14px;
-    padding: 18px; background: var(--bg); border: 1px dashed var(--accent-deep); border-radius: 8px;
-    color: var(--accent-hover); cursor: pointer;
-  }
-  .code .pixel { font-size: 28px; font-weight: 700; letter-spacing: 0.14em; font-variant-numeric: tabular-nums; }
-  .waiting { font-size: 15px; }
   .big { height: 42px; }
   form { display: grid; gap: 12px; }
   .small { font-size: 14px; }

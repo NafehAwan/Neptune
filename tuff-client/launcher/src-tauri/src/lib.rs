@@ -538,6 +538,9 @@ async fn ms_login_window(app: AppHandle, state: State<'_, AppState>) -> CmdResul
         .title("Microsoft Login")
         .inner_size(520.0, 700.0)
         .center()
+        .focused(true)
+        // a private window: every sign-in starts fresh, so any account can be added
+        .incognito(true)
         .on_navigation(move |url| match auth::code_from_redirect(url) {
             Some(result) => {
                 on_nav(result);

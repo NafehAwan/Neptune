@@ -7,14 +7,7 @@
 
   const s = $derived(app.settings!);
   const maxMemory = $derived(Math.max(2048, Math.floor(((app.info?.totalMemoryMb ?? 8192) - 1024) / 512) * 512));
-  let clientId = $state(app.settings?.msClientId ?? "");
   let discordId = $state(app.settings?.discordAppId ?? "");
-
-  async function saveClientId() {
-    await updateSettings({ msClientId: clientId.trim() || null });
-    app.info = await api.appInfo();
-    toast(clientId.trim() ? "Microsoft client ID saved" : "Using the built-in client ID", "success");
-  }
 
   async function saveDiscord() {
     await updateSettings({ discordAppId: discordId.trim() || null });
@@ -82,24 +75,6 @@
       </div>
     </section>
 
-    <section class="card rise" style="--i: 2">
-      <h3>Accounts</h3>
-      <div class="setting col">
-        <p class="label">Microsoft client ID</p>
-        <p class="hint">
-          Leave this empty: Glade signs in the same way as the official Minecraft launcher.
-          Only paste a client ID if you have your own Azure app that Mojang has approved.
-        </p>
-        <div class="row">
-          <input class="input mono grow" bind:value={clientId} placeholder="Built-in (recommended)" />
-          <button class="btn small" onclick={saveClientId}>Save</button>
-        </div>
-        <button class="btn ghost small linkbtn" onclick={() => api.openUrl("https://learn.microsoft.com/entra/identity-platform/quickstart-register-app")}>
-          <Icon name="link" size={10} /> How to register an app
-        </button>
-      </div>
-    </section>
-
     <section class="card rise" style="--i: 3">
       <h3>Discord</h3>
       {@render toggle("Rich Presence", "Show what you're playing on your Discord profile.", s.discordRpc, (v) => updateSettings({ discordRpc: v }))}
@@ -142,7 +117,6 @@
   .hint { font-size: 14px; color: var(--muted); margin-top: 2px; }
   .val { color: var(--accent-hover); }
   .narrow { width: 90px; }
-  .linkbtn { justify-self: start; padding-left: 0; }
   .about { padding-bottom: 18px; display: grid; gap: 6px; }
   .brand { color: var(--accent-hover); }
   kbd { font: 12.5px var(--mono); padding: 1px 5px; border-radius: 4px; background: var(--surface-3); border: 1px solid var(--border-strong); }

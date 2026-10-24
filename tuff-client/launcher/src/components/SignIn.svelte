@@ -4,30 +4,19 @@
   import art from "../assets/glade/signin.jpg";
   import logo from "../assets/brand/leaf.png";
   import { api, windowAction } from "../lib/api";
-  import { app, refreshAccounts } from "../lib/state.svelte";
-  import { toast } from "../lib/toast.svelte";
-  import AccountModal from "./AccountModal.svelte";
+  import { app, refreshAccounts, signInMicrosoft } from "../lib/state.svelte";
   import Icon from "./Icon.svelte";
 
-  let busy = $state(false);
-  let codeLogin = $state(false);
   let offline = $state(false);
   let name = $state("");
   let error = $state("");
 
   async function microsoft() {
-    // an own Azure app in Settings signs in with a code instead
-    if (app.settings?.msClientId) { codeLogin = true; return; }
-    busy = true;
     error = "";
     try {
-      const account = await api.msLoginWindow();
-      await refreshAccounts();
-      toast(`Signed in as ${account.name}`, "success");
+      await signInMicrosoft();
     } catch (e) {
-      error = String(e);
-    } finally {
-      busy = false;
+      if (!String(e).includes("window closed")) error = String(e);
     }
   }
 
@@ -54,8 +43,8 @@
     <div class="brand"><img src={logo} alt="" width="38" height="38" /> Glade</div>
     <h1>Step into<br />the <span>Glade.</span></h1>
     <p class="sub">Sign in with your Microsoft account to play, join servers and see your friends.</p>
-    <button class="ms" onclick={microsoft} disabled={busy}>
-      {#if busy}<span class="spinner"></span> Waiting for Microsoft…{:else}<i><b style="background:#f25022"></b><b style="background:#7fba00"></b><b style="background:#00a4ef"></b><b style="background:#ffb900"></b></i> Sign in with Microsoft{/if}
+    <button class="ms" onclick={microsoft} disabled={app.signingIn}>
+      {#if app.signingIn}<span class="spinner"></span> Waiting for Microsoft…{:else}<i><b style="background:#f25022"></b><b style="background:#7fba00"></b><b style="background:#00a4ef"></b><b style="background:#ffb900"></b></i> Sign in with Microsoft{/if}
     </button>
     <div class="or">or</div>
     {#if offline}
@@ -71,7 +60,6 @@
       <button class="later" onclick={() => (app.signinSkipped = true)}>Not now</button></p>
   </div>
 </div>
-{#if codeLogin}<AccountModal onclose={() => (codeLogin = false)} />{/if}
 
 <style>
   .signin { position: fixed; inset: 0; z-index: 60; background: var(--bg); }

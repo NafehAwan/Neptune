@@ -30,8 +30,6 @@ const SCOPE: &str = "XboxLive.signin offline_access";
 /// approved Azure app. A client ID is public (every sign-in sends it).
 pub const DEFAULT_CLIENT_ID: &str = "00000000402b5328";
 
-/// Glade's old Azure app, never approved by Mojang: treated as "not set".
-const OLD_CLIENT_ID: &str = "d93d1551-5d45-42b7-acfc-886f4de37af7";
 
 fn is_live(client_id: &str) -> bool {
     client_id == DEFAULT_CLIENT_ID
@@ -74,12 +72,11 @@ struct MsToken {
     refresh_token: String,
 }
 
-pub fn client_id(runtime: Option<&str>) -> Result<String> {
-    Ok(runtime
-        .map(str::trim)
-        .filter(|s| !s.is_empty() && *s != OLD_CLIENT_ID)
-        .unwrap_or(DEFAULT_CLIENT_ID)
-        .to_string())
+/// The client ID every sign-in uses: the official launcher's. A client ID saved in
+/// settings by older versions is ignored, since an Azure app Mojang hasn't approved
+/// can't sign in to Minecraft at all.
+pub fn client_id(_saved: Option<&str>) -> Result<String> {
+    Ok(DEFAULT_CLIENT_ID.to_string())
 }
 
 pub async fn start_device_code(http: &reqwest::Client, client_id: &str) -> Result<DeviceCode> {
@@ -108,7 +105,6 @@ pub fn live_authorize_url() -> reqwest::Url {
             ("response_type", "code"),
             ("scope", LIVE_SCOPE),
             ("redirect_uri", LIVE_REDIRECT),
-            ("prompt", "select_account"),
         ],
     )
     .expect("valid sign-in url")
@@ -316,10 +312,10 @@ mod tests {
 
     #[test]
     fn client_id_order() {
-        assert_eq!(client_id(Some(" my-app ")).unwrap(), "my-app");
+        // whatever older versions saved, sign-in goes through the official launcher's app
+        assert_eq!(client_id(Some(" my-app ")).unwrap(), DEFAULT_CLIENT_ID);
         assert_eq!(client_id(None).unwrap(), DEFAULT_CLIENT_ID);
-        assert_eq!(client_id(Some("  ")).unwrap(), DEFAULT_CLIENT_ID);
-        assert_eq!(client_id(Some(OLD_CLIENT_ID)).unwrap(), DEFAULT_CLIENT_ID);
+        assert_eq!(client_id(Some("d93d1551-5d45-42b7-acfc-886f4de37af7")).unwrap(), DEFAULT_CLIENT_ID);
         assert!(is_live(&client_id(None).unwrap()));
     }
 

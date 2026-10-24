@@ -34,6 +34,8 @@ export const app = $state({
   /** Profile the library page should open, set by other pages. */
   focusProfile: null as string | null,
   accountModal: false,
+  /** Microsoft's sign-in window is open. */
+  signingIn: false,
   /** The first-run sign-in screen was put off for this session. */
   signinSkipped: false,
   /** A newer launcher; the update screen installs it. */
@@ -110,6 +112,21 @@ export async function updateSettings(patch: Partial<Settings>) {
 
 export async function selectProfile(id: string) {
   await updateSettings({ selectedProfile: id });
+}
+
+/** Opens Microsoft's own sign-in page in a window (no code to type) and adds the account.
+ *  Rejects with the reason when it doesn't work; closing the window rejects too. */
+export async function signInMicrosoft(): Promise<Account> {
+  if (app.signingIn) throw "The sign-in window is already open.";
+  app.signingIn = true;
+  try {
+    const account = await api.msLoginWindow();
+    await refreshAccounts();
+    toast(`Signed in as ${account.name}`, "success");
+    return account;
+  } finally {
+    app.signingIn = false;
+  }
 }
 
 export async function play(profileId: string, server?: string) {
