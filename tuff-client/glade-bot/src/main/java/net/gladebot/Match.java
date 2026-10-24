@@ -45,6 +45,7 @@ public final class Match {
 	public static String start(ServerPlayer player) {
 		ServerLevel level = (ServerLevel) player.level();
 		MinecraftServer server = level.getServer();
+		AimTrainer.stop(server);
 		stop(server);
 		Vec3 ahead = Vec3.directionFromRotation(0, player.getYRot()).scale(6);
 		Vec3 pos = ground(level, player.position().add(ahead), player.getY());
@@ -262,7 +263,7 @@ public final class Match {
 	}
 
 	/** Where to stand: the spot ahead if there's room, otherwise the ground above it. */
-	private static Vec3 ground(ServerLevel level, Vec3 at, double y) {
+	static Vec3 ground(ServerLevel level, Vec3 at, double y) {
 		BlockPos feet = BlockPos.containing(at.x, y, at.z);
 		if (level.getBlockState(feet).isAir() && level.getBlockState(feet.above()).isAir() && !level.getBlockState(feet.below()).isAir()) {
 			return new Vec3(at.x, feet.getY(), at.z);
@@ -270,7 +271,7 @@ public final class Match {
 		return new Vec3(at.x, level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, feet.getX(), feet.getZ()), at.z);
 	}
 
-	private static void title(ServerPlayer player, Component text) {
+	static void title(ServerPlayer player, Component text) {
 		player.connection.send(new ClientboundSetTitlesAnimationPacket(0, 22, 4));
 		player.connection.send(new ClientboundSetTitleTextPacket(text));
 	}

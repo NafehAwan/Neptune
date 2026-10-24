@@ -24,6 +24,8 @@ public final class BotPlayer extends ServerPlayer {
 	private final MinecraftServer host;
 	private Vec3 knockback;
 	public BotBrain brain;
+	/** Moves the aim trainer target. */
+	public AimTrainer.Mover mover;
 
 	private BotPlayer(MinecraftServer server, ServerLevel level, GameProfile profile, FakeConnection fake) {
 		super(server, level, profile, ClientInformation.createDefault());
@@ -62,6 +64,7 @@ public final class BotPlayer extends ServerPlayer {
 			knockback = null;
 		}
 		if (brain != null) brain.tick();
+		if (mover != null) mover.tick();
 		super.tick();
 		// what a real player's connection does each tick: move and run the player
 		double y = getY();

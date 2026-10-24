@@ -31,8 +31,10 @@ public final class GladeBot implements ModInitializer {
 		Settings.load();
 		CommandRegistrationCallback.EVENT.register((dispatcher, registries, environment) -> register(dispatcher));
 		ServerTickEvents.END_SERVER_TICK.register(Match::tick);
+		ServerTickEvents.END_SERVER_TICK.register(AimTrainer::tick);
 		ServerLivingEntityEvents.ALLOW_DEATH.register((entity, source, amount) -> Match.allowDeath(entity, source));
 		ServerLifecycleEvents.SERVER_STOPPING.register(Match::stop);
+		ServerLifecycleEvents.SERVER_STOPPING.register(AimTrainer::stop);
 	}
 
 	private static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
@@ -96,6 +98,8 @@ public final class GladeBot implements ModInitializer {
 						+ "): /bot start, /bot stop, /bot tier lt3|mt3|ht3, /bot mend on|off, /bot kit save me|bot, /bot kit reset. Press B for settings."))
 				.then(Commands.literal("start").executes(ctx -> say(ctx, Match.start(player(ctx)))))
 				.then(Commands.literal("selftest").executes(ctx -> say(ctx, Match.selfTest(ctx.getSource().getServer()))))
+				.then(Commands.literal("aimselftest").executes(ctx -> say(ctx, AimTrainer.selfTest(ctx.getSource().getServer()))))
+				.then(aim())
 				.then(Commands.literal("stop").executes(ctx -> {
 					Match.stop(ctx.getSource().getServer());
 					return say(ctx, "Match stopped.");
@@ -129,6 +133,28 @@ public final class GladeBot implements ModInitializer {
 					Settings.save();
 					return say(ctx, label + ": off");
 				}));
+	}
+
+	/** /bot aim tracking [easy|medium|hard] [seconds], /bot aim stop */
+	private static LiteralArgumentBuilder<CommandSourceStack> aim() {
+		var tracking = Commands.literal("tracking").executes(ctx -> say(ctx, AimTrainer.start(player(ctx), AimTrainer.Level.values()[Settings.aimLevel], 30)));
+		for (AimTrainer.Level l : AimTrainer.Level.values()) {
+			tracking.then(Commands.literal(l.name().toLowerCase())
+					.executes(ctx -> {
+						Settings.aimLevel = l.ordinal();
+						Settings.save();
+						return say(ctx, AimTrainer.start(player(ctx), l, 30));
+					})
+					.then(Commands.argument("seconds", com.mojang.brigadier.arguments.IntegerArgumentType.integer(10, 300)).executes(ctx -> {
+						Settings.aimLevel = l.ordinal();
+						Settings.save();
+						return say(ctx, AimTrainer.start(player(ctx), l, com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "seconds")));
+					})));
+		}
+		return Commands.literal("aim").then(tracking).then(Commands.literal("stop").executes(ctx -> {
+			AimTrainer.stop(ctx.getSource().getServer());
+			return say(ctx, "Aim training stopped.");
+		}));
 	}
 
 	private static LiteralArgumentBuilder<CommandSourceStack> percent(String name, java.util.function.IntConsumer set, String label, int max) {

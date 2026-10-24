@@ -86,6 +86,13 @@ if wait_for(r"Done \(", 600):
             "mends": bot.get("mends", 0) >= 1,
             "armour mended evenly": armour_even(),
         }
+        # aim trainer: a bot aiming perfectly at a moving target scores high, and the target really moves
+        send("bot aimselftest")
+        am = wait_for(r"\[gladebot\] aim result accuracy=(\d+) moved=(\d+)", 90)
+        if am:
+            print(f"SELFTEST aim trainer accuracy={am.group(1)}% target moved={am.group(2)} blocks")
+        checks["aim trainer scores a perfect aimer (85%+)"] = bool(am) and int(am.group(1)) >= 85
+        checks["aim trainer target moves (5+ blocks)"] = bool(am) and int(am.group(2)) >= 5
         for name, passed in checks.items():
             print(f"SELFTEST {'PASS' if passed else 'FAIL'} {name}")
         ok = all(checks.values())

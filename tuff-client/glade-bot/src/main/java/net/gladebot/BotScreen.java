@@ -20,7 +20,7 @@ import net.minecraft.network.chat.Component;
  */
 public final class BotScreen extends Screen {
 	private static final int PANEL = 0xE0141A16, EDGE = 0xFF2C3A30, GREEN = 0xFF4FB07F, TEXT = 0xFFFFFFFF, MUTED = 0xFFA9B7AD;
-	private static final int W = 300, H = 324;
+	private static final int W = 300, H = 352;
 	private Tier tier = Settings.tier;
 	private String status = "";
 	private final Button[] tierButtons = new Button[Tier.values().length];
@@ -136,8 +136,26 @@ public final class BotScreen extends Screen {
 		}).bounds(x, y, w - 64, 24).build());
 		addRenderableWidget(Button.builder(Component.literal("Stop"), b -> {
 			command("bot stop");
-			status = "Match stopped";
+			command("bot aim stop");
+			status = "Stopped";
 		}).bounds(x + w - 60, y, 60, 24).build());
+		y += 28;
+		// aim trainer
+		addRenderableWidget(Button.builder(aimLabel(), b -> {
+			Settings.aimLevel = (Settings.aimLevel + 1) % AimTrainer.Level.values().length;
+			Settings.save();
+			b.setMessage(aimLabel());
+		}).bounds(x, y, hw, 20).build());
+		addRenderableWidget(Button.builder(Component.literal("Start tracking").withStyle(ChatFormatting.AQUA), b -> {
+			command("bot aim tracking " + AimTrainer.Level.values()[Settings.aimLevel].name().toLowerCase());
+			onClose();
+		}).bounds(x + hw + 4, y, hw, 20).build());
+	}
+
+	private static Component aimLabel() {
+		AimTrainer.Level l = AimTrainer.Level.values()[Settings.aimLevel];
+		int best = Settings.bestTracking[l.ordinal()];
+		return Component.literal("Aim: " + l.label + (best > 0 ? " (best " + best + "%)" : ""));
 	}
 
 	private static boolean anyTuning() {

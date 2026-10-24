@@ -25,6 +25,9 @@ public final class Settings {
 	public static int critPct = -1, jumpResetPct = -1, strafePct = -1, potAtHearts = -1;
 	/** XP bottles thrown per second while mending (1-10). */
 	public static int mendRate = 4;
+	/** Aim trainer: the difficulty picked, and the best Tracking score per difficulty. */
+	public static int aimLevel = 1;
+	public static int[] bestTracking = new int[3];
 	/** Chance (0-100) a swing misses: it swings at the air instead of hitting. */
 	public static int missPct = 0;
 	/** Let go of W for a tick or two after a sprint hit. */
@@ -110,6 +113,11 @@ public final class Settings {
 			if (o.has("jumpResetPct")) jumpResetPct = o.get("jumpResetPct").getAsInt();
 			if (o.has("strafePct")) strafePct = o.get("strafePct").getAsInt();
 			if (o.has("potAtHearts")) potAtHearts = o.get("potAtHearts").getAsInt();
+			if (o.has("aimLevel")) aimLevel = Math.max(0, Math.min(2, o.get("aimLevel").getAsInt()));
+			if (o.has("bestTracking")) {
+				var a = o.getAsJsonArray("bestTracking");
+				for (int i = 0; i < Math.min(3, a.size()); i++) bestTracking[i] = a.get(i).getAsInt();
+			}
 			if (o.has("mendRate")) mendRate = Math.max(1, Math.min(10, o.get("mendRate").getAsInt()));
 			if (o.has("missPct")) missPct = Math.max(0, Math.min(100, o.get("missPct").getAsInt()));
 			playerKit = o.has("playerKit") ? o.get("playerKit") : null;
@@ -133,6 +141,10 @@ public final class Settings {
 		o.addProperty("strafePct", strafePct);
 		o.addProperty("potAtHearts", potAtHearts);
 		o.addProperty("mendRate", mendRate);
+		o.addProperty("aimLevel", aimLevel);
+		com.google.gson.JsonArray best = new com.google.gson.JsonArray();
+		for (int b : bestTracking) best.add(b);
+		o.add("bestTracking", best);
 		o.addProperty("missPct", missPct);
 		if (playerKit != null) o.add("playerKit", playerKit);
 		if (botKit != null) o.add("botKit", botKit);
