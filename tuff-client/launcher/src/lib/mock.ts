@@ -89,6 +89,7 @@ export async function mockCall(cmd: string, args: Record<string, any> = {}): Pro
     case "set_active_account": settings.activeAccount = args.id; return null;
     case "add_offline_account": { const a = { id: crypto.randomUUID(), name: args.name, kind: "offline" }; accounts = [...accounts, a as T.Account]; return a; }
     case "remove_account": accounts = accounts.filter((a) => a.id !== args.id); return null;
+    case "ms_login_window":
     case "ms_login_start": throw "Microsoft login isn't set up yet. Add your Azure client ID in Settings → Accounts.";
     case "list_versions":
       return {

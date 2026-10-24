@@ -17,6 +17,9 @@ const TOKEN_URL: &str = "https://login.microsoftonline.com/consumers/oauth2/v2.0
 const LIVE_DEVICE_CODE_URL: &str = "https://login.live.com/oauth20_connect.srf";
 const LIVE_TOKEN_URL: &str = "https://login.live.com/oauth20_token.srf";
 const LIVE_SCOPE: &str = "service::user.auth.xboxlive.com::MBI_SSL";
+const LIVE_AUTHORIZE_URL: &str = "https://login.live.com/oauth20_authorize.srf";
+/// Where Microsoft sends the browser back to after signing in; the code is in its query.
+pub const LIVE_REDIRECT: &str = "https://login.live.com/oauth20_desktop.srf";
 const XBL_URL: &str = "https://user.auth.xboxlive.com/user/authenticate";
 const XSTS_URL: &str = "https://xsts.auth.xboxlive.com/xsts/authorize";
 const MC_LOGIN_URL: &str = "https://api.minecraftservices.com/authentication/login_with_xbox";
@@ -94,6 +97,63 @@ pub async fn start_device_code(http: &reqwest::Client, client_id: &str) -> Resul
         );
     }
     Ok(response.json().await?)
+}
+
+/// The Microsoft sign-in page (the one the official launcher shows).
+pub fn live_authorize_url() -> reqwest::Url {
+    reqwest::Url::parse_with_params(
+        LIVE_AUTHORIZE_URL,
+        &[
+            ("client_id", DEFAULT_CLIENT_ID),
+            ("response_type", "code"),
+            ("scope", LIVE_SCOPE),
+            ("redirect_uri", LIVE_REDIRECT),
+            ("prompt", "select_account"),
+        ],
+    )
+    .expect("valid sign-in url")
+}
+
+/// None while the page isn't the redirect yet; then the code or why there's none.
+pub fn code_from_redirect(url: &reqwest::Url) -> Option<Result<String, String>> {
+    if !url.as_str().starts_with(LIVE_REDIRECT) {
+        return None;
+    }
+    let get = |key: &str| url.query_pairs().find(|(k, _)| k == key).map(|(_, v)| v.into_owned());
+    Some(match get("code") {
+        Some(code) if !code.is_empty() => Ok(code),
+        _ => match get("error").as_deref() {
+            Some("access_denied") => Err("Sign-in was cancelled.".into()),
+            _ => Err(format!(
+                "Microsoft sign-in failed: {}",
+                get("error_description").unwrap_or_else(|| "no code came back".into())
+            )),
+        },
+    })
+}
+
+/// Swaps the sign-in page's code for tokens, then signs in to Minecraft.
+pub async fn finish_live_code(http: &reqwest::Client, code: &str) -> Result<Account> {
+    let response = http
+        .post(LIVE_TOKEN_URL)
+        .form(&[
+            ("client_id", DEFAULT_CLIENT_ID),
+            ("code", code),
+            ("grant_type", "authorization_code"),
+            ("redirect_uri", LIVE_REDIRECT),
+            ("scope", LIVE_SCOPE),
+        ])
+        .send()
+        .await?;
+    if !response.status().is_success() {
+        let body: Value = response.json().await.unwrap_or_default();
+        bail!(
+            "Microsoft sign-in failed: {}",
+            body["error_description"].as_str().unwrap_or("unknown error")
+        );
+    }
+    let token: MsToken = response.json().await?;
+    minecraft_login(http, token, true).await
 }
 
 /// Polls until the user finishes signing in, then completes the full chain.
@@ -261,5 +321,14 @@ mod tests {
         assert_eq!(client_id(Some("  ")).unwrap(), DEFAULT_CLIENT_ID);
         assert_eq!(client_id(Some(OLD_CLIENT_ID)).unwrap(), DEFAULT_CLIENT_ID);
         assert!(is_live(&client_id(None).unwrap()));
+    }
+
+    #[test]
+    fn redirect_code() {
+        let url = |s: &str| reqwest::Url::parse(s).unwrap();
+        assert!(code_from_redirect(&live_authorize_url()).is_none());
+        assert_eq!(code_from_redirect(&url("https://login.live.com/oauth20_desktop.srf?code=M.C1_abc&lc=1033")), Some(Ok("M.C1_abc".into())));
+        assert!(matches!(code_from_redirect(&url("https://login.live.com/oauth20_desktop.srf?error=access_denied")), Some(Err(_))));
+        assert!(live_authorize_url().as_str().contains("client_id=00000000402b5328"));
     }
 }

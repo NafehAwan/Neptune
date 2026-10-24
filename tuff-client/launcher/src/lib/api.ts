@@ -84,6 +84,7 @@ export const api = {
   defaultSkin: () => call<string | null>("default_skin"),
   msLoginStart: () => call<T.DeviceCode>("ms_login_start"),
   msLoginFinish: (code: T.DeviceCode) => call<T.Account>("ms_login_finish", { code }),
+  msLoginWindow: () => call<T.Account>("ms_login_window"),
   removeAccount: (id: string) => call<void>("remove_account", { id }),
   setActiveAccount: (id: string) => call<void>("set_active_account", { id }),
 

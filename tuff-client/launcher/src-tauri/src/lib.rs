@@ -506,6 +506,63 @@ async fn ms_login_start(app: AppHandle, state: State<'_, AppState>) -> CmdResult
     Ok(code)
 }
 
+/// Signs in through Microsoft's own page in a launcher window, like the
+/// official launcher: no code to type. The window closes once it's done.
+#[tauri::command]
+async fn ms_login_window(app: AppHandle, state: State<'_, AppState>) -> CmdResult<AccountView> {
+    const LABEL: &str = "ms-login";
+    if let Some(old) = app.get_webview_window(LABEL) {
+        let _ = old.destroy();
+    }
+    let (tx, rx) = tokio::sync::oneshot::channel::<Result<String, String>>();
+    let tx = Arc::new(Mutex::new(Some(tx)));
+    // first answer wins: the redirect (seen on navigation or page load) or the window closing
+    let send = {
+        let tx = tx.clone();
+        let app = app.clone();
+        move |result: Result<String, String>| {
+            if let Some(tx) = tx.lock().ok().and_then(|mut t| t.take()) {
+                let _ = tx.send(result);
+                let app = app.clone();
+                tauri::async_runtime::spawn(async move {
+                    if let Some(w) = app.get_webview_window(LABEL) {
+                        let _ = w.destroy();
+                    }
+                });
+            }
+        }
+    };
+    let on_nav = send.clone();
+    let on_load = send.clone();
+    let window = tauri::WebviewWindowBuilder::new(&app, LABEL, tauri::WebviewUrl::External(auth::live_authorize_url()))
+        .title("Microsoft Login")
+        .inner_size(520.0, 700.0)
+        .center()
+        .on_navigation(move |url| match auth::code_from_redirect(url) {
+            Some(result) => {
+                on_nav(result);
+                false
+            }
+            None => true,
+        })
+        .on_page_load(move |_, payload| {
+            if let Some(result) = auth::code_from_redirect(payload.url()) {
+                on_load(result);
+            }
+        })
+        .build()
+        .map_err(|e| format!("Couldn't open the sign-in window: {e}"))?;
+    let on_close = send.clone();
+    window.on_window_event(move |event| {
+        if matches!(event, tauri::WindowEvent::Destroyed | tauri::WindowEvent::CloseRequested { .. }) {
+            on_close(Err("Sign-in window closed.".into()));
+        }
+    });
+    let code = rx.await.map_err(|_| "Sign-in window closed.".to_string())??;
+    let account = auth::finish_live_code(&state.http, &code).await.map_err(err)?;
+    store_account(&state, account).map_err(err)
+}
+
 #[tauri::command]
 async fn ms_login_finish(state: State<'_, AppState>, code: auth::DeviceCode) -> CmdResult<AccountView> {
     let client_id = auth::client_id(state.settings().ms_client_id.as_deref()).map_err(err)?;
@@ -1322,6 +1379,7 @@ pub fn run() {
             add_offline_account,
             ms_login_start,
             ms_login_finish,
+            ms_login_window,
             remove_account,
             set_active_account,
             launch,

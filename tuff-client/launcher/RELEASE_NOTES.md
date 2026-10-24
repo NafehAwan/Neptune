@@ -1,5 +1,5 @@
 Glade 1.7.1
-- Microsoft sign-in works: Glade now signs in the same way as the official Minecraft launcher. Click Add account, enter the code at microsoft.com/link, and you're in. If you had pasted a client ID in Settings, clear it.
+- Microsoft sign-in works: Glade now signs in the same way as the official Minecraft launcher. Click Add account, then Sign in with Microsoft, and Microsoft's sign-in page opens in a window. Sign in there and it closes by itself; no code to type. If you had pasted a client ID in Settings, clear it.
 
 Glade 1.7.0
 - New FPS Boost module (on by default): turns off clouds, entity shadows and biome blending, and stops drawing mobs and items past 48 blocks. Each part can be switched off; turning the module off puts the game's defaults back.

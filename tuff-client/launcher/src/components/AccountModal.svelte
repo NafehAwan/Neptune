@@ -17,8 +17,10 @@
     busy = true;
     error = "";
     try {
-      code = await api.msLoginStart();
-      const account = await api.msLoginFinish(code);
+      // the built-in sign-in opens Microsoft's page in a window; an own Azure app uses a code
+      const account = app.settings?.msClientId
+        ? await api.msLoginFinish((code = await api.msLoginStart()))
+        : await api.msLoginWindow();
       await refreshAccounts();
       toast(`Signed in as ${account.name}`, "success");
       onclose();
@@ -70,7 +72,7 @@
       <p class="muted">Microsoft sign-in needs an Azure app client ID. Add yours in Settings → Accounts, or use an offline account for singleplayer.</p>
       <button class="btn" onclick={() => { onclose(); go("settings"); }}>Open settings</button>
     {:else}
-      <p class="muted">You'll sign in on Microsoft's own page. Glade never sees your password.</p>
+      <p class="muted">{busy ? "Sign in in the Microsoft window. It closes by itself when you're done." : "You'll sign in on Microsoft's own page. Glade never sees your password."}</p>
       <button class="btn primary big" onclick={microsoft} disabled={busy}>
         {#if busy}<span class="spinner"></span>{/if} Sign in with Microsoft
       </button>
