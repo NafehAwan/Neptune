@@ -1,3 +1,7 @@
+Glade 1.8.2
+- A start screen: Glade checks for a launcher update before opening. If there is one, it installs first; offline or slow checks give up after a few seconds so the launcher still opens.
+- Darker backdrops behind dialogs, to match the new look.
+
 Glade 1.8.1
 - Your character on Home now wears the Glade hoodie and headphones over your own skin. Turn it off in Settings ("Glade hoodie").
 - Home matches the new design: green markers on news cards, a featured server card you can join in one click, the mod count under Play, and Friends with an "Add a friend" button (friends are coming soon).

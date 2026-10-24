@@ -29,7 +29,7 @@
 </div>
 
 <style>
-  .backdrop { position: fixed; inset: 0; background: rgba(240, 244, 238, 0.42); backdrop-filter: blur(6px) saturate(1.2); z-index: 50; }
+  .backdrop { position: fixed; inset: 0; background: rgba(8, 9, 11, 0.6); backdrop-filter: blur(6px) saturate(1.1); z-index: 50; }
   .modal {
     position: fixed; z-index: 51; left: 50%; top: 50%; translate: -50% -50%;
     max-width: calc(100vw - 48px); max-height: calc(100vh - 80px);

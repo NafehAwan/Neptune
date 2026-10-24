@@ -4,6 +4,7 @@
   import CrashModal from "./components/CrashModal.svelte";
   import DownloadCard from "./components/DownloadCard.svelte";
   import SignIn from "./components/SignIn.svelte";
+  import Splash from "./components/Splash.svelte";
   import Sidebar from "./components/Sidebar.svelte";
   import TitleBar from "./components/TitleBar.svelte";
   import Toasts from "./components/Toasts.svelte";
@@ -22,7 +23,7 @@
   const order: Route[] = ["home", "library", "browse", "servers", "wardrobe", "screenshots", "console", "settings"];
 
   onMount(() => {
-    init().catch((e) => toast(e, "error"));
+    init().catch((e) => { app.bootError = String(e); toast(e, "error"); });
   });
 
   function keys(e: KeyboardEvent) {
@@ -70,7 +71,7 @@
         </div>
       {/key}
     {:else}
-      <div class="boot"><span class="spinner"></span></div>
+      <div class="boot"></div>
     {/if}
     <!-- Home shows it above the Play bar; every other page in the corner -->
     {#if app.route !== "home"}<DownloadCard />{/if}
@@ -79,6 +80,7 @@
   <!-- required updates wait until Minecraft is closed -->
   {#if app.update && !app.running && !app.launching && (!import.meta.env.DEV || location.search.includes("update"))}<UpdateScreen update={app.update} />{/if}
   {#if app.ready && !app.accounts.length && !app.signinSkipped}<SignIn />{/if}
+  {#if app.boot && !app.update}<Splash />{/if}
   <Toasts />
 </div>
 

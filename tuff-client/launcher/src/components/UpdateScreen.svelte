@@ -61,7 +61,7 @@
 </div>
 
 <style>
-  .backdrop { position: fixed; inset: 0; z-index: 80; background: rgba(240, 244, 238, 0.55); backdrop-filter: blur(10px) saturate(1.2); }
+  .backdrop { position: fixed; inset: 0; z-index: 80; background: rgba(8, 9, 11, 0.7); backdrop-filter: blur(10px) saturate(1.1); }
   .sheet {
     position: fixed; z-index: 81; left: 50%; top: 50%; translate: -50% -50%; width: 440px; max-width: calc(100vw - 48px);
     display: grid; gap: 12px; justify-items: center; text-align: center; padding: 30px 28px 26px;

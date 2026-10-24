@@ -9,6 +9,9 @@ const MAX_LOG_LINES = 5000;
 
 export const app = $state({
   ready: false,
+  /** What the start screen is doing; null once the launcher is open. */
+  boot: "Starting Glade" as string | null,
+  bootError: null as string | null,
   route: "home" as Route,
   info: null as AppInfo | null,
   settings: null as Settings | null,
@@ -131,6 +134,8 @@ export async function play(profileId: string, server?: string) {
   }
 }
 
+const BOOT_CHECK_MS = 6000;
+
 export async function init() {
   const [info, settings] = await Promise.all([api.appInfo(), api.getSettings()]);
   app.info = info;
@@ -166,8 +171,16 @@ export async function init() {
     app.lastExit = exit;
     if (exit.crash) app.crashOpen = true;
   });
+  // the start screen waits for the update check (a few seconds at most, so being offline doesn't block)
+  app.boot = "Checking for updates";
+  const started = Date.now();
+  await Promise.race([checkForUpdates(), new Promise((r) => setTimeout(r, BOOT_CHECK_MS))]);
+  if (!app.update) {
+    app.boot = "You're up to date";
+    await new Promise((r) => setTimeout(r, Math.max(250, 900 - (Date.now() - started))));
+  }
   app.ready = true;
-  checkForUpdates();
+  app.boot = null;
   setInterval(() => checkForUpdates(), UPDATE_CHECK_MS);
   window.addEventListener("focus", checkOnFocus);
   // browser preview only: ?crash shows the crash dialog with a sample report
