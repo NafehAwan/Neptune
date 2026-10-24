@@ -1,6 +1,10 @@
 //! Microsoft account login: OAuth device code -> Xbox Live -> XSTS ->
 //! Minecraft services. The device code flow needs no local web server and
 //! works the same on every desktop.
+//!
+//! Minecraft only accepts Azure apps Mojang has approved, so by default this
+//! signs in through login.live.com as the official Minecraft launcher, the way
+//! other open launchers do. A client ID set in Settings uses the Azure flow.
 
 use crate::models::{Account, AccountKind};
 use anyhow::{anyhow, bail, Context, Result};
@@ -10,51 +14,76 @@ use std::time::Duration;
 
 const DEVICE_CODE_URL: &str = "https://login.microsoftonline.com/consumers/oauth2/v2.0/devicecode";
 const TOKEN_URL: &str = "https://login.microsoftonline.com/consumers/oauth2/v2.0/token";
+const LIVE_DEVICE_CODE_URL: &str = "https://login.live.com/oauth20_connect.srf";
+const LIVE_TOKEN_URL: &str = "https://login.live.com/oauth20_token.srf";
+const LIVE_SCOPE: &str = "service::user.auth.xboxlive.com::MBI_SSL";
 const XBL_URL: &str = "https://user.auth.xboxlive.com/user/authenticate";
 const XSTS_URL: &str = "https://xsts.auth.xboxlive.com/xsts/authorize";
 const MC_LOGIN_URL: &str = "https://api.minecraftservices.com/authentication/login_with_xbox";
 pub const MC_PROFILE_URL: &str = "https://api.minecraftservices.com/minecraft/profile";
 const SCOPE: &str = "XboxLive.signin offline_access";
 
-/// Build-time client ID; Settings can override it at runtime.
-pub const BUILD_CLIENT_ID: Option<&str> = option_env!("TUFF_MS_CLIENT_ID");
+/// The official Minecraft launcher's client ID, used unless Settings names an
+/// approved Azure app. A client ID is public (every sign-in sends it).
+pub const DEFAULT_CLIENT_ID: &str = "00000000402b5328";
 
-/// Glade's own Azure app, used when neither Settings nor the build name one.
-/// A client ID is public (every sign-in sends it), not a secret.
-pub const DEFAULT_CLIENT_ID: &str = "d93d1551-5d45-42b7-acfc-886f4de37af7";
+/// Glade's old Azure app, never approved by Mojang: treated as "not set".
+const OLD_CLIENT_ID: &str = "d93d1551-5d45-42b7-acfc-886f4de37af7";
+
+fn is_live(client_id: &str) -> bool {
+    client_id == DEFAULT_CLIENT_ID
+}
+
+/// (device code url, token url, scope) for this client ID.
+fn endpoints(client_id: &str) -> (&'static str, &'static str, &'static str) {
+    if is_live(client_id) {
+        (LIVE_DEVICE_CODE_URL, LIVE_TOKEN_URL, LIVE_SCOPE)
+    } else {
+        (DEVICE_CODE_URL, TOKEN_URL, SCOPE)
+    }
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DeviceCode {
     pub device_code: String,
     pub user_code: String,
     pub verification_uri: String,
+    #[serde(default = "default_expiry")]
     pub expires_in: u64,
+    #[serde(default = "default_interval")]
     pub interval: u64,
     #[serde(default)]
     pub message: String,
 }
 
+fn default_expiry() -> u64 {
+    900
+}
+
+fn default_interval() -> u64 {
+    5
+}
+
 #[derive(Deserialize)]
 struct MsToken {
     access_token: String,
+    #[serde(default)]
     refresh_token: String,
 }
 
 pub fn client_id(runtime: Option<&str>) -> Result<String> {
-    // an unset CI secret builds in an empty string, so empty means "not set"
-    Ok([runtime, BUILD_CLIENT_ID, Some(DEFAULT_CLIENT_ID)]
-        .into_iter()
-        .flatten()
+    Ok(runtime
         .map(str::trim)
-        .find(|s| !s.is_empty())
+        .filter(|s| !s.is_empty() && *s != OLD_CLIENT_ID)
         .unwrap_or(DEFAULT_CLIENT_ID)
         .to_string())
 }
 
 pub async fn start_device_code(http: &reqwest::Client, client_id: &str) -> Result<DeviceCode> {
+    let (url, _, scope) = endpoints(client_id);
     let response = http
-        .post(DEVICE_CODE_URL)
-        .form(&[("client_id", client_id), ("scope", SCOPE)])
+        .post(url)
+        .form(&[("client_id", client_id), ("scope", scope), ("response_type", "device_code")])
         .send()
         .await?;
     if !response.status().is_success() {
@@ -77,7 +106,7 @@ pub async fn finish_device_code(http: &reqwest::Client, client_id: &str, code: &
         }
         tokio::time::sleep(Duration::from_secs(interval)).await;
         let response = http
-            .post(TOKEN_URL)
+            .post(endpoints(client_id).1)
             .form(&[
                 ("grant_type", "urn:ietf:params:oauth:grant-type:device_code"),
                 ("client_id", client_id),
@@ -87,7 +116,7 @@ pub async fn finish_device_code(http: &reqwest::Client, client_id: &str, code: &
             .await?;
         if response.status().is_success() {
             let token: MsToken = response.json().await?;
-            return minecraft_login(http, token).await;
+            return minecraft_login(http, token, is_live(client_id)).await;
         }
         let body: Value = response.json().await.unwrap_or_default();
         match body["error"].as_str() {
@@ -105,13 +134,14 @@ pub async fn finish_device_code(http: &reqwest::Client, client_id: &str, code: &
 
 /// Uses the refresh token to get a fresh Minecraft token.
 pub async fn refresh(http: &reqwest::Client, client_id: &str, account: &Account) -> Result<Account> {
+    let (_, url, scope) = endpoints(client_id);
     let response = http
-        .post(TOKEN_URL)
+        .post(url)
         .form(&[
             ("grant_type", "refresh_token"),
             ("client_id", client_id),
             ("refresh_token", account.refresh_token.as_str()),
-            ("scope", SCOPE),
+            ("scope", scope),
         ])
         .send()
         .await?;
@@ -119,17 +149,19 @@ pub async fn refresh(http: &reqwest::Client, client_id: &str, account: &Account)
         bail!("Your Microsoft session expired. Remove the account and sign in again.");
     }
     let token: MsToken = response.json().await?;
-    minecraft_login(http, token).await
+    minecraft_login(http, token, is_live(client_id)).await
 }
 
-async fn minecraft_login(http: &reqwest::Client, ms: MsToken) -> Result<Account> {
+async fn minecraft_login(http: &reqwest::Client, ms: MsToken, live: bool) -> Result<Account> {
+    // live.com service tickets go in as "t=", Azure tokens as "d="
+    let ticket = format!("{}={}", if live { "t" } else { "d" }, ms.access_token);
     let xbl: Value = http
         .post(XBL_URL)
         .json(&json!({
             "Properties": {
                 "AuthMethod": "RPS",
                 "SiteName": "user.auth.xboxlive.com",
-                "RpsTicket": format!("d={}", ms.access_token)
+                "RpsTicket": ticket
             },
             "RelyingParty": "http://auth.xboxlive.com",
             "TokenType": "JWT"
@@ -168,7 +200,7 @@ async fn minecraft_login(http: &reqwest::Client, ms: MsToken) -> Result<Account>
         .send()
         .await?
         .error_for_status()
-        .context("Minecraft sign-in failed. If you just registered your Azure app, it may still be waiting for Mojang's approval")?
+        .context(if live { "Minecraft sign-in failed" } else { "Minecraft sign-in failed. Your Azure app may still be waiting for Mojang's approval; clear the client ID in Settings to use the built-in sign-in" })?
         .json()
         .await?;
     let access_token = mc["access_token"].as_str().ok_or_else(|| anyhow!("Minecraft returned no token"))?;
@@ -225,8 +257,9 @@ mod tests {
     #[test]
     fn client_id_order() {
         assert_eq!(client_id(Some(" my-app ")).unwrap(), "my-app");
-        let fallback = BUILD_CLIENT_ID.map(str::trim).filter(|s| !s.is_empty()).unwrap_or(DEFAULT_CLIENT_ID);
-        assert_eq!(client_id(None).unwrap(), fallback);
-        assert_eq!(client_id(Some("  ")).unwrap(), fallback);
+        assert_eq!(client_id(None).unwrap(), DEFAULT_CLIENT_ID);
+        assert_eq!(client_id(Some("  ")).unwrap(), DEFAULT_CLIENT_ID);
+        assert_eq!(client_id(Some(OLD_CLIENT_ID)).unwrap(), DEFAULT_CLIENT_ID);
+        assert!(is_live(&client_id(None).unwrap()));
     }
 }

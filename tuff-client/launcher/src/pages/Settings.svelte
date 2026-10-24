@@ -86,11 +86,11 @@
       <div class="setting col">
         <p class="label">Microsoft client ID</p>
         <p class="hint">
-          Microsoft sign-in needs an Azure app registration that Mojang has approved for Minecraft.
-          {app.info?.msLoginConfigured ? "This build already has one; paste your own to override it." : "Paste your app's client ID here."}
+          Leave this empty: Glade signs in the same way as the official Minecraft launcher.
+          Only paste a client ID if you have your own Azure app that Mojang has approved.
         </p>
         <div class="row">
-          <input class="input mono grow" bind:value={clientId} placeholder="00000000-0000-0000-0000-000000000000" />
+          <input class="input mono grow" bind:value={clientId} placeholder="Built-in (recommended)" />
           <button class="btn small" onclick={saveClientId}>Save</button>
         </div>
         <button class="btn ghost small linkbtn" onclick={() => api.openUrl("https://learn.microsoft.com/entra/identity-platform/quickstart-register-app")}>

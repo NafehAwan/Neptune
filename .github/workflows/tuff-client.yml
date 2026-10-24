@@ -346,7 +346,6 @@ jobs:
         run: cargo test --locked
       - name: Build .deb
         env:
-          TUFF_MS_CLIENT_ID: ${{ secrets.TUFF_MS_CLIENT_ID }}
           TUFF_DISCORD_APP_ID: ${{ secrets.TUFF_DISCORD_APP_ID }}
           GLADE_UPDATE_URL: https://github.com/${{ github.repository }}/releases/latest/download/latest.json
         run: npx tauri build --bundles deb

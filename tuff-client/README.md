@@ -104,20 +104,13 @@ for UI work.
 
 ### Microsoft login setup
 
-Minecraft only accepts sign-ins from Azure apps that Mojang has approved:
+Minecraft only accepts sign-ins from Azure apps that Mojang has approved, so
+by default Glade signs in through login.live.com with the official Minecraft
+launcher's client ID (`00000000402b5328`), like other open launchers. Nothing
+to set up.
 
-1. Register an app at <https://portal.azure.com> under **App registrations**.
-   Choose *Personal Microsoft accounts only* and enable **Allow public client
-   flows** under Authentication.
-2. Request Minecraft API access for it using Mojang's form for third-party
-   launchers (linked from the Minecraft Help Center).
-3. Glade's own app (`d93d1551-5d45-42b7-acfc-886f4de37af7`, in
-   `launcher/src-tauri/src/auth.rs`) is built in. To use another, put its
-   client ID in Settings → Accounts, or build with `TUFF_MS_CLIENT_ID=<id>`
-   (the CI workflow reads the `TUFF_MS_CLIENT_ID` repository secret when set).
-
-Sign-in works once Mojang has approved the app; until then Minecraft refuses
-it after the Microsoft step, and offline accounts work for singleplayer.
+If you have your own Azure app that Mojang has approved, put its client ID in
+Settings → Accounts and Glade uses the Azure device code flow with it instead.
 
 ### Discord Rich Presence
 
