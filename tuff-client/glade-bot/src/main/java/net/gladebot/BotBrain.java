@@ -734,8 +734,17 @@ public final class BotBrain {
 	 * ticks (a double pop); the gapple back once safe.
 	 */
 	private void offhand(Tier tier, double dist) {
-		if (busy > 0 || bot.isUsingItem() || mode == Mode.READY || mode == Mode.POP) return;
+		if (busy > 0 || bot.isUsingItem() || mode == Mode.READY) return;
 		ItemStack off = bot.getOffhandItem();
+		if (mode == Mode.POP) {
+			// right after a pop the next totem goes in before the pots: that's the double pop
+			int slot = off.is(Items.TOTEM_OF_UNDYING) ? -1 : hotbar(s -> s.is(Items.TOTEM_OF_UNDYING));
+			if (slot >= 0) {
+				swapOffhand(slot);
+				busy = 2;
+			}
+			return;
+		}
 		float hp = bot.getHealth();
 		boolean danger = hp <= tier.totemAt && dist < 6 || deiviCommit;
 		if (danger) {

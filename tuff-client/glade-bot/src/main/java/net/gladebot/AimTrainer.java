@@ -85,6 +85,7 @@ public final class AimTrainer {
 		world.getChunk(0, 0);
 		int y = world.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, 0, 0);
 		BotPlayer a = BotPlayer.spawn(server, world, new Vec3(20.5, y, 0.5), 0, "Aimer");
+		a.setInvulnerable(true);
 		String msg = start(a, Level.HARD, 10);
 		aimer = a;
 		return msg;
