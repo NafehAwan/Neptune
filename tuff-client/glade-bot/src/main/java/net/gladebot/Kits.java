@@ -98,12 +98,19 @@ public final class Kits {
 	}
 
 	/** Clears a player's inventory and gives them a kit. */
+	/** A copy with full durability, so a kit saved with worn armour still starts fresh. */
+	private static ItemStack fresh(ItemStack s) {
+		ItemStack c = s.copy();
+		if (c.isDamageableItem()) c.setDamageValue(0);
+		return c;
+	}
+
 	public static void apply(ServerPlayer player, ItemStack[] kit) {
 		var inv = player.getInventory();
 		inv.clearContent();
-		for (int i = 0; i < 36; i++) inv.setItem(i, kit[i].copy());
-		for (int i = 0; i < 4; i++) player.setItemSlot(ARMOR[i], kit[36 + i].copy());
-		player.setItemSlot(EquipmentSlot.OFFHAND, kit[40].copy());
+		for (int i = 0; i < 36; i++) inv.setItem(i, fresh(kit[i]));
+		for (int i = 0; i < 4; i++) player.setItemSlot(ARMOR[i], fresh(kit[36 + i]));
+		player.setItemSlot(EquipmentSlot.OFFHAND, fresh(kit[40]));
 		inv.setSelectedSlot(0);
 		player.containerMenu.broadcastChanges();
 	}

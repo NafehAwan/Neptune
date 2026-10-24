@@ -53,6 +53,8 @@ public final class BotBrain {
 	private boolean oppWasEating, jumpNow;
 	/** XP bottles it allows itself this mend session, and ticks it's paused for (tests). */
 	private int mendBudget, paused, mendCooldown, lastGap = -1000;
+	// first mend at 120 durability left, the second at 70, then somewhere in 60-130
+	private int mendsDone, nextMendAt = 120;
 	/** How long a mend fight opens defensively. */
 	private static final int OPENING = 600;
 	/** The current playstyle (changes as the fight goes, see {@link #updateStyle}). */
@@ -328,12 +330,14 @@ public final class BotBrain {
 			return;
 		}
 		// 4. mend when they're far or busy (not while they're low: keep the pressure on)
-		// mend on its own once the armour is low: make room first (sprint away), then mend
-		boolean armourLow = lowestPoints() < mendTarget() * tier.mendAt;
-		if (Settings.mend && armourLow && age >= mendCooldown && has(s -> s.is(Items.EXPERIENCE_BOTTLE)) && hp > 10 && !threatened) {
+		// mend once the weakest piece is down to the threshold, and only with room:
+		// they're away or busy. Up close it keeps fighting instead of giving free hits
+		boolean armourLow = lowestPoints() <= nextMendAt;
+		boolean away = dist > 4.5 || opp.busy() || opp.retreating && dist > 3.8;
+		if (Settings.mend && armourLow && away && age >= mendCooldown && has(s -> s.is(Items.EXPERIENCE_BOTTLE)) && hp > 10 && !threatened) {
 			enter(Mode.MEND);
 			mendBudget = mendBudget();
-			retreat = dist > 6.5 || opp.busy() ? 0 : 50;
+			retreat = dist > 6.5 || opp.busy() ? 0 : 40;
 			return;
 		}
 		// 5. hotbar almost out of pots: refill with room
@@ -591,7 +595,8 @@ public final class BotBrain {
 			turn(yawTo(where) + 180, 0, tier.aimSpeed * 2f);
 			move(1, strafeDir * 0.3f, true, false);
 			if (dist > 6.5) retreat = 0;
-			else if (retreat == 0) {
+			else if (dist < 3.2 && !opp.busy() || retreat == 0) {
+				retreat = 0;
 				// couldn't get away: fight on, try again a bit later
 				mendCooldown = age + 100;
 				enter(Mode.FIGHT);
@@ -604,6 +609,10 @@ public final class BotBrain {
 		if (coming || allMended() || mendBudget <= 0 || modeTicks > 500) {
 			GladeBot.LOGGER.info("[gladebot] {} mended: {}", bot.getName().getString(), armorReport());
 			if (coming) mendCooldown = age + 60;
+			else {
+				mendsDone++;
+				nextMendAt = mendsDone == 1 ? 70 : 60 + random.nextInt(71);
+			}
 			enter(Mode.FIGHT);
 			return;
 		}
@@ -918,8 +927,7 @@ public final class BotBrain {
 	/**
 	 * Bottles to use this session: what the armour needs (a bottle gives about
 	 * 7 XP, and Mending fixes 2 durability per XP on a random damaged piece, so
-	 * every piece comes back together), but at most a third of what's left so
-	 * there's XP for later in the fight.
+	 * every piece comes back together). The first mend uses at most half the XP.
 	 */
 	private int mendBudget() {
 		int missing = 0, target = mendTarget();
@@ -928,7 +936,9 @@ public final class BotBrain {
 		int bottles = 0;
 		var inv = bot.getInventory();
 		for (int i = 0; i < 36; i++) if (inv.getItem(i).is(Items.EXPERIENCE_BOTTLE)) bottles += inv.getItem(i).getCount();
-		return Math.max(1, Math.min(need, Math.max(6, bottles / 3)));
+		// the first mend keeps half the XP for later, after that it uses what it needs
+		int cap = mendsDone == 0 ? Math.max(6, bottles / 2) : bottles;
+		return Math.max(1, Math.min(need, cap));
 	}
 
 	/** Each piece's durability left, for the log. */
