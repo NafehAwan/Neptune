@@ -1,0 +1,67 @@
+package net.tuffclient.module.hud;
+
+import net.tuffclient.gui.Gfx;
+import java.util.ArrayList;
+import java.util.List;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.tuffclient.gui.Theme;
+
+public final class EffectsModule extends HudModule {
+	private static final String[] ROMAN = {"", " II", " III", " IV", " V", " VI", " VII", " VIII", " IX", " X"};
+
+	public EffectsModule() {
+		super("effects", "Potion Effects", "Active effects with time remaining.", 0.006, 0.48, false);
+	}
+
+	@Override
+	public void render(Gfx g, Font font, boolean preview) {
+		LocalPlayer player = Minecraft.getInstance().player;
+		List<MobEffectInstance> effects = new ArrayList<>();
+		if (player != null) {
+			for (MobEffectInstance e : player.getActiveEffects()) {
+				if (e.showIcon()) effects.add(e);
+			}
+		}
+		if (effects.isEmpty()) {
+			if (preview) {
+				int p = pad();
+				box(g, 22 + width(font, "Speed II") + p * 2, 22 + p * 2 - 4);
+				value(g, font, "Speed II", p + 20, p + 1);
+				label(g, font, "1:30", p + 20, p + 10);
+			} else {
+				width = 0;
+				height = 0;
+			}
+			return;
+		}
+		int p = pad();
+		int w = 40;
+		for (MobEffectInstance e : effects) w = Math.max(w, 20 + width(font, name(e)));
+		box(g, w + p * 2, effects.size() * 22 + p * 2 - 4);
+		int y = p - 2;
+		for (MobEffectInstance e : effects) {
+			var icon = net.tuffclient.compat.EffectIcons.sprite(e.getEffect());
+			if (icon != null) g.sprite(icon, p - 1, y + 2, 18, 18);
+			value(g, font, name(e), p + 20, y + 3);
+			String time = e.isInfiniteDuration() ? "**:**" : duration(e.getDuration());
+			if (e.endsWithin(200)) text(g, font, time, p + 20, y + 12, Theme.DANGER);
+			else label(g, font, time, p + 20, y + 12);
+			y += 22;
+		}
+	}
+
+	private static String name(MobEffectInstance e) {
+		int amp = e.getAmplifier();
+		return Component.translatable(e.getDescriptionId()).getString() + (amp < ROMAN.length ? ROMAN[amp] : " " + (amp + 1));
+	}
+
+	private static String duration(int ticks) {
+		int secs = ticks / 20;
+		return secs / 60 + ":" + String.format("%02d", secs % 60);
+	}
+}

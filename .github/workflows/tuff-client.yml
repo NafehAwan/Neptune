@@ -1,0 +1,415 @@
+name: Glade
+
+on:
+  push:
+    branches: [ "master", "claude/**" ]
+    paths: [ "tuff-client/**", ".github/workflows/tuff-client.yml" ]
+  pull_request:
+    branches: [ "master" ]
+    paths: [ "tuff-client/**", ".github/workflows/tuff-client.yml" ]
+  workflow_dispatch:
+
+concurrency:
+  group: tuff-client-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mod:
+    name: Fabric mod
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: tuff-client/mod
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build every Minecraft version
+        env:
+          # Versions that must build; the others are still being ported.
+          READY: "1.21.1 1.21.3 1.21.4 1.21.5 1.21.8 1.21.10 1.21.11 26.1 26.2 26.3"
+        run: |
+          ./gradlew buildAndCollect --continue 2>&1 | tee build.log; status=${PIPESTATUS[0]}
+          echo "=== BUILT"; ls build/libs || true
+          if [ "$status" -ne 0 ]; then
+            echo "=== COMPILE ERRORS"
+            grep -E "error:|warning: \[|What went wrong|^> |Could not|Exception" -A3 build.log | head -400
+          fi
+          for v in $READY; do
+            ls build/libs/tuff-client-*+$v.jar >/dev/null 2>&1 || { echo "::error::Glade for Minecraft $v didn't build"; failed=1; }
+          done
+          exit ${failed:-0}
+      - name: Dump the Minecraft APIs Glade uses, per version
+        if: always()
+        run: |
+          ./gradlew gladeClasspath --continue -q || true
+          python3 tools/apidump.py $(grep -oE 'versions\(([^)]*)\)' settings.gradle.kts | grep -oE '[0-9][0-9.]*')
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tuff-mod
+          path: tuff-client/mod/build/libs/tuff-client-*.jar
+          if-no-files-found: warn
+
+  mod-legacy:
+    name: Fabric mod (1.8.9)
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: tuff-client/mod-legacy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build
+        run: |
+          ./gradlew build 2>&1 | tee build.log; status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then echo "=== COMPILE ERRORS"; grep -E "error:|What went wrong|^> |Could not" -A3 build.log | head -200; exit 1; fi
+          ls build/libs
+      - name: Dump the 1.8.9 APIs Glade uses
+        if: always()
+        run: python3 tools/dump.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tuff-mod-legacy
+          path: tuff-client/mod-legacy/build/libs/tuff-client-*.jar
+          if-no-files-found: warn
+
+  mod-test:
+    name: Fabric mod in-game test (${{ matrix.mc }})
+    needs: mod
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    # On 1.21.11 Fabric's client test tool stalls while loading the test world
+    # (on Linux and Windows alike), so that run doesn't block releases.
+    continue-on-error: ${{ matrix.mc == '1.21.11' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        mc: [ "1.21.11", "26.3" ]
+    defaults:
+      run:
+        working-directory: tuff-client/mod
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Install software rendering drivers
+        run: sudo apt-get update && sudo apt-get install -y mesa-vulkan-drivers libgl1-mesa-dri libglx-mesa0 libegl-mesa0 xvfb imagemagick
+      - name: Run client game test
+        # Same setup as Fabric API's own client tests: Mesa's software Vulkan driver.
+        run: |
+          timeout 15m xvfb-run -a -s "-screen 0 1920x1080x24 +extension GLX +render -noreset" ./gradlew :${{ matrix.mc }}:runClientGameTest --stacktrace
+      - name: Print screenshot previews
+        if: always()
+        run: |
+          for f in $(find . -path '*screenshots*' -name '*.png' | sort); do
+            echo "Screenshot $(basename "$f"): $(identify -format '%wx%h' "$f")"
+            convert "$f" -resize 960x -quality 70 /tmp/preview.jpg || continue
+            echo "SHOT $(basename "$f") $(base64 -w0 /tmp/preview.jpg)"
+          done
+          for f in $(find . -path '*screenshots*' -name '*glade-account*.png' | sort); do
+            convert "$f" -gravity northwest -crop 960x700+0+0 +repage -quality 92 /tmp/crop.jpg || continue
+            echo "SHOT crop-$(basename "$f") $(base64 -w0 /tmp/crop.jpg)"
+          done
+          for f in $(find . -path '*screenshots*' -name '*glade-tiers*.png' | sort); do
+            convert "$f" -gravity center -crop 960x420+0-170 +repage -quality 92 /tmp/crop.jpg || continue
+            echo "SHOT crop-$(basename "$f") $(base64 -w0 /tmp/crop.jpg)"
+          done
+          # Full-resolution crops show real text quality.
+          for f in $(find . -path '*screenshots*' -name '*tuff-menu-mods*.png' -o -path '*screenshots*' -name '*tuff-title.png' | sort); do
+            convert "$f" -gravity center -crop 640x360+0+0 +repage -quality 92 /tmp/crop.jpg || continue
+            echo "SHOT crop-$(basename "$f") $(base64 -w0 /tmp/crop.jpg)"
+          done
+      - name: Show game log
+        if: failure()
+        run: find . -name latest.log -path '*logs*' -exec tail -n 150 {} \;
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: glade-test-screenshots-${{ matrix.mc }}
+          path: |
+            tuff-client/mod/**/run/**/screenshots
+            tuff-client/mod/run/**/screenshots
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: glade-test-logs-${{ matrix.mc }}
+          path: |
+            tuff-client/mod/**/run/**/logs
+            tuff-client/mod/run/**/logs
+            tuff-client/mod/**/run/**/crash-reports
+            tuff-client/mod/run/**/crash-reports
+          if-no-files-found: ignore
+
+  mod-windows:
+    # Glade on Windows: the same in-game test on 1.21.11, on its own and next to Sodium.
+    name: Fabric mod on Windows (1.21.11${{ matrix.sodium && ' + Sodium' || '' }})
+    needs: mod
+    runs-on: windows-2022
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        sodium: [ false, true ]
+    defaults:
+      run:
+        shell: bash
+        working-directory: tuff-client/mod
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: |
+            21
+            25
+          distribution: 'temurin'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Install Mesa (software OpenGL, the runner has no GPU)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download -R pal1000/mesa-dist-win --pattern '*-release-msvc.7z' -D "$RUNNER_TEMP/mesa"
+          7z x -o"$RUNNER_TEMP/mesa/x" "$RUNNER_TEMP"/mesa/*.7z > /dev/null
+          # Windows loads opengl32.dll from java.exe's folder first
+          for j in "$JAVA_HOME_21_X64" "$JAVA_HOME_25_X64"; do cp "$RUNNER_TEMP"/mesa/x/x64/*.dll "$j/bin/"; done
+          ls "$JAVA_HOME_21_X64/bin" | grep -i -E 'opengl|gallium|glapi'
+      - name: Add Sodium
+        if: matrix.sodium
+        run: |
+          mkdir -p extra-mods/1.21.11
+          url=$(curl -fsSL 'https://api.modrinth.com/v2/project/sodium/version?game_versions=%5B%221.21.11%22%5D&loaders=%5B%22fabric%22%5D' | python -c "import sys,json;v=json.load(sys.stdin)[0];f=[f for f in v['files'] if f['primary']] or v['files'];print(f[0]['url'])")
+          echo "Sodium: $url"
+          curl -fsSL "$url" -o extra-mods/1.21.11/sodium.jar
+      - name: Run client game test
+        env:
+          GALLIUM_DRIVER: llvmpipe
+        run: |
+          timeout 30m ./gradlew :1.21.11:runClientGameTest --stacktrace "-Porg.gradle.java.installations.fromEnv=JAVA_HOME_21_X64,JAVA_HOME_25_X64" "-Porg.gradle.java.installations.auto-download=false"
+      - name: Show game log
+        if: failure()
+        run: find . -name latest.log -path '*logs*' -exec tail -n 200 {} \;
+
+  bot:
+    # Glade Bot: the Neth Pot practice bot (a separate mod for now, 1.21.11 only).
+    name: Glade Bot (1.21.11)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: tuff-client/glade-bot
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build
+        run: |
+          ./gradlew buildAndCollect 2>&1 | tee build.log; status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then echo "=== COMPILE ERRORS"; grep -E "error:|What went wrong|^> |Could not" -A3 build.log | head -300; exit 1; fi
+          ls build/libs
+      - name: Dump the Minecraft APIs the bot uses
+        if: always()
+        run: |
+          ./gradlew gladeClasspath -q || true
+          python3 tools/apidump.py 1.21.11
+      - name: Install software rendering drivers
+        run: sudo apt-get update && sudo apt-get install -y mesa-vulkan-drivers libgl1-mesa-dri libglx-mesa0 libegl-mesa0 xvfb imagemagick
+      - name: Self test on a dedicated server (the bot against a dummy)
+        id: selftest
+        run: timeout 15m python3 tools/selftest.py
+      - name: Publish the bot (its own pre-release, so Glade's updater ignores it)
+        if: steps.selftest.outcome == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/claude/serene-euler-8ygwvm'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          J=$(ls build/libs/glade-bot-*.jar | grep -v -e sources -e dev | head -1)
+          V=$(unzip -p "$J" fabric.mod.json | jq -r .version); V=${V%%+*}
+          TAG="glade-bot-v$V"
+          cp "$J" glade-bot-1.21.11.jar
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" glade-bot-1.21.11.jar --clobber
+          else
+            gh release create "$TAG" glade-bot-1.21.11.jar --title "Glade Bot $V (Minecraft 1.21.11)" --prerelease --latest=false --target "$GITHUB_SHA" \
+              --notes "Neth Pot practice bot for singleplayer. Put glade-bot-1.21.11.jar in your mods folder next to Fabric API (Minecraft 1.21.11, Fabric). In a world press B, pick LT3/HT3/LT2 and mend, then Start fight (or /bot start)."
+          fi
+      - name: Run the bot game test (screenshots; Fabric's test tool stalls on 1.21.11)
+        continue-on-error: true
+        run: |
+          timeout 20m xvfb-run -a -s "-screen 0 1920x1080x24 +extension GLX +render -noreset" ./gradlew :1.21.11:runClientGameTest --stacktrace 2>&1 | tee test.log; status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then echo "=== COMPILE ERRORS"; grep -E "error:|What went wrong" -A3 test.log | head -200; fi
+          exit $status
+      - name: Print screenshot previews
+        if: always()
+        run: |
+          for f in $(find . -path '*screenshots*' -name '*.png' | sort); do
+            convert "$f" -resize 960x -quality 70 /tmp/preview.jpg || continue
+            echo "SHOT $(basename "$f") $(base64 -w0 /tmp/preview.jpg)"
+          done
+      - name: Show game log
+        if: failure()
+        run: find . -name latest.log -path '*logs*' -exec tail -n 200 {} \;
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: glade-bot
+          path: tuff-client/glade-bot/build/libs/glade-bot-*.jar
+          if-no-files-found: warn
+
+  loaders:
+    name: Launcher loaders (install and start)
+    needs: [mod, mod-legacy]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    defaults:
+      run:
+        working-directory: tuff-client/launcher/src-tauri
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libssl-dev xvfb libgl1-mesa-dri libglx-mesa0 libegl-mesa0 x11-xserver-utils
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: tuff-client/launcher/src-tauri
+      - name: Fetch the Glade mod builds
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: tuff-mod*
+          path: tuff-client/launcher/src-tauri/glade-jars
+          merge-multiple: true
+      - name: Install every loader, put Glade in each Fabric profile and start the game
+        env:
+          GLADE_SKIP_ASSETS: "1"
+          GLADE_JARS: glade-jars
+          GLADE_SMOKE: "fabric:1.8.9,fabric:1.8.8,fabric:1.21.1,fabric:1.21.3,fabric:1.21.4,fabric:1.21.5,fabric:1.21.8,fabric:1.21.10,fabric:1.21.11,fabric:26.1,fabric:26.2,fabric:26.3,quilt:1.21.1,neoforge:1.21.1,forge:1.20.1,forge:1.12.2"
+        run: timeout 70m xvfb-run -a -s "-screen 0 1280x720x24 +extension GLX +render -noreset" cargo test --locked smoke -- --ignored --nocapture
+
+  launcher:
+    name: Launcher (.deb)
+    needs: [mod, mod-legacy]
+    if: always()
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: tuff-client/launcher
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch the Glade mod builds
+        uses: actions/download-artifact@v4
+        with:
+          pattern: tuff-mod*
+          path: tuff-client/launcher/mod-build
+          merge-multiple: true
+      - name: Bundle the mod
+        run: |
+          # a launcher without the Glade mod would start the game without Glade
+          if ! ls mod-build/tuff-client-*+26.3.jar >/dev/null 2>&1; then echo "::error::The Glade mod jar is missing"; exit 1; fi
+          mkdir -p src-tauri/resources/glade-mods
+          cp mod-build/tuff-client-*.jar src-tauri/resources/glade-mods/
+          ls -l src-tauri/resources/glade-mods
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libssl-dev patchelf
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tuff-client/launcher/package-lock.json
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: tuff-client/launcher/src-tauri
+      - run: npm ci
+      - run: npm run check
+      - name: Rust tests
+        working-directory: tuff-client/launcher/src-tauri
+        run: cargo test --locked
+      - name: Build .deb
+        env:
+          TUFF_DISCORD_APP_ID: ${{ secrets.TUFF_DISCORD_APP_ID }}
+          GLADE_UPDATE_URL: https://github.com/${{ github.repository }}/releases/latest/download/latest.json
+        run: npx tauri build --bundles deb
+      - uses: actions/upload-artifact@v4
+        with:
+          name: glade-deb
+          path: tuff-client/launcher/src-tauri/target/release/bundle/deb/*.deb
+          if-no-files-found: error
+
+  # Publishes an update when the version in tauri.conf.json is new: every
+  # launcher checks the latest release's latest.json and updates itself and the
+  # Glade mod. Bump the version to ship an update.
+  release:
+    name: Publish update
+    needs: [launcher, mod-test, loaders]
+    if: github.event_name == 'push' && needs.loaders.result == 'success' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/claude/serene-euler-8ygwvm')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: glade-deb
+          path: dist/deb
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: tuff-mod*
+          path: dist/mod
+          merge-multiple: true
+      - name: Publish the release if this version is new
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          V=$(jq -r .version tuff-client/launcher/src-tauri/tauri.conf.json)
+          if gh release view "v$V" >/dev/null 2>&1; then echo "v$V is already released; bump the version to publish an update"; exit 0; fi
+          mkdir -p out
+          cp "$(ls dist/deb/*.deb | head -1)" "out/glade_${V}_amd64.deb"
+          # every Glade build, one per group of Minecraft versions
+          MODS='[]'
+          for j in dist/mod/tuff-client-*.jar; do
+            case "$j" in *-sources.jar|*-dev.jar) continue ;; esac
+            mc=${j##*+}; mc=${mc%.jar}; name="glade-$mc.jar"
+            cp "$j" "out/$name"
+            range=$(unzip -p "$j" fabric.mod.json | jq -r .depends.minecraft)
+            MODS=$(jq --arg v "$V" --arg mc "$range" --arg f "$name" --arg url "https://github.com/${{ github.repository }}/releases/download/v$V/$name" \
+              --arg sha "$(sha256sum "out/$name" | cut -d' ' -f1)" --argjson size "$(stat -c%s "out/$name")" \
+              '. + [{version: $v, minecraft: $mc, file: $f, url: $url, sha256: $sha, size: $size}]' <<<"$MODS")
+          done
+          # launcher 1.1.0 reads only "mod" (the 26.3 build)
+          cp "$(ls dist/mod/tuff-client-*+26.3.jar | head -1)" out/glade-mod.jar
+          MOD_V=$(unzip -p out/glade-mod.jar fabric.mod.json | jq -r .version)
+          MC=$(unzip -p out/glade-mod.jar fabric.mod.json | jq -r .depends.minecraft)
+          [ "$MOD_V" = "$V" ] || { echo "::error::mod version $MOD_V doesn't match $V"; exit 1; }
+          BASE="https://github.com/${{ github.repository }}/releases/download/v$V"
+          jq -n --arg v "$V" --arg mc "$MC" --arg page "https://github.com/${{ github.repository }}/releases/tag/v$V" \
+            --rawfile notes tuff-client/launcher/RELEASE_NOTES.md \
+            --arg deb "$BASE/glade_${V}_amd64.deb" --arg debsha "$(sha256sum "out/glade_${V}_amd64.deb" | cut -d' ' -f1)" --argjson debsize "$(stat -c%s "out/glade_${V}_amd64.deb")" \
+            --argjson mods "$MODS" \
+            --arg jar "$BASE/glade-mod.jar" --arg jarsha "$(sha256sum out/glade-mod.jar | cut -d' ' -f1)" --argjson jarsize "$(stat -c%s out/glade-mod.jar)" \
+            '{version: $v, notes: ($notes | rtrimstr("\n")), page: $page,
+              deb: {url: $deb, sha256: $debsha, size: $debsize},
+              mod: {version: $v, minecraft: $mc, url: $jar, sha256: $jarsha, size: $jarsize},
+              mods: $mods}' > out/latest.json
+          cat out/latest.json
+          gh release create "v$V" out/* --title "Glade $V" --notes-file tuff-client/launcher/RELEASE_NOTES.md --target "$GITHUB_SHA" --latest

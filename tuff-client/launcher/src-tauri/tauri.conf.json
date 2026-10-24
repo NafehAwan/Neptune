@@ -1,0 +1,58 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Glade",
+  "mainBinaryName": "glade",
+  "version": "1.8.3",
+  "identifier": "net.tuffclient.launcher",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Glade",
+        "width": 1200,
+        "height": 740,
+        "minWidth": 980,
+        "minHeight": 620,
+        "center": true,
+        "decorations": false,
+        "backgroundColor": "#141614"
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; img-src 'self' asset: http://asset.localhost data: blob: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src ipc: http://ipc.localhost; script-src 'self'",
+      "assetProtocol": {
+        "enable": true,
+        "scope": ["$DATA/glade/instances/**"]
+      }
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["deb"],
+    "category": "Game",
+    "shortDescription": "A fast, minimal Minecraft launcher",
+    "longDescription": "Glade is a lightweight Minecraft launcher with Microsoft login, Fabric profiles, a Modrinth content browser, server pinging, skin management and the Glade in-game mod.",
+    "copyright": "Glade. Not affiliated with Mojang or Microsoft.",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.png"
+    ],
+    "resources": ["resources/**/*"],
+    "linux": {
+      "deb": {
+        "section": "games",
+        "depends": [],
+        "conflicts": ["tuff-client"],
+        "replaces": ["tuff-client"]
+      }
+    }
+  }
+}

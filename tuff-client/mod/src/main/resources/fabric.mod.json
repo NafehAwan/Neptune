@@ -1,0 +1,21 @@
+{
+	"schemaVersion": 1,
+	"id": "tuff",
+	"version": "${version}",
+	"name": "Glade",
+	"description": "The Glade in-game mod: an animated title screen, a mod menu, a drag-and-drop HUD editor and HUD and utility modules.",
+	"authors": ["Glade"],
+	"license": "GPL-3.0",
+	"icon": "assets/tuff/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"client": ["net.tuffclient.TuffClient"]
+	},
+	"mixins": ["tuff.mixins.json"],
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "${minecraft}",
+		"java": ">=${java}",
+		"fabric-api": "*"
+	}
+}
