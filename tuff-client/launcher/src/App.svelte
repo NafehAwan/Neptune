@@ -3,7 +3,7 @@
   import { fade } from "svelte/transition";
   import CrashModal from "./components/CrashModal.svelte";
   import DownloadCard from "./components/DownloadCard.svelte";
-  import GroveScene from "./components/GroveScene.svelte";
+  import SignIn from "./components/SignIn.svelte";
   import Sidebar from "./components/Sidebar.svelte";
   import TitleBar from "./components/TitleBar.svelte";
   import Toasts from "./components/Toasts.svelte";
@@ -53,11 +53,9 @@
 <svelte:window onkeydown={keys} />
 
 <div class="shell" class:low-motion={app.settings?.lowMotion}>
-  <!-- the forest lives behind everything; it animates on Home and rests elsewhere -->
-  <GroveScene active={app.route === "home"} still={!!app.settings?.lowMotion} />
   <Sidebar />
-  <main class:frost={app.route !== "home"}>
-    <TitleBar transparent={app.route === "home"} />
+  <main>
+    <TitleBar />
     {#if app.ready}
       {#key app.route}
         <div class="view" in:pageIn out:fade={{ duration: 90 }}>
@@ -80,18 +78,14 @@
   {#if app.crashOpen && app.lastExit?.crash}<CrashModal exit={app.lastExit} onclose={() => (app.crashOpen = false)} />{/if}
   <!-- required updates wait until Minecraft is closed -->
   {#if app.update && !app.running && !app.launching && (!import.meta.env.DEV || location.search.includes("update"))}<UpdateScreen update={app.update} />{/if}
+  {#if app.ready && !app.accounts.length && !app.signinSkipped}<SignIn />{/if}
   <Toasts />
 </div>
 
 <style>
   .shell { position: relative; display: flex; height: 100%; background: var(--bg); }
   main { position: relative; flex: 1; min-width: 0; height: 100%; overflow: hidden; }
-  /* on every page but Home the forest sits behind a sheet of frosted glass */
-  main.frost::before {
-    content: ""; position: absolute; inset: 0;
-    background: rgba(246, 244, 238, 0.62);
-    backdrop-filter: blur(26px) saturate(1.3); -webkit-backdrop-filter: blur(26px) saturate(1.3);
-  }
+
   .view { position: absolute; inset: 0; }
   .view :global(.page) { padding-top: 64px; }
   .boot { height: 100%; display: grid; place-items: center; color: var(--accent); }

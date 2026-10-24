@@ -12,9 +12,9 @@
 <style>
   .tile {
     display: grid; place-items: center; flex: none;
-    background: rgba(255, 255, 255, 0.7);
-    border: 1px solid rgba(31, 42, 34, 0.08);
+    background: var(--glass-strong);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 9px;
-    box-shadow: 0 2px 6px rgba(30, 60, 40, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   }
 </style>

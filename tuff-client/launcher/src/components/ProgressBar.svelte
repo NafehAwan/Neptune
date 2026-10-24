@@ -8,7 +8,7 @@
 </div>
 
 <style>
-  .bar { position: relative; height: 6px; border-radius: 999px; background: rgba(47, 107, 79, 0.14); overflow: hidden; }
+  .bar { position: relative; height: 6px; border-radius: 999px; background: rgba(47, 191, 106, 0.14); overflow: hidden; }
   .bar span {
     position: absolute; left: 0; top: 0; bottom: 0; border-radius: inherit;
     background: linear-gradient(90deg, var(--accent), var(--accent-hover));

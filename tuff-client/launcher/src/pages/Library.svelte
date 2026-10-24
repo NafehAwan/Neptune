@@ -1,4 +1,5 @@
 <script lang="ts">
+  import chestArt from "../assets/glade/noprofiles.jpg";
   import Icon from "../components/Icon.svelte";
   import Modal from "../components/Modal.svelte";
   import ProfileIcon from "../components/ProfileIcon.svelte";
@@ -150,6 +151,7 @@
 
   {#if !app.profiles.length}
     <div class="empty">
+      <img class="emptyart" src={chestArt} alt="" />
       <p class="pixel">No profiles yet</p>
       <p>Start from a Glade preset (Performance, Performance+, Performance++ or Scenic), or build your own.</p>
       <div class="row"><button class="btn primary" onclick={() => (picking = true)}>Choose a preset</button><button class="btn ghost" onclick={() => (creating = true)}>Custom profile</button></div>
@@ -295,7 +297,7 @@
 
   .toolbar { display: flex; align-items: center; gap: 10px; margin: 16px 0 12px; flex-wrap: wrap; }
   .search { width: 160px; height: 32px; }
-  .updates { display: flex; align-items: center; gap: 12px; justify-content: space-between; padding: 10px 12px; margin-bottom: 10px; border-radius: 8px; background: rgba(47, 107, 79, 0.08); border: 1px solid rgba(47, 107, 79, 0.3); font-size: 14.5px; }
+  .updates { display: flex; align-items: center; gap: 12px; justify-content: space-between; padding: 10px 12px; margin-bottom: 10px; border-radius: 8px; background: rgba(47, 191, 106, 0.08); border: 1px solid rgba(47, 191, 106, 0.3); font-size: 14.5px; }
   .content { display: grid; gap: 6px; }
   .citem { display: flex; align-items: center; gap: 12px; padding: 7px 8px 7px 7px; border-radius: 8px; background: var(--bg); border: 1px solid var(--border); transition: opacity var(--fast); }
   .citem.off { opacity: 0.5; }
@@ -306,7 +308,8 @@
   .empty.small { padding: 34px 16px; }
   .del { font-size: 15px; color: var(--muted); }
   .chip.glade, .chip.lock { display: inline-flex; align-items: center; gap: 4px; }
-  .chip.glade { background: rgba(47, 107, 79, 0.12); color: var(--accent-deep); border-color: rgba(47, 107, 79, 0.3); }
+  .chip.glade { background: rgba(47, 191, 106, 0.12); color: var(--accent-deep); border-color: rgba(47, 191, 106, 0.3); }
   .chip.lock { color: var(--accent-deep); }
   .del input { accent-color: var(--danger); }
+  .emptyart { width: 180px; border-radius: 16px; -webkit-mask-image: radial-gradient(closest-side, #000 60%, transparent 100%); mask-image: radial-gradient(closest-side, #000 60%, transparent 100%); }
 </style>

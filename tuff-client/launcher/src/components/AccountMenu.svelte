@@ -64,15 +64,14 @@
 </script>
 
 <div class="wrap" use:outside>
-  <button class="chip-btn" class:open onclick={() => (open = !open)} aria-haspopup="menu" aria-expanded={open}>
+  <button class="chip-btn" class:open class:out={!current} onclick={() => (open = !open)} aria-haspopup="menu" aria-expanded={open}>
     {#if current}
-      <Head3D skin={skinOf(current)} size={26} />
+      <Head3D skin={skinOf(current)} size={30} />
     {:else}
       <span class="nohead"><Icon name="user" size={14} /></span>
     {/if}
-    <span class="name">{current?.name ?? "Add account"}</span>
-    {#if current}<span class="kind">{current.kind === "msa" ? "Microsoft" : "Offline"}</span>{/if}
-    <Icon name="chevron" size={16} />
+    <span class="who2"><small>{current ? (current.kind === "msa" ? "Signed in" : "Offline") : "Not signed in"}</small><span class="name ellipsis">{current?.name ?? "Add account"}</span></span>
+    <Icon name="chevron" size={14} />
   </button>
 
   {#if open}
@@ -133,37 +132,38 @@
   /* Sizes follow the Grove Glass mockups: the launcher chip (design/app.js, launcher()) and the account menu (accountMenu()). */
   .wrap { position: relative; }
   .chip-btn {
-    display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 14px 0 4px;
-    background: rgba(255, 255, 255, 0.38); border: 1px solid rgba(255, 255, 255, 0.7); border-radius: 999px;
-    backdrop-filter: blur(20px) saturate(1.5); -webkit-backdrop-filter: blur(20px) saturate(1.5);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 10px 30px rgba(30, 60, 40, 0.12);
-    color: var(--text); font: 600 13px var(--font); cursor: pointer;
-    transition: background var(--fast);
+    display: flex; align-items: center; gap: 9px; height: 42px; width: 176px; padding: 0 12px 0 6px;
+    background: linear-gradient(90deg, #1f7a45, #2fbf6a); border: 0; border-radius: 11px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 8px 22px rgba(47, 191, 106, 0.18);
+    color: #fff; font: 700 13px var(--font); cursor: pointer; text-align: left; transition: filter var(--fast);
   }
-  .chip-btn:hover, .chip-btn.open { background: rgba(255, 255, 255, 0.62); }
-  .kind { font: 400 11px var(--mono); color: var(--muted); margin-left: 4px; }
-  .chip-btn :global(.icon) { color: var(--text); }
+  .chip-btn.out { background: var(--surface); border: 1px solid var(--border); box-shadow: none; }
+  .chip-btn:hover, .chip-btn.open { filter: brightness(1.08); }
+  .chip-btn :global(canvas) { border-radius: 6px; background: rgba(0, 0, 0, 0.18); }
+  .who2 { display: grid; flex: 1; min-width: 0; line-height: 1.15; }
+  .who2 small { font: 600 8.5px var(--font); letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.8; }
+  .chip-btn :global(.icon) { color: #fff; opacity: 0.85; flex: none; }
   .nohead { width: 26px; height: 26px; display: grid; place-items: center; }
 
   .menu {
-    position: absolute; right: 0; top: 46px; width: 320px; padding: 8px; z-index: 30; border-radius: 20px; transform-origin: top right;
-    background: rgba(255, 255, 255, 0.62); border: 1px solid rgba(255, 255, 255, 0.7);
+    position: absolute; right: 0; top: 50px; width: 320px; padding: 8px; z-index: 30; border-radius: 20px; transform-origin: top right;
+    background: var(--glass-strong); border: 1px solid var(--glass-border);
     backdrop-filter: blur(22px) saturate(1.5); -webkit-backdrop-filter: blur(22px) saturate(1.5);
-    box-shadow: 0 20px 60px rgba(30, 60, 40, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.05);
     font-size: 13px;
   }
   .hero { display: flex; align-items: center; gap: 16px; height: 112px; padding: 0 14px; }
-  .big { width: 84px; height: 84px; display: grid; place-items: center; flex: none; filter: drop-shadow(0 10px 14px rgba(30, 60, 40, 0.25)); }
-  .hname { font: italic 600 22px var(--display); letter-spacing: -0.02em; }
+  .big { width: 84px; height: 84px; display: grid; place-items: center; flex: none; filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.5)); }
+  .hname { font: 700 22px var(--display); letter-spacing: -0.02em; }
   .hkind { font-size: 12px; color: var(--muted); margin-top: 2px; }
   .pills { display: flex; gap: 6px; margin-top: 8px; }
-  .pill { font: 600 11px var(--font); padding: 3px 8px; border-radius: 999px; border: 0; background: rgba(255, 255, 255, 0.6); color: var(--text); cursor: pointer; }
-  .pill:hover { background: rgba(255, 255, 255, 0.9); }
-  .sep { height: 1px; background: rgba(255, 255, 255, 0.7); margin: 0 6px 6px; }
+  .pill { font: 600 11px var(--font); padding: 3px 8px; border-radius: 999px; border: 0; background: var(--surface-3); color: var(--text); cursor: pointer; }
+  .pill:hover { background: #363a41; }
+  .sep { height: 1px; background: var(--border); margin: 0 6px 6px; }
   .label { font: 400 10.5px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); padding: 4px 10px 6px; }
   .acct { display: flex; align-items: center; border-radius: 12px; }
-  .acct.active { background: rgba(255, 255, 255, 0.5); }
-  .acct:hover:not(.active) { background: rgba(255, 255, 255, 0.3); }
+  .acct.active { background: var(--surface-2); }
+  .acct:hover:not(.active) { background: rgba(255, 255, 255, 0.05); }
   .pick { flex: 1; display: flex; align-items: center; gap: 12px; height: 46px; padding: 0 10px; background: none; border: 0; color: var(--text); cursor: pointer; text-align: left; min-width: 0; }
   .pick .grow { display: grid; min-width: 0; }
   .n { font-weight: 600; font-size: 13.5px; }
@@ -174,11 +174,11 @@
   .acct.active .del { display: none; }
   .del:hover { color: var(--danger); }
   .action { width: 100%; display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 10px; background: none; border: 0; border-radius: 10px; color: var(--text); font: 600 13px var(--font); cursor: pointer; }
-  .action:hover, .action.on { background: rgba(255, 255, 255, 0.45); }
-  .ai { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: rgba(47, 107, 79, 0.12); color: var(--accent); }
+  .action:hover, .action.on { background: var(--surface-2); }
+  .ai { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: rgba(47, 191, 106, 0.12); color: var(--accent); }
   .offline { display: flex; gap: 8px; padding: 6px 6px 0; }
-  .offline .input { flex: 1; height: 36px; background: rgba(255, 255, 255, 0.65); border-color: rgba(47, 107, 79, 0.45); font-size: 12.5px; border-radius: 10px; }
-  .addbtn { height: 36px; padding: 0 16px; border-radius: 10px; border: 0; background: var(--accent); color: #fff; font: 600 13.5px var(--font); cursor: pointer; }
+  .offline .input { flex: 1; height: 36px; background: var(--surface); border-color: rgba(47, 191, 106, 0.45); font-size: 12.5px; border-radius: 10px; }
+  .addbtn { height: 36px; padding: 0 16px; border-radius: 10px; border: 0; background: var(--accent); color: var(--accent-ink); font: 600 13.5px var(--font); cursor: pointer; }
   .addbtn:disabled { opacity: 0.5; cursor: default; }
   .err { color: var(--danger); font-size: 12px; padding: 6px 10px 2px; }
 </style>

@@ -29,10 +29,10 @@
 <style>
   .dl {
     position: absolute; right: 22px; bottom: 22px; z-index: 30; width: 320px; display: grid; gap: 7px; padding: 14px 16px;
-    border-radius: 16px; background: rgba(251, 251, 248, 0.86); border: 1px solid var(--glass-border);
-    backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); box-shadow: var(--glass-shadow), 0 18px 50px rgba(30, 60, 40, 0.16);
+    border-radius: 16px; background: var(--glass-strong); border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); box-shadow: var(--glass-shadow), 0 18px 50px rgba(0, 0, 0, 0.4);
   }
-  .dl.inline { position: static; width: 360px; background: rgba(255, 255, 255, 0.62); }
+  .dl.inline { position: static; width: 360px; background: var(--glass-strong); }
   .row { display: flex; align-items: center; gap: 9px; }
   .row .spinner { color: var(--accent); width: 13px; height: 13px; }
   .title { font-weight: 600; font-size: 13.5px; flex: 1; min-width: 0; }

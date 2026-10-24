@@ -34,11 +34,11 @@
     position: fixed; z-index: 51; left: 50%; top: 50%; translate: -50% -50%;
     max-width: calc(100vw - 48px); max-height: calc(100vh - 80px);
     display: flex; flex-direction: column;
-    background: rgba(255, 255, 255, 0.72); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+    background: var(--glass-strong); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
     border: 1px solid var(--glass-border); border-radius: 20px;
-    box-shadow: 0 30px 80px rgba(30, 60, 40, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   }
   header { display: flex; align-items: center; justify-content: space-between; padding: 18px 18px 6px 22px; }
   .body { padding: 12px 22px 18px; overflow-y: auto; display: grid; gap: 14px; }
-  footer { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 22px; border-top: 1px solid rgba(31, 42, 34, 0.07); }
+  footer { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 22px; border-top: 1px solid rgba(255, 255, 255, 0.07); }
 </style>

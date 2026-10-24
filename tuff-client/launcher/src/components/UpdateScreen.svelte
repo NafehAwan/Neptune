@@ -65,14 +65,14 @@
   .sheet {
     position: fixed; z-index: 81; left: 50%; top: 50%; translate: -50% -50%; width: 440px; max-width: calc(100vw - 48px);
     display: grid; gap: 12px; justify-items: center; text-align: center; padding: 30px 28px 26px;
-    background: rgba(255, 255, 255, 0.8); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+    background: var(--glass-strong); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
     border: 1px solid var(--glass-border); border-radius: 22px;
-    box-shadow: 0 30px 80px rgba(30, 60, 40, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   }
-  .badge { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; background: rgba(47, 107, 79, 0.12); color: var(--accent); }
-  h2 { font: italic 600 26px var(--display); letter-spacing: -0.01em; }
+  .badge { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; background: rgba(47, 191, 106, 0.12); color: var(--accent); }
+  h2 { font: 700 26px var(--display); letter-spacing: -0.01em; }
   .notes { font-size: 14px; line-height: 1.5; color: var(--text); white-space: pre-line; max-height: 160px; overflow-y: auto; }
-  .bar { width: 100%; height: 8px; border-radius: 99px; background: rgba(47, 107, 79, 0.12); overflow: hidden; }
+  .bar { width: 100%; height: 8px; border-radius: 99px; background: rgba(47, 191, 106, 0.12); overflow: hidden; }
   .bar span { display: block; height: 100%; border-radius: 99px; background: var(--accent); transition: width 0.2s ease; }
   .stage { font-size: 14px; display: flex; gap: 8px; align-items: center; }
   .err { font-size: 14px; color: var(--danger); }

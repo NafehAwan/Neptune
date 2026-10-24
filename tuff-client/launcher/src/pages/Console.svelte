@@ -99,8 +99,8 @@
   .count { font-size: 14px; }
   .log {
     flex: 1; min-height: 200px; overflow: auto; padding: 12px 14px;
-    background: rgba(255, 255, 255, 0.62); border: 1px solid var(--glass-border); border-radius: 14px;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    background: var(--glass-strong); border: 1px solid var(--glass-border); border-radius: 14px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
     font: 13.5px/1.6 var(--mono); color: #33403A;
   }
   .line { white-space: pre-wrap; word-break: break-all; content-visibility: auto; contain-intrinsic-size: auto 19px; }

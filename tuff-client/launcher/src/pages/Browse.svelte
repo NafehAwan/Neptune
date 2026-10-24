@@ -1,4 +1,5 @@
 <script lang="ts">
+  import offlineArt from "../assets/glade/offline.jpg";
   import Icon from "../components/Icon.svelte";
   import { api } from "../lib/api";
   import { compact, loaderName } from "../lib/format";
@@ -125,7 +126,7 @@
   {/if}
 
   {#if error}
-    <div class="empty"><p class="pixel">Couldn't reach Modrinth</p><p class="selectable">{error}</p><button class="btn" onclick={() => search()}>Retry</button></div>
+    <div class="empty"><img class="emptyart" src={offlineArt} alt="" /><p class="pixel">Couldn't reach Modrinth</p><p class="selectable">{error}</p><button class="btn" onclick={() => search()}>Retry</button></div>
   {:else}
     <div class="results">
       {#each hits as hit, i (hit.project_id)}
@@ -183,4 +184,5 @@
   .install { width: 112px; flex: none; }
   .install.done { color: var(--online); border-color: rgba(111, 191, 115, 0.35); background: rgba(111, 191, 115, 0.08); opacity: 1; }
   .more { justify-self: center; margin-top: 8px; }
+  .emptyart { width: 170px; border-radius: 16px; -webkit-mask-image: radial-gradient(closest-side, #000 60%, transparent 100%); mask-image: radial-gradient(closest-side, #000 60%, transparent 100%); }
 </style>

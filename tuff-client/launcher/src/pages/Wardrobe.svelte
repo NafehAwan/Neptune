@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { studioLights } from "../lib/character3d";
   import { onMount } from "svelte";
   import Icon from "../components/Icon.svelte";
   import { api, pickFile } from "../lib/api";
@@ -45,8 +46,7 @@
       viewer.fov = 40;
       viewer.autoRotate = rotate;
       viewer.autoRotateSpeed = 0.6;
-      viewer.globalLight.intensity = 2.4;
-      viewer.cameraLight.intensity = 0.8;
+      studioLights(viewer);
       applyAnimation();
       await loadProfile();
     })();
@@ -202,7 +202,7 @@
   .layout { display: grid; grid-template-columns: 340px 1fr; gap: 18px; align-items: start; }
   .stage {
     position: relative; display: grid; justify-items: center; padding: 18px 0 16px; overflow: hidden;
-    background: radial-gradient(70% 60% at 50% 40%, rgba(47, 107, 79, 0.14), transparent 70%), var(--surface);
+    background: radial-gradient(70% 60% at 50% 40%, rgba(47, 191, 106, 0.14), transparent 70%), var(--surface);
   }
   canvas { width: 300px; height: 420px; cursor: grab; }
   canvas:active { cursor: grabbing; }
@@ -214,7 +214,7 @@
   .box { padding: 18px; display: grid; gap: 12px; }
   .lab { font-size: 14px; color: var(--muted); font-weight: 500; }
   .field { display: grid; gap: 6px; justify-items: start; }
-  .pending { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 7px; background: rgba(47, 107, 79, 0.08); border: 1px solid rgba(47, 107, 79, 0.3); font-size: 14.5px; }
+  .pending { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 7px; background: rgba(47, 191, 106, 0.08); border: 1px solid rgba(47, 191, 106, 0.3); font-size: 14.5px; }
   .capes { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
   .cape { display: grid; justify-items: center; gap: 6px; padding: 10px 6px 8px; background: var(--bg); border: 2px solid var(--border); border-radius: 8px; color: var(--text); cursor: pointer; transition: border-color var(--fast); }
   .cape:hover { border-color: var(--border-strong); }

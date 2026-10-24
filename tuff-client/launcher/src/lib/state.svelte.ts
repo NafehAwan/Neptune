@@ -31,6 +31,8 @@ export const app = $state({
   /** Profile the library page should open, set by other pages. */
   focusProfile: null as string | null,
   accountModal: false,
+  /** The first-run sign-in screen was put off for this session. */
+  signinSkipped: false,
   /** A newer launcher; the update screen installs it. */
   update: null as LauncherUpdate | null,
   updateProgress: null as UpdateProgress | null,

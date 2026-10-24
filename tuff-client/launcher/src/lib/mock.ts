@@ -83,7 +83,8 @@ export async function mockCall(cmd: string, args: Record<string, any> = {}): Pro
       profiles = [...profiles, p];
       return p;
     }
-    case "list_accounts": return { accounts, active: settings.activeAccount };
+    // browser preview only: ?signin shows the first-run sign-in screen
+    case "list_accounts": return location.search.includes("signin") ? { accounts: [], active: null } : { accounts, active: settings.activeAccount };
     case "account_skin": return accounts.find((a) => a.id === args.id)?.kind === "msa" ? sampleSkin : null;
     case "default_skin": return null;
     case "set_active_account": settings.activeAccount = args.id; return null;

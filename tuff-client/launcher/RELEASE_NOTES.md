@@ -1,3 +1,12 @@
+Glade 1.8.0
+- A new look for the launcher: a dark theme, a slim menu on the left, and new art throughout.
+- Home: your character in 3D with proper lighting and 3D skin layers (hats, hoodies and hair stand out). Non-premium accounts show Steve.
+- A new Play button, with the version and your profile right under it.
+- Quick Play along the top: popular servers with their real server icons. Click one to join it.
+- Latest news cards, and Friends, Discord and Store spots (coming soon).
+- A new sign-in screen on first start, and pictures for crashes, empty profiles and being offline.
+- New fonts: Geist, with Unbounded on the Play button.
+
 Glade 1.7.1
 - Microsoft sign-in works: Glade now signs in the same way as the official Minecraft launcher. Click Add account, then Sign in with Microsoft, and Microsoft's sign-in page opens in a window. Sign in there and it closes by itself; no code to type. If you had pasted a client ID in Settings, clear it.
 
