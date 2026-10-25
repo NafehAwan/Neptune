@@ -4,7 +4,6 @@ package net.tuffclient.mixin;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.resource.CrossFrameResourcePool;
 import net.minecraft.client.renderer.GameRenderer;
-import net.tuffclient.module.visual.MotionBlurModule;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -25,6 +24,6 @@ public abstract class MotionBlurMixin {
 
 	@Inject(method = "applyPostEffects", at = @At("TAIL"))
 	private void glade$motionBlur(CallbackInfo ci) {
-		MotionBlurModule.apply(mainRenderTarget, resourcePool);
+		net.tuffclient.compat.MotionBlurChain.apply(mainRenderTarget, resourcePool);
 	}
 }

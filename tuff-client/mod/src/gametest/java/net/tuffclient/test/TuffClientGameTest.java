@@ -344,7 +344,7 @@ public class TuffClientGameTest implements FabricClientGameTest {
 				context.waitTicks(1);
 			}
 			context.takeScreenshot("glade-motion-blur");
-			boolean blurLoaded = context.computeOnClient(client -> net.tuffclient.module.visual.MotionBlurModule.chain() != null);
+			boolean blurLoaded = context.computeOnClient(client -> TuffClient.modules().motionBlur.loaded());
 			context.runOnClient(client -> {
 				TuffClient.modules().motionBlur.setEnabled(false);
 				client.player.setYRot(0);

@@ -7,4 +7,9 @@ public final class MotionBlurFormat {
 	}
 
 	public static final String NAME = null;
+
+	/** Whether Glade's blur effect at this strength loads. */
+	public static boolean loaded(int level) {
+		return false;
+	}
 }
