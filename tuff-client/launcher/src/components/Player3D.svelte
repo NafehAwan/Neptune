@@ -3,7 +3,7 @@
   // kept for the page; a new skin or hoodie setting just loads a new texture into it.
   import { onDestroy, onMount } from "svelte";
   import hoodieOverlay from "../assets/glade/hoodie.png";
-  import { POSES, studioLights, withHoodie } from "../lib/character3d";
+  import { POSES, studioLights, thinLayers, withHoodie } from "../lib/character3d";
 
   let { skin, hoodie = true, width = 300, height = 300, still = false }: { skin: string; hoodie?: boolean; width?: number; height?: number; still?: boolean } = $props();
   let canvas: HTMLCanvasElement;
@@ -18,6 +18,7 @@
     const url = outfit ? await withHoodie(base, hoodieOverlay).catch(() => base) : base;
     if (!viewer || wanted !== key) return; // a newer skin was asked for meanwhile
     await viewer.loadSkin(url, { model: "auto-detect" });
+    if (wanted === key) await thinLayers(viewer, url).catch(() => {});
   }
 
   onMount(async () => {

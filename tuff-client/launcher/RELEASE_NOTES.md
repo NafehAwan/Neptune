@@ -1,7 +1,7 @@
 Glade 1.8.4
 - Start-up fixed: the start screen now waits for the launcher check and then updates the Glade mod files itself ("Updating Glade…"), so nothing starts updating after you press Play. It only says "You're up to date" when both worked, and says so when the update server can't be reached.
 - Mod files are never replaced while Minecraft is starting or running.
-- The 3D character uses Minecraft's normal skin layers again (no more chunky blocks), and turning the Glade hoodie off no longer breaks the skin.
+- The 3D character has proper 3D skin layers: every pixel of your skin's outer layer (hats, jackets, hair) stands out a little, like the 3D Skin Layers mod, in the skin's exact colours. Turning the Glade hoodie off no longer breaks the skin.
 - The Glade hoodie fits every skin, including slim (Alex) skins, and no longer paints brown hair over yours.
 - The maximize button is back.
 - Kill clips and Giveaways are now the top row of Latest news.
