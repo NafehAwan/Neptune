@@ -8,13 +8,18 @@ import net.tuffclient.setting.BoolSetting;
 public final class ScoreboardModule extends Module {
 	public final BoolSetting hide = add(new BoolSetting("hide", "Hide the scoreboard", false));
 	public final BoolSetting background = add(new BoolSetting("background", "Background", false)).showIf(() -> !hide.get());
+	public final BoolSetting numbers = add(new BoolSetting("numbers", "Red numbers", true)).showIf(() -> !hide.get());
 
 	public ScoreboardModule() {
-		super("scoreboard", "Scoreboard", "Hide the sidebar scoreboard or remove its background.", Category.VISUAL, false);
+		super("scoreboard", "Scoreboard", "Hide the sidebar scoreboard, its background or its red numbers.", Category.VISUAL, false);
 	}
 
 	public boolean hidden() {
 		return isEnabled() && hide.get();
+	}
+
+	public boolean hideNumbers() {
+		return isEnabled() && !numbers.get();
 	}
 
 	public boolean noBackground() {

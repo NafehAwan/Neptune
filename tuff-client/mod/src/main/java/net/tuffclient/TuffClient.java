@@ -47,6 +47,13 @@ public final class TuffClient implements ClientModInitializer {
 		return zoomKey;
 	}
 
+	private static final java.util.Map<String, KeyMapping> extraKeys = new java.util.HashMap<>();
+
+	/** A key added for a module (snaplook, chat macros), or null before start-up. */
+	public static KeyMapping key(String name) {
+		return extraKeys.get(name);
+	}
+
 	@Override
 	public void onInitializeClient() {
 		modules = new ModuleManager();
@@ -59,7 +66,9 @@ public final class TuffClient implements ClientModInitializer {
 		waypointKey = keys[2];
 		freelookKey = keys[3];
 		clipKey = keys[4];
+		for (String name : new String[] {"snaplook", "macro_1", "macro_2", "macro_3", "macro_4", "macro_5", "macro_6"}) extraKeys.put(name, Platform.registerKey(name));
 		Platform.registerCommands();
+		net.tuffclient.module.visual.ClearGlassModule.register();
 
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
 			unbindOldDefaultsOnce(client);

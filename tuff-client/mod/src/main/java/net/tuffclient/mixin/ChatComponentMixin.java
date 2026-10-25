@@ -21,9 +21,9 @@ public abstract class ChatComponentMixin {
 		glade$drop = chat.hidden(message.getString());
 		if (!chat.isEnabled()) {
 			AutoGGModule.onChat(message.getString());
-			return message;
+			return TuffClient.modules().nickHider.chat(message);
 		}
-		return chat.process(message, (ChatComponentAccessor) this);
+		return TuffClient.modules().nickHider.chat(chat.process(message, (ChatComponentAccessor) this));
 	}
 
 	@org.spongepowered.asm.mixin.injection.Inject(method = "addMessageToDisplayQueue", at = @At("HEAD"), cancellable = true)

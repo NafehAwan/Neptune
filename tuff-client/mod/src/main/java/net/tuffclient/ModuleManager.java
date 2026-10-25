@@ -86,6 +86,19 @@ public final class ModuleManager {
 	public final net.tuffclient.module.visual.SmallShieldModule smallShield = add(new net.tuffclient.module.visual.SmallShieldModule());
 	public final net.tuffclient.module.visual.HandViewModule handView = add(new net.tuffclient.module.visual.HandViewModule());
 	public final net.tuffclient.module.visual.TimeWeatherModule timeWeather = add(new net.tuffclient.module.visual.TimeWeatherModule());
+	public final net.tuffclient.module.util.SnaplookModule snaplook = add(new net.tuffclient.module.util.SnaplookModule());
+	public final net.tuffclient.module.util.ChatMacrosModule chatMacros = add(new net.tuffclient.module.util.ChatMacrosModule());
+	public final net.tuffclient.module.visual.HurtCamModule hurtCam = add(new net.tuffclient.module.visual.HurtCamModule());
+	public final net.tuffclient.module.visual.FovChangerModule fovChanger = add(new net.tuffclient.module.visual.FovChangerModule());
+	public final net.tuffclient.module.hud.SaturationModule saturation = add(new net.tuffclient.module.hud.SaturationModule());
+	public final net.tuffclient.module.visual.LowHealthModule lowHealth = add(new net.tuffclient.module.visual.LowHealthModule());
+	public final net.tuffclient.module.util.NickHiderModule nickHider = add(new net.tuffclient.module.util.NickHiderModule());
+	public final net.tuffclient.module.visual.ShinyPotsModule shinyPots = add(new net.tuffclient.module.visual.ShinyPotsModule());
+	public final net.tuffclient.module.visual.MinimalBobbingModule minimalBobbing = add(new net.tuffclient.module.visual.MinimalBobbingModule());
+	public final net.tuffclient.module.visual.HitboxesModule hitboxes = add(new net.tuffclient.module.visual.HitboxesModule());
+	public final net.tuffclient.module.visual.GlintColorModule glintColor = add(new net.tuffclient.module.visual.GlintColorModule());
+	public final net.tuffclient.module.visual.ClearGlassModule clearGlass = add(new net.tuffclient.module.visual.ClearGlassModule());
+	public final net.tuffclient.module.visual.TntTimerModule tntTimer = add(new net.tuffclient.module.visual.TntTimerModule());
 
 	public ModuleManager() {
 		add(new ToggleSprintModule());
@@ -107,6 +120,7 @@ public final class ModuleManager {
 		add(new SessionStatsModule());
 		add(new PackDisplayModule());
 		add(new DayTimeModule());
+		add(new net.tuffclient.module.hud.CooldownsModule());
 	}
 
 	private <M extends Module> M add(M module) {
@@ -160,7 +174,10 @@ public final class ModuleManager {
 		Minecraft client = Minecraft.getInstance();
 		if (client.player == null) return;
 		if (!net.tuffclient.Mc.hudHidden()) {
+			if (lowHealth.isEnabled()) lowHealth.render(g);
+			if (tntTimer.isEnabled()) tntTimer.render(g);
 			if (waypoints.isEnabled()) waypoints.render(g);
+			if (saturation.isEnabled()) saturation.render(g);
 			for (HudModule m : hud) {
 				if (m.isEnabled()) renderModule(g, client.font, m, false);
 			}

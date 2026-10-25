@@ -24,11 +24,12 @@ public final class ItemCounterModule extends HudModule {
 	private final BoolSetting hideZero = add(new BoolSetting("hide_zero", "Hide items you have none of", true));
 
 	public ItemCounterModule() {
-		super("item_counter", "Item Counter", "How many arrows, totems, golden apples and pearls you're carrying.", 0.9, 0.42, false);
+		super("item_counter", "Item Counter", "How many arrows, totems, golden apples, pearls and splash potions you're carrying.", 0.9, 0.42, false);
 		track("arrows", "Arrows", true, 64, Items.ARROW, Items.SPECTRAL_ARROW, Items.TIPPED_ARROW);
 		track("totems", "Totems", true, 2, Items.TOTEM_OF_UNDYING);
 		track("gapples", "Golden apples", true, 12, Items.GOLDEN_APPLE, Items.ENCHANTED_GOLDEN_APPLE);
 		track("pearls", "Ender pearls", true, 16, Items.ENDER_PEARL);
+		track("potions", "Splash potions", true, 8, Items.SPLASH_POTION);
 		track("xp", "Bottles o' Enchanting", false, 32, Items.EXPERIENCE_BOTTLE);
 		track("fireworks", "Firework rockets", false, 48, Items.FIREWORK_ROCKET);
 		track("food", "Steak and bread", false, 24, Items.COOKED_BEEF, Items.BREAD, Items.GOLDEN_CARROT);

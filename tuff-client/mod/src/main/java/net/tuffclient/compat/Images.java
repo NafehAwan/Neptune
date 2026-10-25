@@ -11,4 +11,9 @@ public final class Images {
 	public static void setPixel(NativeImage image, int x, int y, int argb) {
 		image.setPixel(x, y, argb);
 	}
+
+	/** Reads a pixel as ARGB. */
+	public static int getPixel(NativeImage image, int x, int y) {
+		return image.getPixel(x, y);
+	}
 }

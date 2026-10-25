@@ -26,6 +26,6 @@ public abstract class GuiHudMixin {
 		var modules = TuffClient.modules();
 		if (modules == null || !modules.crosshair.isEnabled()) return;
 		ci.cancel();
-		if (Minecraft.getInstance().options.getCameraType().isFirstPerson() && !Mc.hudHidden()) modules.crosshair.render(Gfx.of(graphics));
+		if (modules.crosshair.shows(Minecraft.getInstance()) && !Mc.hudHidden()) modules.crosshair.render(Gfx.of(graphics));
 	}
 }

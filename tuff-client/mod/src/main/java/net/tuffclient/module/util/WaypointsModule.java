@@ -14,12 +14,10 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.phys.Vec3;
 import net.tuffclient.TuffClient;
 import net.tuffclient.gui.Ui;
 import net.tuffclient.module.Category;
@@ -27,7 +25,6 @@ import net.tuffclient.module.Module;
 import net.tuffclient.setting.BoolSetting;
 import net.tuffclient.setting.ColorSetting;
 import net.tuffclient.setting.NumberSetting;
-import org.joml.Vector3fc;
 
 /**
  * Saved places, shown on screen with their distance. Its key (set in Controls) can
@@ -151,23 +148,17 @@ public final class WaypointsModule extends Module {
 	public void render(Gfx g) {
 		Minecraft mc = Minecraft.getInstance();
 		if (mc.player == null || mc.level == null) return;
-		Camera cam = net.tuffclient.compat.CameraView.main();
-		Vec3 eye = net.tuffclient.compat.CameraView.eye(cam);
-		Vector3fc f = net.tuffclient.compat.CameraView.forward(cam), up = net.tuffclient.compat.CameraView.up(cam), left = net.tuffclient.compat.CameraView.left(cam);
-		double tanHalf = Math.tan(Math.toRadians(net.tuffclient.compat.CameraView.fov(cam)) / 2);
+		net.tuffclient.gui.Projector proj = new net.tuffclient.gui.Projector(g);
 		int gw = g.guiWidth(), gh = g.guiHeight();
 		Font font = mc.font;
 		double max = maxDistance.get();
 		for (Point pt : here()) {
 			if (!pt.visible) continue;
-			double rx = pt.x + 0.5 - eye.x, ry = pt.y + 1.2 - eye.y, rz = pt.z + 0.5 - eye.z;
-			double dist = Math.sqrt(rx * rx + ry * ry + rz * rz);
+			double dist = proj.distance(pt.x + 0.5, pt.y + 1.2, pt.z + 0.5);
 			if (max > 0 && dist > max) continue;
-			double cz = rx * f.x() + ry * f.y() + rz * f.z();
-			if (cz < 0.05) continue;
-			double cx = -(rx * left.x() + ry * left.y() + rz * left.z()), cy = rx * up.x() + ry * up.y() + rz * up.z();
-			float sx = (float) (gw / 2.0 + cx / cz / tanHalf * gh / 2.0);
-			float sy = (float) (gh / 2.0 - cy / cz / tanHalf * gh / 2.0);
+			float[] at = proj.project(pt.x + 0.5, pt.y + 1.2, pt.z + 0.5);
+			if (at == null) continue;
+			float sx = at[0], sy = at[1];
 			if (sx < -50 || sx > gw + 50 || sy < -50 || sy > gh + 50) continue;
 			float s = size.get().floatValue();
 			// a diamond marker

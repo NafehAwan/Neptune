@@ -21,15 +21,21 @@ public final class Platform {
 	private Platform() {
 	}
 
+	private static final KeyMapping.Category CATEGORY = KeyMapping.Category.register(Identifier.fromNamespaceAndPath(TuffClient.MOD_ID, "tuff"));
+
+	/** An extra Glade key, unbound until the player sets one. */
+	public static KeyMapping registerKey(String name) {
+		return KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff." + name, InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), CATEGORY));
+	}
+
 	/** Menu, zoom, waypoint, freelook and clip keys, in that order. */
 	public static KeyMapping[] registerKeys() {
-		KeyMapping.Category category = KeyMapping.Category.register(Identifier.fromNamespaceAndPath(TuffClient.MOD_ID, "tuff"));
 		return new KeyMapping[] {
-				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.menu", InputConstants.KEY_RSHIFT, category)),
-				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.zoom", InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), category)),
-				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.waypoint", InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), category)),
-				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.clip", InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), category)),
-				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.freelook", InputConstants.KEY_F4, category)),
+				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.menu", InputConstants.KEY_RSHIFT, CATEGORY)),
+				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.zoom", InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), CATEGORY)),
+				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.waypoint", InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), CATEGORY)),
+				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.freelook", InputConstants.KEY_F4, CATEGORY)),
+				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.clip", InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), CATEGORY)),
 		};
 	}
 
@@ -54,7 +60,7 @@ public final class Platform {
 			Minecraft client = Minecraft.getInstance();
 			if (!modules.crosshair.isEnabled()) {
 				original.render(graphics, delta);
-			} else if (client.options.getCameraType().isFirstPerson() && !Mc.hudHidden()) {
+			} else if (modules.crosshair.shows(client) && !Mc.hudHidden()) {
 				modules.crosshair.render(Gfx.of(graphics));
 			}
 		});

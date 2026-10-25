@@ -9,6 +9,13 @@ HOME = os.path.expanduser("~/.gradle")
 
 # Older names of classes Glade uses (renamed or replaced in newer versions).
 EXTRA = """
+net.minecraft.world.scores.Objective net.minecraft.network.chat.numbers.BlankFormat net.minecraft.client.renderer.PostChainConfig$InternalTarget
+net.minecraft.network.Connection net.minecraft.client.renderer.PostChainConfig net.minecraft.client.renderer.texture.AbstractTexture
+net.minecraft.client.renderer.texture.SimpleTexture net.minecraft.client.renderer.texture.ReloadableTexture net.minecraft.client.renderer.texture.TextureManager
+com.mojang.blaze3d.systems.GpuDevice com.mojang.blaze3d.systems.CommandEncoder com.mojang.blaze3d.textures.GpuTexture com.mojang.blaze3d.textures.GpuTextureView
+net.minecraft.client.gui.components.debug.DebugScreenEntryStatus net.minecraft.client.gui.components.debug.DebugScreenEntries
+net.minecraft.client.renderer.state.level.CameraRenderState net.minecraft.client.renderer.PostPass net.minecraft.client.renderer.GraphicsResourceAllocator
+net.minecraft.client.renderer.LevelTargetBundle net.minecraft.server.packs.repository.PackRepository net.minecraft.client.renderer.texture.DynamicTexture
 net.minecraft.client.renderer.entity.EntityRenderDispatcher net.minecraft.world.item.ItemCooldowns net.minecraft.world.food.FoodData
 net.minecraft.world.entity.item.PrimedTnt net.minecraft.client.player.KeyboardInput net.minecraft.client.player.ClientInput net.minecraft.client.player.Input
 net.minecraft.world.entity.player.Input net.minecraft.world.item.PotionItem net.minecraft.world.item.SplashPotionItem net.minecraft.world.item.ThrowablePotionItem

@@ -11,7 +11,9 @@ public final class NameTags {
 
 	public static Component decorate(Entity entity, Component name) {
 		var modules = TuffClient.modules();
-		if (modules == null || name == null || !(entity instanceof Player p)) return name;
+		if (modules == null || name == null) return name;
+		name = modules.nickHider.tag(name);
+		if (!(entity instanceof Player p)) return name;
 		Component out = modules.tiers.decorate(p, name);
 		var cosmetics = modules.cosmetics;
 		if (cosmetics.showBadge(p)) out = cosmetics.withBadge(out);

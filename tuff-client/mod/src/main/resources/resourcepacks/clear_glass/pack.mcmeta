@@ -1,0 +1,12 @@
+{
+  "pack": {
+    "description": "Glade: glass without the streaks",
+    "pack_format": 34,
+    "supported_formats": [
+      1,
+      999
+    ],
+    "min_format": 1,
+    "max_format": 999
+  }
+}

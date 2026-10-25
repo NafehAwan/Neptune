@@ -11,6 +11,8 @@ public final class CpsModule extends TextHudModule {
 	private static boolean wasLeft;
 	private static boolean wasRight;
 
+	private final net.tuffclient.setting.ChoiceSetting show = add(new net.tuffclient.setting.ChoiceSetting("show", "Show", 0, "Left and right", "Left only", "Right only"));
+
 	public CpsModule() {
 		super("cps", "CPS", "Left and right clicks per second.", "CPS", 0.006, 0.08, true);
 	}
@@ -38,6 +40,10 @@ public final class CpsModule extends TextHudModule {
 
 	@Override
 	protected String value(Minecraft client, boolean preview) {
-		return left() + " | " + right();
+		return switch (show.get()) {
+			case 1 -> String.valueOf(left());
+			case 2 -> String.valueOf(right());
+			default -> left() + " | " + right();
+		};
 	}
 }

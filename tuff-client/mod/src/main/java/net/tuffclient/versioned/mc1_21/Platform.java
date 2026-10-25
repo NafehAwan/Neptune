@@ -20,15 +20,21 @@ public final class Platform {
 	private Platform() {
 	}
 
+	private static final String CATEGORY = "key.categories.tuff";
+
+	/** An extra Glade key, unbound until the player sets one. */
+	public static KeyMapping registerKey(String name) {
+		return KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff." + name, InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), CATEGORY));
+	}
+
 	/** Menu, zoom, waypoint, freelook and clip keys, in that order. */
 	public static KeyMapping[] registerKeys() {
-		String category = "key.categories.tuff";
 		return new KeyMapping[] {
-				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.menu", InputConstants.KEY_RSHIFT, category)),
-				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.zoom", InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), category)),
-				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.waypoint", InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), category)),
-				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.clip", InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), category)),
-				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.freelook", InputConstants.KEY_F4, category)),
+				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.menu", InputConstants.KEY_RSHIFT, CATEGORY)),
+				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.zoom", InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), CATEGORY)),
+				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.waypoint", InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), CATEGORY)),
+				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.freelook", InputConstants.KEY_F4, CATEGORY)),
+				KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tuff.clip", InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), CATEGORY)),
 		};
 	}
 

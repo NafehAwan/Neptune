@@ -17,7 +17,7 @@ public abstract class TabListMixin {
 		var modules = TuffClient.modules();
 		if (modules == null) return;
 		Component name = cir.getReturnValue();
-		Component out = modules.cosmetics.decorateTab(info, name);
+		Component out = modules.nickHider.tab(modules.cosmetics.decorateTab(info, name));
 		if (out != name) cir.setReturnValue(out);
 	}
 }

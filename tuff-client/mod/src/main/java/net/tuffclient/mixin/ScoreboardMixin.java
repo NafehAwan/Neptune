@@ -16,4 +16,11 @@ public abstract class ScoreboardMixin {
 		var m = TuffClient.modules() == null ? null : TuffClient.modules().scoreboard;
 		return m != null && m.noBackground() ? 0 : options.getBackgroundColor(opacity);
 	}
+
+	/** Hides the red score numbers down the right side. */
+	@org.spongepowered.asm.mixin.injection.Redirect(method = "displayScoreboardSidebar", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/scores/Objective;numberFormatOrDefault(Lnet/minecraft/network/chat/numbers/NumberFormat;)Lnet/minecraft/network/chat/numbers/NumberFormat;"), require = 0)
+	private net.minecraft.network.chat.numbers.NumberFormat glade$numbers(net.minecraft.world.scores.Objective objective, net.minecraft.network.chat.numbers.NumberFormat fallback) {
+		var m = TuffClient.modules() == null ? null : TuffClient.modules().scoreboard;
+		return m != null && m.hideNumbers() ? net.minecraft.network.chat.numbers.BlankFormat.INSTANCE : objective.numberFormatOrDefault(fallback);
+	}
 }
