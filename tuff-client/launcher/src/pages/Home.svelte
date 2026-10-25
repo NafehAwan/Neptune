@@ -120,13 +120,6 @@
       <div class="head"><h2>Latest news</h2><button class="link" onclick={() => open(RELEASES)}>View all News</button></div>
       <div class="news">
         <div class="slot"><span class="gd"></span>
-          <button class="nc" onclick={() => open(RELEASES)}>
-            <span class="art" style:background-image="url({newversion})" style:background-position="right -40px center"></span>
-            <span class="txt"><small>NEW VERSION</small><b>GLADE {app.info?.version ?? ""}</b><em>IS NOW AVAILABLE TO PLAY!</em></span>
-            <span class="arrow">→</span>
-          </button>
-        </div>
-        <div class="slot"><span class="gd"></span>
           <button class="nc poster hot" onclick={() => open(RELEASES)}>
             <img src={clips} alt="Kill clips" />
             <span class="tag">● New</span><span class="lbl">KILL CLIPS</span><span class="arrow">→</span>
@@ -136,6 +129,13 @@
           <button class="nc poster" onclick={discord}>
             <img src={giveaways} alt="Weekly giveaways" />
             <span class="lbl">WEEKLY GIVEAWAYS</span><span class="arrow">→</span>
+          </button>
+        </div>
+        <div class="slot"><span class="gd"></span>
+          <button class="nc" onclick={() => open(RELEASES)}>
+            <span class="art" style:background-image="url({newversion})" style:background-position="right -40px center"></span>
+            <span class="txt"><small>NEW VERSION</small><b>GLADE {app.info?.version ?? ""}</b><em>IS NOW AVAILABLE TO PLAY!</em></span>
+            <span class="arrow">→</span>
           </button>
         </div>
         <div class="slot"><span class="gd"></span>

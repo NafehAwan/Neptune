@@ -1,23 +1,29 @@
 <script lang="ts">
-  // The signed-in player in 3D (Steve when the account isn't premium).
+  // The signed-in player in 3D (Steve when the account isn't premium). One viewer is
+  // kept for the page; a new skin or hoodie setting just loads a new texture into it.
   import { onDestroy, onMount } from "svelte";
   import hoodieOverlay from "../assets/glade/hoodie.png";
-  import { POSES, studioLights, voxelLayers, withHoodie } from "../lib/character3d";
+  import { POSES, studioLights, withHoodie } from "../lib/character3d";
 
   let { skin, hoodie = true, width = 300, height = 300, still = false }: { skin: string; hoodie?: boolean; width?: number; height?: number; still?: boolean } = $props();
   let canvas: HTMLCanvasElement;
   let viewer: import("skinview3d").SkinViewer | null = null;
   let frame = 0;
-  let loaded = "";
+  let wanted = "";
+  let alive = true;
 
-  async function build(base: string, withOutfit: boolean) {
-    const url = withOutfit ? await withHoodie(base, hoodieOverlay).catch(() => base) : base;
+  async function show(base: string, outfit: boolean) {
+    const key = `${base}|${outfit}`;
+    wanted = key;
+    const url = outfit ? await withHoodie(base, hoodieOverlay).catch(() => base) : base;
+    if (!viewer || wanted !== key) return; // a newer skin was asked for meanwhile
+    await viewer.loadSkin(url, { model: "auto-detect" });
+  }
+
+  onMount(async () => {
     const s = await import("skinview3d");
-    viewer?.dispose();
+    if (!alive) return;
     const v = new s.SkinViewer({ canvas, width, height });
-    viewer = v;
-    await v.loadSkin(url, { model: "auto-detect" });
-    if (viewer !== v) return;
     v.renderer.setClearColor(0x000000, 0);
     v.camera.position.set(0, 6, 50);
     v.zoom = 0.93; v.fov = 38;
@@ -25,8 +31,10 @@
     v.playerObject.rotation.y = 0.55;
     POSES.run(v);
     studioLights(v);
-    voxelLayers(v, url, v.playerObject.skin.modelType === "slim").catch(() => {});
-  }
+    viewer = v;
+    show(skin, hoodie);
+    if (!still) frame = requestAnimationFrame(tick);
+  });
 
   // a slow float and breath; skinview3d redraws every frame
   function tick(t: number) {
@@ -37,9 +45,8 @@
     frame = requestAnimationFrame(tick);
   }
 
-  onMount(() => { if (!still) frame = requestAnimationFrame(tick); });
-  $effect(() => { const key = `${skin}|${hoodie}`; if (skin && key !== loaded) { loaded = key; build(skin, hoodie); } });
-  onDestroy(() => { cancelAnimationFrame(frame); viewer?.dispose(); viewer = null; });
+  $effect(() => { const s = skin, h = hoodie; if (viewer && s && `${s}|${h}` !== wanted) show(s, h); });
+  onDestroy(() => { alive = false; cancelAnimationFrame(frame); viewer?.dispose(); viewer = null; });
 </script>
 
 <canvas bind:this={canvas} style:width="{width}px" style:height="{height}px"></canvas>

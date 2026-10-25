@@ -135,6 +135,7 @@ export async function mockCall(cmd: string, args: Record<string, any> = {}): Pro
       return location.search.includes("update")
         ? { launcher: { version: "1.2.0", current: "1.1.0", notes: "Glade is now in every Fabric profile.", page: "#", canInstall: true }, modUpdated: null }
         : { launcher: null, modUpdated: null };
+    case "update_glade": await delay(700); return null;
     case "install_update": await new Promise((r) => setTimeout(r, 1500)); throw "The password prompt was closed, so the update wasn't installed.";
     case "content_updates": return [{ file: mods[1].file, kind: "mod", title: "Sodium", current: "0.8.2", latest: "0.8.3" }];
     case "modrinth_search": {

@@ -12,6 +12,7 @@
   <div class="controls">
     <button class="ctl" onclick={() => api.openUrl(RELEASES)} aria-label="What's new" title="What's new"><Icon name="mail" size={15} /></button>
     <button class="ctl" onclick={() => windowAction("minimize")} aria-label="Minimize"><Icon name="minimize" size={13} /></button>
+    <button class="ctl" onclick={() => windowAction("maximize")} aria-label="Maximize"><Icon name="maximize" size={12} /></button>
     <button class="ctl close" onclick={() => windowAction("close")} aria-label="Close"><Icon name="close" size={13} /></button>
   </div>
 </header>

@@ -21,8 +21,8 @@
       <p class="err selectable">Glade couldn't start: {app.bootError}</p>
       <button class="retry" onclick={() => location.reload()}>Try again</button>
     {:else}
-      <div class="bar"><i class:done={app.boot === "You're up to date"}></i></div>
-      <p class="stage">{app.boot}{app.boot !== "You're up to date" ? "…" : ""}</p>
+      <div class="bar"><i class:done={!app.bootBusy}></i></div>
+      <p class="stage">{app.boot}{app.bootBusy ? "…" : ""}</p>
     {/if}
   </div>
   <p class="ver">v{app.info?.version ?? ""}</p>

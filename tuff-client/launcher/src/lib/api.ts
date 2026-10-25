@@ -100,6 +100,7 @@ export const api = {
     call<void>("content_toggle", { profileId, kind, file, enabled }),
   contentRemove: (profileId: string, kind: T.ContentKind, file: string) => call<void>("content_remove", { profileId, kind, file }),
   checkUpdate: () => call<T.UpdateStatus>("check_update"),
+  updateGlade: () => call<string | null>("update_glade"),
   installUpdate: () => call<void>("install_update"),
   contentUpdates: (profileId: string) => call<T.ContentUpdate[]>("content_updates", { profileId }),
   contentUpdate: (profileId: string, kind: T.ContentKind, file: string) => call<void>("content_update", { profileId, kind, file }),

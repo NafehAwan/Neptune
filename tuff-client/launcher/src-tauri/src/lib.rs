@@ -1098,14 +1098,10 @@ struct LauncherUpdate {
 
 #[tauri::command]
 async fn check_update(app: AppHandle, state: State<'_, AppState>) -> CmdResult<UpdateStatus> {
+    // only the launcher: quick, so the start screen can wait for it. Glade mod files
+    // are brought up to date separately (update_glade).
     let manifest = update::manifest(&state.http).await.map_err(err)?;
-    let updated = update::update_mods(&state.http, &state.paths, &glade_builds(&app, &state.paths), &manifest)
-        .await
-        .unwrap_or_else(|e| {
-            eprintln!("Glade mod update failed: {e:#}");
-            Vec::new()
-        });
-    let mod_updated = (!updated.is_empty()).then(|| updated.join(", "));
+    let mod_updated = None;
     let current = app.package_info().version.to_string();
     let launcher = (update::is_newer(&manifest.version, &current) && manifest.deb.is_some()).then(|| LauncherUpdate {
         version: manifest.version.clone(),
@@ -1115,6 +1111,19 @@ async fn check_update(app: AppHandle, state: State<'_, AppState>) -> CmdResult<U
         can_install: update::can_install(),
     });
     Ok(UpdateStatus { launcher, mod_updated })
+}
+
+/// Downloads newer Glade mod builds from the latest release. Returns the versions updated.
+#[tauri::command]
+async fn update_glade(app: AppHandle, state: State<'_, AppState>) -> CmdResult<Option<String>> {
+    if state.game.lock().await.is_some() {
+        return Ok(None); // never swap mod files under a running game
+    }
+    let manifest = update::manifest(&state.http).await.map_err(err)?;
+    let updated = update::update_mods(&state.http, &state.paths, &glade_builds(&app, &state.paths), &manifest)
+        .await
+        .map_err(err)?;
+    Ok((!updated.is_empty()).then(|| updated.join(", ")))
 }
 
 #[derive(Serialize, Clone)]
@@ -1396,6 +1405,7 @@ pub fn run() {
             content_updates,
             content_update,
             check_update,
+            update_glade,
             install_update,
             import_mrpack,
             install_modpack,

@@ -11,6 +11,7 @@ export const app = $state({
   ready: false,
   /** What the start screen is doing; null once the launcher is open. */
   boot: "Starting Glade" as string | null,
+  bootBusy: true,
   bootError: null as string | null,
   route: "home" as Route,
   info: null as AppInfo | null,
@@ -65,17 +66,38 @@ const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let lastCheck = 0;
 
 /** Checks for a newer launcher and Glade mod. With `manual`, says what it found. */
-export async function checkForUpdates(manual = false) {
-  lastCheck = Date.now();
+/** Is there a newer launcher? True when the check worked. */
+async function checkLauncher(manual: boolean): Promise<boolean> {
   try {
     const status = await api.checkUpdate();
-    if (status.modUpdated) toast(`Glade mod updated to ${status.modUpdated}. It's used from your next launch.`, "success", 6000);
     if (status.launcher) app.update = status.launcher;
     else if (manual) toast(`Glade ${app.info?.version} is the newest version.`, "success");
+    return true;
   } catch (e) {
     // offline or no release yet: try again later
     if (manual) toast(`Couldn't check for updates: ${e}`, "error", 8000);
+    return false;
   }
+}
+
+let gladeUpdate: Promise<boolean> | null = null;
+
+/** Brings the Glade mod files up to date (never while a game starts or runs). True when it worked. */
+export function updateGlade(): Promise<boolean> {
+  if (gladeUpdate) return gladeUpdate;
+  if (app.running || app.launching) return Promise.resolve(false);
+  gladeUpdate = api.updateGlade()
+    .then((v) => { if (v && app.ready) toast(`Glade mod updated to ${v}. It's used from your next launch.`, "success", 6000); return true; })
+    .catch(() => false)
+    .finally(() => { gladeUpdate = null; });
+  return gladeUpdate;
+}
+
+export async function checkForUpdates(manual = false): Promise<boolean> {
+  lastCheck = Date.now();
+  const ok = await checkLauncher(manual);
+  if (ok && !app.update) updateGlade();
+  return ok;
 }
 
 /** Whenever you come back to the launcher, check again (at most every 20 s). */
@@ -131,6 +153,8 @@ export async function signInMicrosoft(): Promise<Account> {
 
 export async function play(profileId: string, server?: string) {
   if (app.running || app.launching) return;
+  // let a Glade mod update finish first, so the game never starts on half-written files
+  if (gladeUpdate) await gladeUpdate;
   if (!app.activeAccount) {
     app.accountModal = true;
     toast("Add an account to play.", "info");
@@ -151,7 +175,8 @@ export async function play(profileId: string, server?: string) {
   }
 }
 
-const BOOT_CHECK_MS = 6000;
+const LAUNCHER_CHECK_MS = 15000;
+const MOD_UPDATE_MS = 120000;
 
 export async function init() {
   const [info, settings] = await Promise.all([api.appInfo(), api.getSettings()]);
@@ -188,13 +213,22 @@ export async function init() {
     app.lastExit = exit;
     if (exit.crash) app.crashOpen = true;
   });
-  // the start screen waits for the update check (a few seconds at most, so being offline doesn't block)
-  app.boot = "Checking for updates";
+  // the start screen waits for the launcher check, then for the Glade mod files, before opening
   const started = Date.now();
-  await Promise.race([checkForUpdates(), new Promise((r) => setTimeout(r, BOOT_CHECK_MS))]);
+  const within = <T,>(p: Promise<T>, ms: number, late: T) => Promise.race([p, new Promise<T>((r) => setTimeout(() => r(late), ms))]);
+  app.boot = "Checking for updates";
+  app.bootBusy = true;
+  lastCheck = Date.now();
+  const launcherOk = await within(checkLauncher(false), LAUNCHER_CHECK_MS, false);
   if (!app.update) {
-    app.boot = "You're up to date";
-    await new Promise((r) => setTimeout(r, Math.max(250, 900 - (Date.now() - started))));
+    let modsOk = false;
+    if (launcherOk) {
+      app.boot = "Updating Glade";
+      modsOk = await within(updateGlade(), MOD_UPDATE_MS, false);
+    }
+    app.bootBusy = false;
+    app.boot = launcherOk && modsOk ? "You're up to date" : "Couldn't reach the update server, starting anyway";
+    await new Promise((r) => setTimeout(r, Math.max(launcherOk && modsOk ? 300 : 1400, 900 - (Date.now() - started))));
   }
   app.ready = true;
   app.boot = null;

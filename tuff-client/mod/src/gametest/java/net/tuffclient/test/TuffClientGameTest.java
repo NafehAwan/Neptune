@@ -159,8 +159,12 @@ public class TuffClientGameTest implements FabricClientGameTest {
 		}
 		context.runOnClient(client -> menu.onClose());
 		context.waitForScreen(TuffTitleScreen.class);
+		// Turning a resource pack on and off must finish loading (players saw it get stuck).
+		togglePack(context, "glade-pack-title");
 
 		try (TestSingleplayerContext world = context.worldBuilder().create()) {
+			waitForChunks(world);
+			togglePack(context, "glade-pack-world");
 			waitForChunks(world);
 			context.runOnClient(client -> {
 				for (Module m : TuffClient.modules().all()) {
@@ -361,6 +365,33 @@ public class TuffClientGameTest implements FabricClientGameTest {
 	// ---- calls that differ between Minecraft versions (1.21.11 and 26.x), found by name
 
 	/** Waits for the world's chunks to render: getConnection() on 26.x, getClientWorld() before. */
+	/** Turns the built-in Programmer Art pack on, then off again, the way Glade's Packs page and
+	 *  the vanilla pack screen do, and fails if either resource reload doesn't finish. */
+	private static void togglePack(ClientGameTestContext context, String screenshot) {
+		for (boolean on : new boolean[] {true, false}) {
+			boolean changed = context.computeOnClient(client -> {
+				var repo = client.getResourcePackRepository();
+				repo.reload();
+				if (!repo.getAvailableIds().contains("programmer_art")) return false;
+				var ids = new java.util.ArrayList<>(repo.getSelectedIds());
+				if (on) ids.add("programmer_art");
+				else ids.remove("programmer_art");
+				repo.setSelected(ids);
+				client.options.updateResourcePacks(repo);
+				return true;
+			});
+			if (!changed) {
+				System.out.println("[glade-test] no programmer_art pack in this version, skipping the pack check");
+				return;
+			}
+			context.waitTicks(2);
+			long start = System.currentTimeMillis();
+			context.waitFor(client -> client.getOverlay() == null, 20 * 120);
+			System.out.println("[glade-test] resource reload with programmer_art " + (on ? "on" : "off") + " took " + (System.currentTimeMillis() - start) + " ms");
+			if (on) context.takeScreenshot(screenshot);
+		}
+	}
+
 	private static void waitForChunks(TestSingleplayerContext world) {
 		try {
 			// look methods up on the public interfaces: the implementations aren't public
