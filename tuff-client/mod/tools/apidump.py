@@ -59,7 +59,7 @@ net.minecraft.client.multiplayer.ClientLevel net.minecraft.world.level.dimension
 
 
 # Classes whose bytecode is printed too, to see how the game uses them.
-DISASM = ["net.minecraft.client.renderer.GameRenderer", "net.minecraft.client.renderer.PostChain"]
+DISASM = ["net.minecraft.client.renderer.GameRenderer", "net.minecraft.client.renderer.PostChain", "net.minecraft.client.gui.components.PlayerTabOverlay"]
 
 
 def used_classes():

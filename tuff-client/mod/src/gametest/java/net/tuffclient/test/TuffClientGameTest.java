@@ -336,6 +336,21 @@ public class TuffClientGameTest implements FabricClientGameTest {
 			world.getServer().runCommand("/effect give @a minecraft:instant_health 1 5");
 			world.getServer().runCommand("/gamemode creative @a");
 
+			// Motion Blur: Glade's post effect must load (shader and JSON) and blend while turning
+			context.runOnClient(client -> TuffClient.modules().motionBlur.setEnabled(true));
+			for (int i = 0; i < 12; i++) {
+				final int step = i;
+				context.runOnClient(client -> client.player.setYRot(step * 6f));
+				context.waitTicks(1);
+			}
+			context.takeScreenshot("glade-motion-blur");
+			boolean blurLoaded = context.computeOnClient(client -> net.tuffclient.module.visual.MotionBlurModule.chain() != null);
+			context.runOnClient(client -> {
+				TuffClient.modules().motionBlur.setEnabled(false);
+				client.player.setYRot(0);
+			});
+			if (!blurLoaded) throw new AssertionError("Motion blur post effect didn't load");
+
 			// Clear Glass: Glade's built-in pack turns on with the module (a resource reload)
 			world.getServer().runCommand("/fill -2 -60 3 2 -58 3 minecraft:glass");
 			world.getServer().runCommand("/fill -2 -57 3 2 -57 3 minecraft:red_stained_glass");

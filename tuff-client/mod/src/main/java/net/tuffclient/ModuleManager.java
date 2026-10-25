@@ -98,6 +98,7 @@ public final class ModuleManager {
 	public final net.tuffclient.module.visual.HitboxesModule hitboxes = add(new net.tuffclient.module.visual.HitboxesModule());
 	public final net.tuffclient.module.visual.GlintColorModule glintColor = add(new net.tuffclient.module.visual.GlintColorModule());
 	public final net.tuffclient.module.visual.ClearGlassModule clearGlass = add(new net.tuffclient.module.visual.ClearGlassModule());
+	public final net.tuffclient.module.visual.MotionBlurModule motionBlur = add(new net.tuffclient.module.visual.MotionBlurModule());
 	public final net.tuffclient.module.visual.TntTimerModule tntTimer = add(new net.tuffclient.module.visual.TntTimerModule());
 
 	public ModuleManager() {
