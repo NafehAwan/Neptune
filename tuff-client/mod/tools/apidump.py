@@ -58,6 +58,10 @@ net.minecraft.client.multiplayer.ClientLevel net.minecraft.world.level.dimension
 """.split()
 
 
+# Classes whose bytecode is printed too, to see how the game uses them.
+DISASM = ["net.minecraft.client.renderer.GameRenderer", "net.minecraft.client.renderer.PostChain"]
+
+
 def used_classes():
     names = set(EXTRA)
     for path in glob.glob(os.path.join(ROOT, "src", "**", "*.java"), recursive=True):
@@ -144,6 +148,10 @@ def main():
             inner = sorted(n.replace("/", ".") for n in names if "$" in n and n.split("$")[0].replace("/", ".") in used and not n.split("$")[1][:1].isdigit())
             parts.append("=== MISSING\n" + "\n".join(sorted(c for c in used if not c.startswith("net.fabricmc") and c.replace(".", "/") not in have)))
             parts.append("=== JAVAP\n" + javap(jar, mc + inner))
+            for cls in DISASM:
+                if cls.replace(".", "/") in have:
+                    r = subprocess.run(["javap", "-c", "-p", "-classpath", jar, cls], capture_output=True, text=True)
+                    parts.append("=== DISASM " + cls + "\n" + r.stdout)
         for fj in fabric_jars(version):
             names = class_names(fj, ("net/fabricmc/fabric/api/",))
             if not names:

@@ -10,6 +10,9 @@ public final class ComboModule extends TextHudModule {
 	private long last;
 	private int lastHurt;
 
+	private final net.tuffclient.setting.BoolSetting hideZero = add(new net.tuffclient.setting.BoolSetting("hide_zero", "Hide when there's no combo", false));
+	private final net.tuffclient.setting.NumberSetting resetAfter = add(new net.tuffclient.setting.NumberSetting("reset", "Reset after (seconds)", 3, 1, 10, 1));
+
 	public ComboModule() {
 		super("combo", "Combo", "Hits in a row before you get hit back.", "Combo", 0.006, 0.21, false);
 	}
@@ -17,7 +20,7 @@ public final class ComboModule extends TextHudModule {
 	public void onAttack(Entity target) {
 		if (!(target instanceof LivingEntity)) return;
 		long now = System.currentTimeMillis();
-		combo = now - last > 3000 ? 1 : combo + 1;
+		combo = now - last > resetAfter.get() * 1000 ? 1 : combo + 1;
 		last = now;
 	}
 
@@ -27,11 +30,12 @@ public final class ComboModule extends TextHudModule {
 		int hurt = client.player.hurtTime;
 		if (hurt > lastHurt) combo = 0;
 		lastHurt = hurt;
-		if (System.currentTimeMillis() - last > 3000) combo = 0;
+		if (System.currentTimeMillis() - last > resetAfter.get() * 1000) combo = 0;
 	}
 
 	@Override
 	protected String value(Minecraft client, boolean preview) {
-		return preview && combo == 0 ? "4" : String.valueOf(combo);
+		if (preview && combo == 0) return "4";
+		return combo == 0 && hideZero.get() ? null : String.valueOf(combo);
 	}
 }

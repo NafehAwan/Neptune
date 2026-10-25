@@ -292,6 +292,67 @@ public class TuffClientGameTest implements FabricClientGameTest {
 			});
 			context.waitTicks(5);
 
+			// Lunar-style modules: low health, saturation, cooldowns, TNT timer, shiny pots,
+			// a new glint color, hitboxes, the sprint status line and a custom crosshair.
+			world.getServer().runCommand("/tp @a 0.5 -60 0.5 0 0");
+			world.getServer().runCommand("/gamemode survival @a");
+			world.getServer().runCommand("/item replace entity @a hotbar.0 with minecraft:splash_potion");
+			world.getServer().runCommand("/item replace entity @a hotbar.1 with minecraft:ender_pearl 16");
+			world.getServer().runCommand("/item replace entity @a hotbar.2 with minecraft:diamond_sword");
+			world.getServer().runCommand("/enchant @a minecraft:sharpness 5");
+			world.getServer().runCommand("/damage @a 13");
+			world.getServer().runCommand("/summon minecraft:tnt 0.5 -60 5.5 {fuse:400}");
+			world.getServer().runCommand("/summon minecraft:zombie 2.5 -60 6.5 {NoAI:1b}");
+			context.runOnClient(client -> {
+				var m = TuffClient.modules();
+				for (Module mod : m.all()) {
+					if (java.util.List.of("toggle_sprint", "cooldowns", "saturation", "low_health", "tnt_timer", "shiny_pots", "glint_color", "hitboxes", "nick_hider", "crosshair").contains(mod.id)) mod.setEnabled(true);
+				}
+				m.crosshair.style.set(4);
+				m.crosshair.dot.set(true);
+				client.player.getInventory().setSelectedSlot(2);
+				client.player.getCooldowns().addCooldown(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.ENDER_PEARL), 200);
+			});
+			context.waitTicks(30);
+			waitForChunks(world);
+			context.takeScreenshot("glade-lunar-modules");
+			String problems = context.computeOnClient(client -> {
+				var m = TuffClient.modules();
+				StringBuilder bad = new StringBuilder();
+				if (!new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.SPLASH_POTION).hasFoil()) bad.append(" shiny-pots");
+				String me = client.getUser().getName();
+				if (!m.nickHider.tab(net.minecraft.network.chat.Component.literal("[VIP] " + me)).getString().equals("[VIP] You")) bad.append(" nick-hider");
+				if (net.tuffclient.compat.Cooldowns.left(client.player, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.ENDER_PEARL)) <= 0) bad.append(" cooldowns");
+				return bad.toString();
+			});
+			if (!problems.isEmpty()) throw new AssertionError("Lunar-style modules failed:" + problems);
+			context.runOnClient(client -> {
+				for (Module mod : TuffClient.modules().all()) {
+					if (java.util.List.of("toggle_sprint", "cooldowns", "saturation", "low_health", "tnt_timer", "shiny_pots", "glint_color", "hitboxes", "nick_hider", "crosshair").contains(mod.id)) mod.setEnabled(false);
+				}
+			});
+			world.getServer().runCommand("/kill @e[type=minecraft:zombie]");
+			world.getServer().runCommand("/kill @e[type=minecraft:tnt]");
+			world.getServer().runCommand("/effect give @a minecraft:instant_health 1 5");
+			world.getServer().runCommand("/gamemode creative @a");
+
+			// Clear Glass: Glade's built-in pack turns on with the module (a resource reload)
+			world.getServer().runCommand("/fill -2 -60 3 2 -58 3 minecraft:glass");
+			world.getServer().runCommand("/fill -2 -57 3 2 -57 3 minecraft:red_stained_glass");
+			context.runOnClient(client -> TuffClient.modules().clearGlass.setEnabled(true));
+			context.waitTicks(5);
+			context.waitFor(client -> net.tuffclient.Mc.overlay() == null, 20 * 120);
+			waitForChunks(world);
+			context.waitTicks(20);
+			context.takeScreenshot("glade-clear-glass");
+			boolean clearOn = context.computeOnClient(client -> client.getResourcePackRepository().getSelectedIds().stream().anyMatch(id -> id.endsWith("clear_glass")));
+			context.runOnClient(client -> TuffClient.modules().clearGlass.setEnabled(false));
+			context.waitTicks(5);
+			context.waitFor(client -> net.tuffclient.Mc.overlay() == null, 20 * 120);
+			if (!clearOn) throw new AssertionError("Clear Glass pack wasn't turned on");
+			world.getServer().runCommand("/fill -2 -60 3 2 -57 3 minecraft:air");
+			waitForChunks(world);
+
 			// Zoom: a gold block 12 blocks ahead must cover far more pixels while zoomed,
 			// proving the narrower FOV reaches the world projection.
 			world.getServer().runCommand("/tp @a 0.5 -60 0.5 0 0");
