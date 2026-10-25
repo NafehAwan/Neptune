@@ -296,6 +296,8 @@ public class TuffClientGameTest implements FabricClientGameTest {
 			// a new glint color, hitboxes, the sprint status line and a custom crosshair.
 			world.getServer().runCommand("/tp @a 0.5 -60 0.5 0 0");
 			world.getServer().runCommand("/gamemode survival @a");
+			// Peaceful heals at once, so low health needs a real difficulty
+			world.getServer().runCommand("/difficulty easy");
 			world.getServer().runCommand("/item replace entity @a hotbar.0 with minecraft:splash_potion");
 			world.getServer().runCommand("/item replace entity @a hotbar.1 with minecraft:ender_pearl 16");
 			world.getServer().runCommand("/item replace entity @a hotbar.2 with minecraft:diamond_sword");
@@ -323,6 +325,7 @@ public class TuffClientGameTest implements FabricClientGameTest {
 				String me = client.getUser().getName();
 				if (!m.nickHider.tab(net.minecraft.network.chat.Component.literal("[VIP] " + me)).getString().equals("[VIP] You")) bad.append(" nick-hider");
 				if (net.tuffclient.compat.Cooldowns.left(client.player, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.ENDER_PEARL)) <= 0) bad.append(" cooldowns");
+				if (!client.debugEntries.isCurrentlyEnabled(net.minecraft.client.gui.components.debug.DebugScreenEntries.ENTITY_HITBOXES)) bad.append(" hitboxes");
 				return bad.toString();
 			});
 			if (!problems.isEmpty()) throw new AssertionError("Lunar-style modules failed:" + problems);

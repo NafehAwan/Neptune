@@ -1,3 +1,10 @@
+Glade 1.8.5
+- New in-game modules, like Lunar Client's: Motion Blur, Hitboxes, Cooldowns (pearl, chorus fruit and more, with time left), Shiny Pots, Glint Color, Hurt Cam, Minimal Bobbing, Low Health Warning, Snaplook, FOV Changer, Saturation, TNT Timer, Clear Glass, Nick Hider, Chat Macros and Tab Editor (ping as a number and player heads on every server).
+- Toggle Sprint now does Toggle Sneak too, can switch with the sprint key, and shows "[Sprinting (Toggled)]" on screen. Item Counter counts splash potions.
+- More options on existing modules: CPS left or right only, Clock seconds and date, Speed units, Reach decimals, Potion Effects icons, names, Roman numerals and blinking, Keystrokes size, spacing, arrows and CPS labels, Coordinates decimals and one axis per line, Crosshair any color, thickness, center dot, circle style, a color when aiming at a player or mob and third person, Scoreboard without the red numbers, Combo hide at zero, colored Ping and Memory as a percent.
+- Fixed: F4 saved a clip instead of starting Freelook.
+- Motion Blur needs Minecraft 1.21.6 or newer.
+
 Glade 1.8.4
 - Start-up fixed: the start screen now waits for the launcher check and then updates the Glade mod files itself ("Updating Glade…"), so nothing starts updating after you press Play. It only says "You're up to date" when both worked, and says so when the update server can't be reached.
 - Mod files are never replaced while Minecraft is starting or running.
