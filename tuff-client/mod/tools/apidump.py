@@ -9,6 +9,22 @@ HOME = os.path.expanduser("~/.gradle")
 
 # Older names of classes Glade uses (renamed or replaced in newer versions).
 EXTRA = """
+net.minecraft.client.renderer.entity.EntityRenderDispatcher net.minecraft.world.item.ItemCooldowns net.minecraft.world.food.FoodData
+net.minecraft.world.entity.item.PrimedTnt net.minecraft.client.player.KeyboardInput net.minecraft.client.player.ClientInput net.minecraft.client.player.Input
+net.minecraft.world.entity.player.Input net.minecraft.world.item.PotionItem net.minecraft.world.item.SplashPotionItem net.minecraft.world.item.ThrowablePotionItem
+net.minecraft.world.item.alchemy.PotionContents net.minecraft.core.component.DataComponents net.minecraft.client.renderer.Sheets
+net.minecraft.client.renderer.rendertype.RenderTypes net.minecraft.client.renderer.PostChain net.minecraft.client.renderer.ShaderManager
+net.minecraft.client.renderer.entity.TntRenderer net.minecraft.client.renderer.entity.state.TntRenderState net.minecraft.client.renderer.ItemBlockRenderTypes
+net.minecraft.world.entity.player.Player net.minecraft.world.entity.LivingEntity net.minecraft.world.entity.Entity
+net.minecraft.client.multiplayer.ClientPacketListener net.minecraft.client.renderer.debug.DebugRenderer net.minecraft.client.renderer.texture.TextureAtlas
+net.minecraft.world.item.Items net.minecraft.world.effect.MobEffects net.minecraft.client.renderer.item.ItemStackRenderState net.minecraft.client.renderer.item.ItemModelResolver
+com.mojang.blaze3d.pipeline.RenderTarget net.minecraft.client.gui.render.GuiRenderer net.minecraft.client.renderer.ShapeRenderer net.minecraft.client.renderer.MultiBufferSource
+com.mojang.blaze3d.vertex.VertexConsumer net.minecraft.client.renderer.entity.state.HitboxesRenderState net.minecraft.client.renderer.entity.state.HitboxRenderState
+net.minecraft.client.renderer.LightTexture net.minecraft.client.renderer.CubeMap net.minecraft.client.gui.components.BossHealthOverlay
+net.minecraft.client.renderer.state.LevelRenderState net.minecraft.client.renderer.SubmitNodeCollector net.minecraft.client.renderer.entity.state.ItemClusterRenderState
+net.minecraft.client.renderer.block.BlockRenderDispatcher net.minecraft.client.renderer.block.model.BakedQuad net.minecraft.client.renderer.chunk.SectionCompiler
+net.minecraft.world.level.block.StainedGlassBlock net.minecraft.world.level.block.TransparentBlock net.minecraft.client.renderer.texture.SpriteContents
+net.minecraft.client.renderer.Lightmap net.minecraft.client.renderer.fog.FogRenderer net.minecraft.client.renderer.entity.ItemFeatureRenderer
 net.minecraft.client.gui.components.PlayerTabOverlay net.minecraft.client.multiplayer.PlayerInfo net.minecraft.client.gui.GuiGraphics net.minecraft.client.renderer.ItemInHandRenderer net.minecraft.resources.ResourceLocation
 net.minecraft.client.renderer.ScreenEffectRenderer net.minecraft.client.renderer.LevelRenderer net.minecraft.client.renderer.GameRenderer
 net.minecraft.client.renderer.FogRenderer net.minecraft.client.renderer.SkyRenderer net.minecraft.client.renderer.RenderType

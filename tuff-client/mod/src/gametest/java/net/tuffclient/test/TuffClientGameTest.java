@@ -386,7 +386,7 @@ public class TuffClientGameTest implements FabricClientGameTest {
 			}
 			context.waitTicks(2);
 			long start = System.currentTimeMillis();
-			context.waitFor(client -> client.getOverlay() == null, 20 * 120);
+			context.waitFor(client -> net.tuffclient.Mc.overlay() == null, 20 * 120);
 			System.out.println("[glade-test] resource reload with programmer_art " + (on ? "on" : "off") + " took " + (System.currentTimeMillis() - start) + " ms");
 			if (on) context.takeScreenshot(screenshot);
 		}

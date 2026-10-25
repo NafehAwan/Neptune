@@ -31,4 +31,9 @@ public final class Mc {
 	public static net.minecraft.client.gui.components.PlayerTabOverlay tabList() {
 		return get().gui.hud.getTabList();
 	}
+
+	/** The loading overlay (resource reload), or null when none is showing. */
+	public static net.minecraft.client.gui.screens.Overlay overlay() {
+		return get().gui.overlay();
+	}
 }
