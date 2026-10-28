@@ -3,7 +3,6 @@ package net.tuffclient.module.util;
 import com.google.gson.JsonObject;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.Identifier;
-import net.minecraft.world.phys.HitResult;
 import net.tuffclient.gui.Gfx;
 import net.tuffclient.gui.Theme;
 import net.tuffclient.module.Category;
@@ -165,10 +164,18 @@ public final class CrosshairModule extends Module {
 
 	public void render(Gfx g) {
 		Minecraft mc = Minecraft.getInstance();
-		boolean aiming = onTarget.get() != 0 && mc.hitResult != null && mc.hitResult.getType() == HitResult.Type.ENTITY;
+		boolean aiming = onTarget.get() != 0 && aimingAtLiving(mc);
 		String shape = aiming && onTarget.get() == 2 ? "Target" : style.choice();
 		boolean red = aiming && onTarget.get() == 1;
 		draw(g, g.guiWidth() / 2, g.guiHeight() / 2, shape, red);
+	}
+
+	/** Looking at a player or mob (not an item frame, armor stand, boat or dropped item). */
+	private static boolean aimingAtLiving(Minecraft mc) {
+		return mc.hitResult instanceof net.minecraft.world.phys.EntityHitResult hit
+				&& hit.getEntity() instanceof net.minecraft.world.entity.LivingEntity living
+				&& !(living instanceof net.minecraft.world.entity.decoration.ArmorStand)
+				&& living.isAlive();
 	}
 
 	/** Draws a shape centred on (cx, cy): also used for the preview in the menu. */

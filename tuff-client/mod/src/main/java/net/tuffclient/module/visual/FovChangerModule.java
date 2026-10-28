@@ -12,8 +12,8 @@ public final class FovChangerModule extends Module {
 	private final NumberSetting effects = add(new NumberSetting("effects", "Sprint, speed and bow FOV (%)", 0, 0, 100, 5));
 	private final BoolSetting custom = add(new BoolSetting("custom", "Set my own FOV", false));
 	private final NumberSetting fov = add(new NumberSetting("fov", "FOV", 90, 30, 110, 1)).showIf(() -> custom.get());
-	private final OptionOverride<Double> effectScale = new OptionOverride<>(o -> o.fovEffectScale());
-	private final OptionOverride<Integer> baseFov = new OptionOverride<>(o -> o.fov());
+	private final OptionOverride<Double> effectScale = new OptionOverride<>("original_fov_effects", o -> o.fovEffectScale(), j -> j.getAsDouble());
+	private final OptionOverride<Integer> baseFov = new OptionOverride<>("original_fov", o -> o.fov(), j -> j.getAsInt());
 
 	public FovChangerModule() {
 		super("fov_changer", "FOV Changer", "Stops sprinting, speed and bows from changing your field of view.", Category.VISUAL, false);
@@ -30,5 +30,20 @@ public final class FovChangerModule extends Module {
 	protected void onDisable() {
 		effectScale.release();
 		baseFov.release();
+	}
+
+	@Override
+	public com.google.gson.JsonObject save() {
+		com.google.gson.JsonObject json = super.save();
+		effectScale.save(json);
+		baseFov.save(json);
+		return json;
+	}
+
+	@Override
+	public void load(com.google.gson.JsonObject json) {
+		super.load(json);
+		effectScale.load(json);
+		baseFov.load(json);
 	}
 }

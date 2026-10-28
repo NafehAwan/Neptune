@@ -22,8 +22,9 @@ public final class Hitboxes {
 				// what's drawn follows the list of active entries, built from these statuses
 				list.rebuildCurrentList();
 			}
-		} else if (before != null) {
-			list.setStatus(ENTRY, before);
+		} else if (list.getStatus(ENTRY) == DebugScreenEntryStatus.ALWAYS_ON) {
+			// back to how it was before the module turned it on (off if we never saw it otherwise)
+			list.setStatus(ENTRY, before == null || before == DebugScreenEntryStatus.ALWAYS_ON ? DebugScreenEntryStatus.NEVER : before);
 			list.rebuildCurrentList();
 			before = null;
 		}

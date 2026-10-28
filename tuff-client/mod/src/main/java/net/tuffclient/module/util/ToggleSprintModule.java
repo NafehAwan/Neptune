@@ -19,6 +19,7 @@ public final class ToggleSprintModule extends HudModule {
 	private final BoolSetting status = add(new BoolSetting("status", "Show status", true));
 	private boolean sprintOn = true;
 	private boolean sneakOn;
+	private boolean forcedSneak;
 
 	public ToggleSprintModule() {
 		super("toggle_sprint", "Toggle Sprint", "Sprint without holding the key, and sneak on a toggle.", 0.006, 0.36, false);
@@ -42,8 +43,16 @@ public final class ToggleSprintModule extends HudModule {
 			boolean was = sneakOn;
 			while (o.keyShift.consumeClick()) sneakOn = !sneakOn;
 			if (client.player == null) sneakOn = false;
-			if (inGame && sneakOn) o.keyShift.setDown(true);
-			else if (was && !sneakOn) o.keyShift.setDown(false);
+			// holding sneak while flying would pull you down, so the toggle waits until you land
+			boolean flying = client.player != null && client.player.getAbilities().flying;
+			if (inGame && sneakOn && !flying) {
+				o.keyShift.setDown(true);
+				forcedSneak = true;
+			} else if (forcedSneak && (flying || !sneakOn || was && !sneakOn)) {
+				// let go of only the sneak this module was holding
+				o.keyShift.setDown(false);
+				forcedSneak = false;
+			}
 		} else {
 			while (o.keyShift.consumeClick()) ;
 			if (sneakOn) {

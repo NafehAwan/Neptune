@@ -86,7 +86,13 @@ public final class TuffClient implements ClientModInitializer {
 			}
 			modules.freelook.update(client, freelookKey.isDown() && modules.freelook.isEnabled());
 		});
-		ClientLifecycleEvents.CLIENT_STOPPING.register(client -> TuffConfig.save(modules));
+		ClientLifecycleEvents.CLIENT_STOPPING.register(client -> {
+			// options the modules hold (FOV, hurt cam) go back to the player's own before they're saved
+			net.tuffclient.module.OptionOverride.releaseAll();
+			if (modules.hitboxes.isEnabled()) net.tuffclient.compat.Hitboxes.show(false);
+			client.options.save();
+			TuffConfig.save(modules);
+		});
 
 		Platform.registerHud(modules);
 		LOGGER.info("Glade loaded with {} modules", modules.all().size());

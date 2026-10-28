@@ -1,3 +1,10 @@
+Glade 1.8.9
+- Fixed: FOV Changer and Hurt Cam could leave your FOV effects or screen shake changed after closing the game with them on, so turning them off later didn't give your settings back. Your own values are now restored when the game closes and kept safe in Glade's config.
+- Fixed: Hitboxes could stay on after turning the module off (on Minecraft 1.21.9 and newer).
+- Fixed: the crosshair's aiming color or Target shape also triggered on item frames, armor stands, boats and dropped items. It now only reacts to players and mobs.
+- Fixed: Toggle Sneak made you sink while flying. It now waits until you land, and holding sneak to fly down still works.
+- Motion Blur no longer retries every frame if its effect can't load, which could flood the log.
+
 Glade 1.8.8
 - Environmental blend is softer, like the reference look: the crosshair mixes the flipped colour with what's behind it (75% by default) instead of flipping it fully. Change it with "Blend strength" in the crosshair settings.
 - The Target (aiming) crosshair has a new shape: a full plus with a small corner bracket in each corner. You can change it in game: when "When aiming at a player or mob" is set to "Switch to Target", the crosshair settings show an Aiming crosshair grid to draw on, with Reset Target to go back.
