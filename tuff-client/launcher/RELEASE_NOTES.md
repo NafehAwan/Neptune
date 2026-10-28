@@ -1,3 +1,7 @@
+Glade 1.8.8
+- Environmental blend is softer, like the reference look: the crosshair mixes the flipped colour with what's behind it (75% by default) instead of flipping it fully. Change it with "Blend strength" in the crosshair settings.
+- The Target crosshair's arms now end level with its corner squares.
+
 Glade 1.8.7
 - The Target crosshair now matches the classic shape: a plus through the middle with a small square in each corner between the arms.
 

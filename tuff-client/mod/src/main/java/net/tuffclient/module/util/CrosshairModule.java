@@ -27,6 +27,7 @@ public final class CrosshairModule extends Module {
 
 	public final ChoiceSetting style = add(new ChoiceSetting("style", "Style", 0, "Default", "Cross", "Dot", "Square", "T", "Circle", "Target", "Draw your own"));
 	public final BoolSetting blend = add(new BoolSetting("blend", "Environmental blend", true));
+	public final NumberSetting blendStrength = add(new NumberSetting("blend_strength", "Blend strength (%)", 75, 30, 100, 5)).showIf(() -> blend.get());
 	public final ColorSetting color = add(new ColorSetting("crosshair_color", "Color", 0xFFFFFFFF, true)).showIf(() -> !blend.get());
 	public final NumberSetting size = add(new NumberSetting("size", "Size", 5, 2, 12, 1)).showIf(() -> shaped());
 	public final NumberSetting gap = add(new NumberSetting("gap", "Gap", 2, 0, 6, 1)).showIf(() -> shaped());
@@ -137,8 +138,9 @@ public final class CrosshairModule extends Module {
 	public void draw(Gfx g, int cx, int cy, String shape, boolean red) {
 		boolean invert = blend.get() && !red;
 		int c = red ? targetTint.argb() : color.argb();
+		float k = blendStrength.get().floatValue() / 100f;
 		if (shape.equals("Default")) {
-			if (invert) g.invertSprite(VANILLA, cx - 7, cy - 7, 15, 15);
+			if (invert) g.invertSprite(VANILLA, cx - 7, cy - 7, 15, 15, k);
 			else g.sprite(VANILLA, cx - 7, cy - 7, 15, 15, c);
 			return;
 		}
@@ -148,7 +150,7 @@ public final class CrosshairModule extends Module {
 			mask.rect(-lo, -lo, hi, hi);
 		}
 		if (invert) {
-			mask.runs((x0, y, x1) -> g.invertRect(cx + x0, cy + y, cx + x1, cy + y + 1));
+			mask.runs((x0, y, x1) -> g.invertRect(cx + x0, cy + y, cx + x1, cy + y + 1, k));
 		} else {
 			if (outline.get()) mask.grown().runs((x0, y, x1) -> g.fill(cx + x0, cy + y, cx + x1, cy + y + 1, 0xC0000000));
 			mask.runs((x0, y, x1) -> g.fill(cx + x0, cy + y, cx + x1, cy + y + 1, c));
@@ -183,10 +185,11 @@ public final class CrosshairModule extends Module {
 			}
 			case "Target" -> {
 				// a plus through the centre with a dot in each corner between the arms
-				m.rect(-4, -lo, 5, hi);
-				m.rect(-lo, -4, hi, 5);
-				int d = 1 + t; // dot size
+				int d = 1 + t; // corner square size
 				int[][] spans = {{-lo - 1 - d, -lo - 1}, {1 + hi, 1 + hi + d}};
+				// the arms end level with the outer edge of the corner squares
+				m.rect(spans[0][0], -lo, spans[1][1], hi);
+				m.rect(-lo, spans[0][0], hi, spans[1][1]);
 				for (int[] xs : spans) for (int[] ys : spans) m.rect(xs[0], ys[0], xs[1], ys[1]);
 			}
 			case "Draw your own" -> {

@@ -158,18 +158,26 @@ public final class Gfx {
 
 	// ------------------------------------------------------------- crosshair
 
-	/** A rectangle that inverts what's behind it, like the vanilla crosshair (white on dark, dark on light). */
-	public void invertRect(int x0, int y0, int x1, int y1) {
+	/**
+	 * A rectangle drawn with the vanilla crosshair's inverting blend. Strength
+	 * 1 flips the colour behind it fully; less mixes the flip with what's
+	 * there (drawing grey instead of white does exactly that with this blend).
+	 */
+	public void invertRect(int x0, int y0, int x1, int y1, float strength) {
 		if (x1 <= x0 || y1 <= y0) return;
 		invertBlend();
+		g.setColor(strength, strength, strength, 1);
 		g.blit(WHITE, x0, y0, 0, 0, x1 - x0, y1 - y0, x1 - x0, y1 - y0);
+		g.setColor(1, 1, 1, 1);
 		RenderSystem.defaultBlendFunc();
 	}
 
-	/** A GUI sprite drawn with the vanilla crosshair's inverting blend. */
-	public void invertSprite(Identifier sprite, int x, int y, int w, int h) {
+	/** A GUI sprite drawn with the vanilla crosshair's inverting blend, at a strength. */
+	public void invertSprite(Identifier sprite, int x, int y, int w, int h, float strength) {
 		invertBlend();
+		g.setColor(strength, strength, strength, 1);
 		g.blitSprite(sprite, x, y, w, h);
+		g.setColor(1, 1, 1, 1);
 		RenderSystem.defaultBlendFunc();
 	}
 
