@@ -16,6 +16,7 @@ import org.joml.Matrix3x2f;
  */
 public final class Gfx {
 	private static final Gfx SHARED = new Gfx();
+	private static final Identifier WHITE = Identifier.fromNamespaceAndPath("tuff", "textures/gui/white.png");
 
 	private GuiGraphics g;
 
@@ -140,5 +141,18 @@ public final class Gfx {
 
 	public void item(ItemStack stack, int x, int y) {
 		g.renderItem(stack, x, y);
+	}
+
+	// ------------------------------------------------------------- crosshair
+
+	/** A rectangle that inverts what's behind it, like the vanilla crosshair (white on dark, dark on light). */
+	public void invertRect(int x0, int y0, int x1, int y1) {
+		if (x1 <= x0 || y1 <= y0) return;
+		g.blit(RenderPipelines.CROSSHAIR, WHITE, x0, y0, 0, 0, x1 - x0, y1 - y0, x1 - x0, y1 - y0);
+	}
+
+	/** A GUI sprite drawn with the vanilla crosshair's inverting blend. */
+	public void invertSprite(Identifier sprite, int x, int y, int w, int h) {
+		g.blitSprite(RenderPipelines.CROSSHAIR, sprite, x, y, w, h);
 	}
 }

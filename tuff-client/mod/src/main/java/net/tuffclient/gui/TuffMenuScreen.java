@@ -667,7 +667,82 @@ public final class TuffMenuScreen extends GladeScreen {
 	/** Module-specific panels below the settings (the waypoint list). */
 	private float extras(Gfx g, float mouseX, float mouseY, float x, float y, float w, Module m, float a, float top, float bottom) {
 		if (m instanceof net.tuffclient.module.util.WaypointsModule wp) return waypointList(g, mouseX, mouseY, x, y, w, wp, a, top, bottom);
+		if (m instanceof net.tuffclient.module.util.CrosshairModule ch) return crosshairEditor(g, mouseX, mouseY, x, y, w, ch, a, top, bottom);
 		return y;
+	}
+
+	/** Crosshair: a preview (normal and aiming, on dark and light) and, for "Draw your own", the drawing grid. */
+	private float crosshairEditor(Gfx g, float mouseX, float mouseY, float x, float y, float w, net.tuffclient.module.util.CrosshairModule ch, float a, float top, float bottom) {
+		y += 18;
+		Ui.spaced(g, "PREVIEW", x, y + 10.5f * 1.005f - 7, Theme.alpha(Theme.MUTED, a), Ui.Font.MONO_10_5, 1.26f);
+		y += 18;
+		float half = (w - 8) / 2, ph = 84;
+		String[] labels = {"Normal", "Aiming"};
+		for (int i = 0; i < 2; i++) {
+			float bx = x + i * (half + 8);
+			// half dark, half light, to show how it sits on both
+			Ui.round(g, bx, y, half, ph, 10, Theme.alpha(0xFF2A3A2E, a));
+			Ui.round(g, bx + half / 2, y, half / 2, ph, 10, Theme.alpha(0xFFD9E3D6, a));
+			g.fill(Math.round(bx + half / 2), Math.round(y), Math.round(bx + half / 2 + 10), Math.round(y + ph), Theme.alpha(0xFFD9E3D6, a));
+			boolean aiming = i == 1;
+			String shape = aiming && ch.onTarget.get() == 2 ? "Target" : ch.style.choice();
+			g.push();
+			g.translate(Math.round(bx + half / 2), Math.round(y + ph / 2));
+			g.scale(3);
+			ch.draw(g, 0, 0, shape, aiming && ch.onTarget.get() == 1);
+			g.pop();
+			Ui.textAt(g, labels[i], bx + 8, y + ph - 8, Theme.alpha(0xCCFFFFFF, a), Ui.Font.UI_12_5_M);
+		}
+		y += ph + 6;
+		if (!ch.style.choice().equals("Draw your own")) return y + 8;
+
+		y += 14;
+		Ui.spaced(g, "DRAW YOUR OWN", x, y + 10.5f * 1.005f - 7, Theme.alpha(Theme.MUTED, a), Ui.Font.MONO_10_5, 1.26f);
+		y += 18;
+		int n = net.tuffclient.module.util.CrosshairModule.GRID;
+		float cell = Math.min(16, (float) Math.floor(w / n));
+		float gx = x + (w - cell * n) / 2, gy = y;
+		Ui.round(g, gx - 4, gy - 4, cell * n + 8, cell * n + 8, 8, Theme.alpha(0xFF2A3A2E, a));
+		for (int cy = 0; cy < n; cy++) {
+			for (int cx = 0; cx < n; cx++) {
+				boolean on = ch.cell(cx, cy), centre = cx == n / 2 && cy == n / 2;
+				int col = on ? 0xFFFFFFFF : centre ? 0xFF4A5C4F : (cx + cy) % 2 == 0 ? 0xFF33443A : 0xFF2E3E33;
+				g.fill(Math.round(gx + cx * cell), Math.round(gy + cy * cell), Math.round(gx + (cx + 1) * cell) - 1, Math.round(gy + (cy + 1) * cell) - 1, Theme.alpha(col, a));
+			}
+		}
+		if (gy + cell * n > top && gy < bottom) hit(gx, Math.max(gy, top), gx + cell * n, Math.min(gy + cell * n, bottom), e -> {
+			int cx = (int) ((e.x() / zoom() - gx) / cell), cy = (int) ((e.y() / zoom() - gy) / cell);
+			if (cx < 0 || cy < 0 || cx >= n || cy >= n) return;
+			// the first cell decides: paint where it was empty, erase where it was set
+			boolean paintOn = !ch.cell(cx, cy);
+			ch.paint(cx, cy, paintOn);
+			drag = (mx, my) -> {
+				int dx = (int) ((mx - gx) / cell), dy = (int) ((my - gy) / cell);
+				if (dx >= 0 && dy >= 0 && dx < n && dy < n) ch.paint(dx, dy, paintOn);
+			};
+		});
+		y = gy + cell * n + 14;
+		float bx = x;
+		String[] buttons = {"Clear", "Start from a plus", ch.mirror ? "Mirror: on" : "Mirror: off"};
+		for (int i = 0; i < buttons.length; i++) {
+			String label = buttons[i];
+			float bw = 12 + Ui.width(label, Ui.Font.UI_12_5_M) + 12;
+			boolean over = Theme.inside(mouseX, mouseY, bx, y, bx + bw, y + 28);
+			boolean active = i == 2 && ch.mirror;
+			Ui.round(g, bx, y, bw, 28, 14, Theme.alpha(active ? Theme.COPPER : over ? 0xFFE6EBE4 : 0xFFEFF1EC, a));
+			Ui.textAt(g, label, bx + 12, Ui.mid(y + 14, 12.5f), Theme.alpha(active ? Theme.INK : Theme.TEXT, a), Ui.Font.UI_12_5_M);
+			final int which = i;
+			if (y + 28 > top && y < bottom) hit(bx, y, bx + bw, y + 28, e -> {
+				click();
+				switch (which) {
+					case 0 -> ch.clearGrid();
+					case 1 -> ch.resetGrid();
+					default -> ch.mirror = !ch.mirror;
+				}
+			});
+			bx += bw + 6;
+		}
+		return y + 28 + 14;
 	}
 
 	private float waypointList(Gfx g, float mouseX, float mouseY, float x, float y, float w, net.tuffclient.module.util.WaypointsModule wp, float a, float top, float bottom) {

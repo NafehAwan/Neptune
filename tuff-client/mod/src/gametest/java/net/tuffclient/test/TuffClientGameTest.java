@@ -141,6 +141,21 @@ public class TuffClientGameTest implements FabricClientGameTest {
 		context.runOnClient(client -> menu.openSettings(TuffClient.modules().crosshair));
 		context.waitTicks(15);
 		context.takeScreenshot("tuff-menu-drawer");
+		// Crosshair: the preview and the draw-your-own grid
+		context.runOnClient(client -> {
+			var ch = TuffClient.modules().crosshair;
+			ch.style.set(7);
+			ch.onTarget.set(2);
+			menu.openSettings(ch);
+			menu.scrollDrawer(900);
+		});
+		context.waitTicks(15);
+		context.takeScreenshot("glade-crosshair-editor");
+		context.runOnClient(client -> {
+			var ch = TuffClient.modules().crosshair;
+			ch.style.set(0);
+			ch.onTarget.set(0);
+		});
 		// The colour wheel picker, and the shared HUD style settings.
 		context.runOnClient(client -> menu.openColorPicker(TuffClient.modules().hitColor, "color"));
 		context.waitTicks(15);
@@ -310,8 +325,9 @@ public class TuffClientGameTest implements FabricClientGameTest {
 				for (Module mod : m.all()) {
 					if (java.util.List.of("toggle_sprint", "cooldowns", "saturation", "low_health", "tnt_timer", "shiny_pots", "glint_color", "hitboxes", "nick_hider", "crosshair").contains(mod.id)) mod.setEnabled(true);
 				}
-				m.crosshair.style.set(4);
-				m.crosshair.dot.set(true);
+				m.crosshair.style.set(7); // draw your own (starts as a small plus)
+				m.crosshair.blend.set(true);
+				m.crosshair.onTarget.set(2); // the zombie ahead switches it to Target
 				client.player.getInventory().setSelectedSlot(2);
 				client.player.getCooldowns().addCooldown(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.ENDER_PEARL), 200);
 			});

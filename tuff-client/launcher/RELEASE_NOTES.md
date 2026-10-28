@@ -1,3 +1,9 @@
+Glade 1.8.6
+- Crosshair: a new "Default" style (the game's own crosshair) and "Draw your own", a 15x15 grid in the crosshair settings you click or drag across, with mirroring, Clear and a plus to start from.
+- Environmental blend (on by default): the crosshair inverts what's behind it like the vanilla one, so it shows on any background. Turn it off for a plain color, white by default.
+- When aiming at a player or mob the crosshair can turn red or switch to the new Target shape (a small box with four arms), in your blend or color settings.
+- A live preview in the settings shows the crosshair normal and while aiming, on dark and light backgrounds.
+
 Glade 1.8.5
 - New in-game modules, like Lunar Client's: Motion Blur, Hitboxes, Cooldowns (pearl, chorus fruit and more, with time left), Shiny Pots, Glint Color, Hurt Cam, Minimal Bobbing, Low Health Warning, Snaplook, FOV Changer, Saturation, TNT Timer, Clear Glass, Nick Hider, Chat Macros and Tab Editor (ping as a number and player heads on every server).
 - Toggle Sprint now does Toggle Sneak too, can switch with the sprint key, and shows "[Sprinting (Toggled)]" on screen. Item Counter counts splash potions.
