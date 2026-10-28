@@ -1,7 +1,10 @@
+Glade 1.8.7
+- The Target crosshair now matches the classic shape: a plus through the middle with a small square in each corner between the arms.
+
 Glade 1.8.6
 - Crosshair: a new "Default" style (the game's own crosshair) and "Draw your own", a 15x15 grid in the crosshair settings you click or drag across, with mirroring, Clear and a plus to start from.
 - Environmental blend (on by default): the crosshair inverts what's behind it like the vanilla one, so it shows on any background. Turn it off for a plain color, white by default.
-- When aiming at a player or mob the crosshair can turn red or switch to the new Target shape (a small box with four arms), in your blend or color settings.
+- When aiming at a player or mob the crosshair can turn red or switch to the new Target shape , in your blend or color settings.
 - A live preview in the settings shows the crosshair normal and while aiming, on dark and light backgrounds.
 
 Glade 1.8.5

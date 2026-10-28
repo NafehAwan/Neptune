@@ -182,15 +182,12 @@ public final class CrosshairModule extends Module {
 				m.rect(-lo, gp + 1, hi, gp + 1 + s);
 			}
 			case "Target" -> {
-				// a small box with four short arms, like a scope
-				m.rect(-2 - lo, -2 - lo, 3 + lo, -2 + hi);
-				m.rect(-2 - lo, 2 - lo, 3 + lo, 2 + hi);
-				m.rect(-2 - lo, -2 - lo, -2 + hi, 3 + lo);
-				m.rect(2 - lo, -2 - lo, 2 + hi, 3 + lo);
-				m.rect(-7, -lo, -3 - lo, hi);
-				m.rect(3 + hi, -lo, 8, hi);
-				m.rect(-lo, -7, hi, -3 - lo);
-				m.rect(-lo, 3 + hi, hi, 8);
+				// a plus through the centre with a dot in each corner between the arms
+				m.rect(-4, -lo, 5, hi);
+				m.rect(-lo, -4, hi, 5);
+				int d = 1 + t; // dot size
+				int[][] spans = {{-lo - 1 - d, -lo - 1}, {1 + hi, 1 + hi + d}};
+				for (int[] xs : spans) for (int[] ys : spans) m.rect(xs[0], ys[0], xs[1], ys[1]);
 			}
 			case "Draw your own" -> {
 				int half = GRID / 2;
