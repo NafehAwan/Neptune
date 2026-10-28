@@ -694,10 +694,19 @@ public final class TuffMenuScreen extends GladeScreen {
 			Ui.textAt(g, labels[i], bx + 8, y + ph - 8, Theme.alpha(0xCCFFFFFF, a), Ui.Font.UI_12_5_M);
 		}
 		y += ph + 6;
-		if (!ch.style.choice().equals("Draw your own")) return y + 8;
+		if (ch.style.choice().equals("Draw your own")) {
+			y = crosshairGrid(g, mouseX, mouseY, x, y, w, ch, ch.grid, "DRAW YOUR OWN", "Start from a plus", () -> net.tuffclient.module.util.CrosshairModule.resetGrid(ch.grid), a, top, bottom);
+		}
+		if (ch.onTarget.get() == 2 || ch.style.choice().equals("Target")) {
+			y = crosshairGrid(g, mouseX, mouseY, x, y, w, ch, ch.targetGrid, "TARGET (AIMING) CROSSHAIR", "Reset Target", ch::resetTarget, a, top, bottom);
+		}
+		return y + 8;
+	}
 
+	/** A 15x15 pixel grid to draw a crosshair on: click or drag; dragging from a set cell erases. */
+	private float crosshairGrid(Gfx g, float mouseX, float mouseY, float x, float y, float w, net.tuffclient.module.util.CrosshairModule ch, boolean[] cells, String title, String resetLabel, Runnable reset, float a, float top, float bottom) {
 		y += 14;
-		Ui.spaced(g, "DRAW YOUR OWN", x, y + 10.5f * 1.005f - 7, Theme.alpha(Theme.MUTED, a), Ui.Font.MONO_10_5, 1.26f);
+		Ui.spaced(g, title, x, y + 10.5f * 1.005f - 7, Theme.alpha(Theme.MUTED, a), Ui.Font.MONO_10_5, 1.26f);
 		y += 18;
 		int n = net.tuffclient.module.util.CrosshairModule.GRID;
 		float cell = Math.min(16, (float) Math.floor(w / n));
@@ -705,7 +714,7 @@ public final class TuffMenuScreen extends GladeScreen {
 		Ui.round(g, gx - 4, gy - 4, cell * n + 8, cell * n + 8, 8, Theme.alpha(0xFF2A3A2E, a));
 		for (int cy = 0; cy < n; cy++) {
 			for (int cx = 0; cx < n; cx++) {
-				boolean on = ch.cell(cx, cy), centre = cx == n / 2 && cy == n / 2;
+				boolean on = net.tuffclient.module.util.CrosshairModule.cell(cells, cx, cy), centre = cx == n / 2 && cy == n / 2;
 				int col = on ? 0xFFFFFFFF : centre ? 0xFF4A5C4F : (cx + cy) % 2 == 0 ? 0xFF33443A : 0xFF2E3E33;
 				g.fill(Math.round(gx + cx * cell), Math.round(gy + cy * cell), Math.round(gx + (cx + 1) * cell) - 1, Math.round(gy + (cy + 1) * cell) - 1, Theme.alpha(col, a));
 			}
@@ -714,16 +723,16 @@ public final class TuffMenuScreen extends GladeScreen {
 			int cx = (int) ((e.x() / zoom() - gx) / cell), cy = (int) ((e.y() / zoom() - gy) / cell);
 			if (cx < 0 || cy < 0 || cx >= n || cy >= n) return;
 			// the first cell decides: paint where it was empty, erase where it was set
-			boolean paintOn = !ch.cell(cx, cy);
-			ch.paint(cx, cy, paintOn);
+			boolean paintOn = !net.tuffclient.module.util.CrosshairModule.cell(cells, cx, cy);
+			ch.paint(cells, cx, cy, paintOn);
 			drag = (mx, my) -> {
 				int dx = (int) ((mx - gx) / cell), dy = (int) ((my - gy) / cell);
-				if (dx >= 0 && dy >= 0 && dx < n && dy < n) ch.paint(dx, dy, paintOn);
+				if (dx >= 0 && dy >= 0 && dx < n && dy < n) ch.paint(cells, dx, dy, paintOn);
 			};
 		});
 		y = gy + cell * n + 14;
 		float bx = x;
-		String[] buttons = {"Clear", "Start from a plus", ch.mirror ? "Mirror: on" : "Mirror: off"};
+		String[] buttons = {"Clear", resetLabel, ch.mirror ? "Mirror: on" : "Mirror: off"};
 		for (int i = 0; i < buttons.length; i++) {
 			String label = buttons[i];
 			float bw = 12 + Ui.width(label, Ui.Font.UI_12_5_M) + 12;
@@ -735,8 +744,8 @@ public final class TuffMenuScreen extends GladeScreen {
 			if (y + 28 > top && y < bottom) hit(bx, y, bx + bw, y + 28, e -> {
 				click();
 				switch (which) {
-					case 0 -> ch.clearGrid();
-					case 1 -> ch.resetGrid();
+					case 0 -> net.tuffclient.module.util.CrosshairModule.clear(cells);
+					case 1 -> reset.run();
 					default -> ch.mirror = !ch.mirror;
 				}
 			});

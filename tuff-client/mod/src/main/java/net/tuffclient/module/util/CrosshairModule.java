@@ -31,8 +31,8 @@ public final class CrosshairModule extends Module {
 	public final ColorSetting color = add(new ColorSetting("crosshair_color", "Color", 0xFFFFFFFF, true)).showIf(() -> !blend.get());
 	public final NumberSetting size = add(new NumberSetting("size", "Size", 5, 2, 12, 1)).showIf(() -> shaped());
 	public final NumberSetting gap = add(new NumberSetting("gap", "Gap", 2, 0, 6, 1)).showIf(() -> shaped());
-	public final NumberSetting thickness = add(new NumberSetting("thickness", "Thickness", 1, 1, 3, 1)).showIf(() -> shaped() || style.choice().equals("Target"));
-	public final BoolSetting dot = add(new BoolSetting("dot", "Center dot", false)).showIf(() -> !style.choice().equals("Default") && !style.choice().equals("Dot"));
+	public final NumberSetting thickness = add(new NumberSetting("thickness", "Thickness", 1, 1, 3, 1)).showIf(() -> shaped());
+	public final BoolSetting dot = add(new BoolSetting("dot", "Center dot", false)).showIf(() -> shaped());
 	public final BoolSetting outline = add(new BoolSetting("outline", "Outline", true)).showIf(() -> !blend.get() && !style.choice().equals("Default"));
 	public final ChoiceSetting onTarget = add(new ChoiceSetting("on_target", "When aiming at a player or mob", 0, "No change", "Turn red", "Switch to Target"));
 	public final ColorSetting targetTint = add(new ColorSetting("target_color", "Aiming color", 0xFFFF3B3B, false)).showIf(() -> onTarget.get() == 1);
@@ -40,18 +40,39 @@ public final class CrosshairModule extends Module {
 
 	/** The crosshair you draw yourself, row by row. */
 	public final boolean[] grid = new boolean[GRID * GRID];
+	/** The Target (aiming) crosshair, also editable. */
+	public final boolean[] targetGrid = new boolean[GRID * GRID];
 	/** Drawing mirrors across both middle lines. */
 	public boolean mirror = true;
+
+	/** The Target shape, centred in the 15x15 grid. */
+	private static final String[] TARGET = {
+			"....#....",
+			".##.#.##.",
+			".#..#..#.",
+			"....#....",
+			"#########",
+			"....#....",
+			".#..#..#.",
+			".##.#.##.",
+			"....#....",
+	};
 
 	private final ChoiceSetting oldColor = new ChoiceSetting("color", "Color", 0, "White", "Copper", "Mint", "Sky", "Red", "Gold");
 
 	public CrosshairModule() {
-		super("crosshair", "Crosshair", "Your own crosshair: the game's, a built-in shape or one you draw. Can turn red on players and mobs.", Category.VISUAL, false);
-		resetGrid();
+		super("crosshair", "Crosshair", "Your own crosshair: the game's, a built-in shape or one you draw. Can turn red or change shape on players and mobs.", Category.VISUAL, false);
+		resetGrid(grid);
+		resetTarget();
 	}
 
 	private boolean shaped() {
-		return switch (style.choice()) {
+		return shaped(style.choice());
+	}
+
+	/** Built-in shapes that use Size, Gap, Thickness and the centre dot. */
+	private static boolean shaped(String shape) {
+		return switch (shape) {
 			case "Cross", "Square", "T", "Circle" -> true;
 			default -> false;
 		};
@@ -62,45 +83,63 @@ public final class CrosshairModule extends Module {
 		return mc.options.getCameraType().isFirstPerson() || thirdPerson.get();
 	}
 
-	// ------------------------------------------------------------------ grid
+	// ------------------------------------------------------------------ grids
 
-	public boolean cell(int x, int y) {
-		return grid[y * GRID + x];
+	public static boolean cell(boolean[] g, int x, int y) {
+		return g[y * GRID + x];
 	}
 
 	/** Sets a cell (and its mirror images when mirroring). */
-	public void paint(int x, int y, boolean on) {
+	public void paint(boolean[] g, int x, int y, boolean on) {
 		int m = GRID - 1;
-		grid[y * GRID + x] = on;
+		g[y * GRID + x] = on;
 		if (mirror) {
-			grid[y * GRID + (m - x)] = on;
-			grid[(m - y) * GRID + x] = on;
-			grid[(m - y) * GRID + (m - x)] = on;
+			g[y * GRID + (m - x)] = on;
+			g[(m - y) * GRID + x] = on;
+			g[(m - y) * GRID + (m - x)] = on;
 		}
 	}
 
-	public void clearGrid() {
-		java.util.Arrays.fill(grid, false);
+	public static void clear(boolean[] g) {
+		java.util.Arrays.fill(g, false);
 	}
 
 	/** A small plus to start from. */
-	public void resetGrid() {
-		clearGrid();
+	public static void resetGrid(boolean[] g) {
+		clear(g);
 		int c = GRID / 2;
 		for (int i = c - 4; i <= c + 4; i++) {
 			if (Math.abs(i - c) < 2) continue;
-			grid[c * GRID + i] = true;
-			grid[i * GRID + c] = true;
+			g[c * GRID + i] = true;
+			g[i * GRID + c] = true;
 		}
-		grid[c * GRID + c] = true;
+		g[c * GRID + c] = true;
+	}
+
+	/** Puts the Target back to its original shape. */
+	public void resetTarget() {
+		clear(targetGrid);
+		int off = (GRID - TARGET.length) / 2;
+		for (int y = 0; y < TARGET.length; y++) {
+			for (int x = 0; x < TARGET[y].length(); x++) targetGrid[(y + off) * GRID + x + off] = TARGET[y].charAt(x) == '#';
+		}
+	}
+
+	private static String encode(boolean[] g) {
+		StringBuilder sb = new StringBuilder();
+		for (boolean b : g) sb.append(b ? '1' : '0');
+		return sb.toString();
+	}
+
+	private static void decode(String s, boolean[] g) {
+		for (int i = 0; i < g.length && i < s.length(); i++) g[i] = s.charAt(i) == '1';
 	}
 
 	@Override
 	public JsonObject save() {
 		JsonObject json = super.save();
-		StringBuilder sb = new StringBuilder();
-		for (boolean b : grid) sb.append(b ? '1' : '0');
-		json.addProperty("grid", sb.toString());
+		json.addProperty("grid", encode(grid));
+		json.addProperty("target_grid", encode(targetGrid));
 		json.addProperty("mirror", mirror);
 		return json;
 	}
@@ -117,10 +156,8 @@ public final class CrosshairModule extends Module {
 		}
 		if (s != null && !s.has("on_target") && s.has("target") && s.get("target").getAsBoolean()) onTarget.set(1);
 		if (s != null && !s.has("blend") && s.has("style")) blend.set(false);
-		if (json.has("grid")) {
-			String g = json.get("grid").getAsString();
-			for (int i = 0; i < grid.length && i < g.length(); i++) grid[i] = g.charAt(i) == '1';
-		}
+		if (json.has("grid")) decode(json.get("grid").getAsString(), grid);
+		if (json.has("target_grid")) decode(json.get("target_grid").getAsString(), targetGrid);
 		if (json.has("mirror")) mirror = json.get("mirror").getAsBoolean();
 	}
 
@@ -145,7 +182,7 @@ public final class CrosshairModule extends Module {
 			return;
 		}
 		Mask mask = mask(shape);
-		if (dot.get() && !shape.equals("Dot")) {
+		if (dot.get() && shaped(shape)) {
 			int lo = thickness.get().intValue() / 2, hi = thickness.get().intValue() - lo;
 			mask.rect(-lo, -lo, hi, hi);
 		}
@@ -183,19 +220,8 @@ public final class CrosshairModule extends Module {
 				m.rect(gp + 1, -lo, gp + 1 + s, hi);
 				m.rect(-lo, gp + 1, hi, gp + 1 + s);
 			}
-			case "Target" -> {
-				// a plus through the centre with a dot in each corner between the arms
-				int d = 1 + t; // corner square size
-				int[][] spans = {{-lo - 1 - d, -lo - 1}, {1 + hi, 1 + hi + d}};
-				// the arms end level with the outer edge of the corner squares
-				m.rect(spans[0][0], -lo, spans[1][1], hi);
-				m.rect(-lo, spans[0][0], hi, spans[1][1]);
-				for (int[] xs : spans) for (int[] ys : spans) m.rect(xs[0], ys[0], xs[1], ys[1]);
-			}
-			case "Draw your own" -> {
-				int half = GRID / 2;
-				for (int y = 0; y < GRID; y++) for (int x = 0; x < GRID; x++) if (cell(x, y)) m.set(x - half, y - half);
-			}
+			case "Target" -> m.grid(targetGrid);
+			case "Draw your own" -> m.grid(grid);
 			default -> {
 				m.rect(-s - gp, -lo, -gp, hi);
 				m.rect(gp + 1, -lo, gp + 1 + s, hi);
@@ -214,6 +240,12 @@ public final class CrosshairModule extends Module {
 		void set(int x, int y) {
 			if (x < -R || x > R || y < -R || y > R) return;
 			px[(y + R) * W + (x + R)] = true;
+		}
+
+		/** The set cells of a 15x15 drawing, centred. */
+		void grid(boolean[] g) {
+			int half = GRID / 2;
+			for (int y = 0; y < GRID; y++) for (int x = 0; x < GRID; x++) if (g[y * GRID + x]) set(x - half, y - half);
 		}
 
 		/** Fills [x0, x1) x [y0, y1). */
