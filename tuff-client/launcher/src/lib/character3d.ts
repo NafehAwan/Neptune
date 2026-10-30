@@ -1,5 +1,6 @@
 // The 3D player on Home: studio lighting, a pose, the Glade hoodie, and 3D skin
 // layers (each outer-layer pixel is a thin block where Minecraft draws that layer).
+import * as THREE from "three";
 import type { SkinViewer } from "skinview3d";
 
 export const POSES = {
@@ -37,7 +38,8 @@ const PARTS: Record<string, [number, number, number, number, number]> = {
 };
 
 /** Swaps the flat outer layer for thin blocks, one per opaque pixel, textured with the skin
- *  itself so the colours match the game. Old 64x32 skins have no outer layer and stay flat. */
+ *  itself so the colours match the game. Each part's blocks are merged into one mesh, so the
+ *  whole layer is six draw calls. Old 64x32 skins have no outer layer and stay flat. */
 export async function thinLayers(v: SkinViewer, url: string) {
   const img = await new Promise<HTMLImageElement>((resolve, reject) => {
     const i = new Image(); i.onload = () => resolve(i); i.onerror = reject; i.src = url;
@@ -56,23 +58,24 @@ export async function thinLayers(v: SkinViewer, url: string) {
   const solid = (x: number, y: number) => alpha[(y * 64 + x) * 4 + 3] > 20;
 
   const slim = skin.modelType === "slim";
-  const base = skin.head.innerLayer;
-  const Mesh = base.constructor, Box = base.geometry.constructor;
   const material = skin.head.outerLayer.material;
   for (const [name, [u, vv, W0, H, D]] of Object.entries(PARTS)) {
     const W = slim && name.endsWith("Arm") ? 3 : W0;
     const T = name === "head" ? 0.75 : 0.55; // how far the layer stands out, in pixels
     const part = skin[name], inner = part.innerLayer, holder = inner.parent, ip = inner.position;
-    part.outerLayer.visible = false;
-    const shapes = { z: new Box(1, 1, T), x: new Box(T, 1, 1), y: new Box(1, T, 1) };
+    const shapes = { z: new THREE.BoxGeometry(1, 1, T), x: new THREE.BoxGeometry(T, 1, 1), y: new THREE.BoxGeometry(1, T, 1) };
+    const pos: number[] = [], nor: number[] = [], uvs: number[] = [], idx: number[] = [];
     const add = (px: number, py: number, shape: "x" | "y" | "z", x: number, y: number, z: number) => {
       if (!solid(px, py)) return;
-      const geo = shapes[shape].clone(), uv = geo.attributes.uv;
-      for (let n = 0; n < uv.count; n++) uv.setXY(n, (px + 0.5) / 64, 1 - (py + 0.5) / 64);
-      const m = new Mesh(geo, material);
-      m.position.set(ip.x + x, ip.y + y, ip.z + z);
-      m.userData.layerVoxel = true;
-      holder.add(m);
+      const geo = shapes[shape], p = geo.attributes.position, n = geo.attributes.normal, start = pos.length / 3;
+      const cu = (px + 0.5) / 64, cv = 1 - (py + 0.5) / 64;
+      for (let k = 0; k < p.count; k++) {
+        pos.push(p.getX(k) + ip.x + x, p.getY(k) + ip.y + y, p.getZ(k) + ip.z + z);
+        nor.push(n.getX(k), n.getY(k), n.getZ(k));
+        uvs.push(cu, cv);
+      }
+      const index = geo.index!;
+      for (let k = 0; k < index.count; k++) idx.push(start + index.getX(k));
     };
     const o = T / 2;
     for (let i = 0; i < W; i++) for (let j = 0; j < H; j++) {
@@ -88,6 +91,16 @@ export async function thinLayers(v: SkinViewer, url: string) {
       add(u + D + W + i, vv + j, "y", -W / 2 + i + .5, -H / 2 - o, -D / 2 + j + .5);         // bottom
     }
     for (const sh of Object.values(shapes)) sh.dispose();
+    part.outerLayer.visible = false;
+    if (!idx.length) continue;
+    const merged = new THREE.BufferGeometry();
+    merged.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+    merged.setAttribute("normal", new THREE.Float32BufferAttribute(nor, 3));
+    merged.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+    merged.setIndex(idx);
+    const mesh = new THREE.Mesh(merged, material);
+    mesh.userData.layerVoxel = true;
+    holder.add(mesh);
   }
 }
 

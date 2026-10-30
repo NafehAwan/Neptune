@@ -18,7 +18,9 @@
     const url = outfit ? await withHoodie(base, hoodieOverlay).catch(() => base) : base;
     if (!viewer || wanted !== key) return; // a newer skin was asked for meanwhile
     await viewer.loadSkin(url, { model: "auto-detect" });
+    dirty = true;
     if (wanted === key) await thinLayers(viewer, url).catch(() => {});
+    dirty = true;
   }
 
   onMount(async () => {
@@ -32,18 +34,26 @@
     v.playerObject.rotation.y = 0.55;
     POSES.run(v);
     studioLights(v);
+    // drawn here at up to 30 fps instead of skinview3d's every-frame loop
+    v.renderPaused = true;
     viewer = v;
     show(skin, hoodie);
-    if (!still) frame = requestAnimationFrame(tick);
+    frame = requestAnimationFrame(tick);
   });
 
-  // a slow float and breath; skinview3d redraws every frame
+  // a slow float and breath, at 30 fps; a still player is only redrawn when it changes
+  let last = 0;
+  let dirty = true;
   function tick(t: number) {
-    if (viewer && !document.hidden) {
+    frame = requestAnimationFrame(tick);
+    if (!viewer || document.hidden || t - last < 33 || (still && !dirty)) return;
+    last = t;
+    dirty = false;
+    if (!still) {
       viewer.playerObject.position.y = Math.sin(t / 900) * 0.8;
       viewer.playerObject.skin.head.rotation.x = 0.1 + Math.sin(t / 1300) * 0.04;
     }
-    frame = requestAnimationFrame(tick);
+    viewer.render();
   }
 
   $effect(() => { const s = skin, h = hoodie; if (viewer && s && `${s}|${h}` !== wanted) show(s, h); });

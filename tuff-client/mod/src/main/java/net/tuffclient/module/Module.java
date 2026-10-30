@@ -47,11 +47,18 @@ public abstract class Module {
 		if (available == null) {
 			boolean found = mixins.length == 0;
 			for (String name : mixins) {
-				if (Module.class.getClassLoader().getResource("net/tuffclient/mixin/" + name + ".class") != null) found = true;
+				if (hasMixin(name)) found = true;
 			}
 			available = found;
 		}
 		return available;
+	}
+
+	private static final java.util.Map<String, Boolean> MIXINS = new java.util.concurrent.ConcurrentHashMap<>();
+
+	/** Whether a Glade mixin was built for this Minecraft version (settings that need one are hidden without it). */
+	public static boolean hasMixin(String name) {
+		return MIXINS.computeIfAbsent(name, n -> Module.class.getClassLoader().getResource("net/tuffclient/mixin/" + n + ".class") != null);
 	}
 
 	/** Hidden modules hold settings but don't appear as mod cards. */

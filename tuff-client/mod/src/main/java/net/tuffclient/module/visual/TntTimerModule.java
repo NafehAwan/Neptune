@@ -23,6 +23,19 @@ public final class TntTimerModule extends Module {
 		super("tnt_timer", "TNT Timer", "Shows how long until lit TNT explodes.", Category.VISUAL, false);
 	}
 
+	// line of sight is a raycast, so it's checked once a tick per TNT, not every frame
+	private final java.util.Map<Integer, Boolean> sight = new java.util.HashMap<>();
+	private long sightTick = -1;
+
+	private boolean seen(Minecraft mc, PrimedTnt tnt) {
+		long t = mc.level.getGameTime();
+		if (t != sightTick) {
+			sightTick = t;
+			sight.clear();
+		}
+		return sight.computeIfAbsent(tnt.getId(), id -> mc.player.hasLineOfSight(tnt));
+	}
+
 	public void render(Gfx g) {
 		Minecraft mc = Minecraft.getInstance();
 		if (mc.player == null || mc.level == null) return;
@@ -32,7 +45,7 @@ public final class TntTimerModule extends Module {
 		for (Entity e : mc.level.entitiesForRendering()) {
 			if (!(e instanceof PrimedTnt tnt) || tnt.distanceTo(mc.player) > max) continue;
 			// only TNT you can see, so it doesn't show through walls
-			if (!mc.player.hasLineOfSight(tnt)) continue;
+			if (!seen(mc, tnt)) continue;
 			if (proj == null) proj = new Projector(g);
 			float[] at = proj.project(tnt.getX(), tnt.getY() + 1.4, tnt.getZ());
 			if (at == null) continue;

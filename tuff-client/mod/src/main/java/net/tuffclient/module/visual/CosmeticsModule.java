@@ -79,9 +79,25 @@ public final class CosmeticsModule extends Module {
 		Minecraft mc = Minecraft.getInstance();
 		ClientPacketListener conn = mc.getConnection();
 		if (conn == null || info == null) return false;
-		if (mc.player != null && conn.getPlayerInfo(mc.player.getUUID()) == info) return true;
-		for (UUID id : users) if (conn.getPlayerInfo(id) == info) return true;
-		return false;
+		// the tab list asks for every entry every frame, so the Glade entries are
+		// looked up once a second instead of once per entry per user
+		long now = System.currentTimeMillis();
+		if (now - gladeInfosAt > 1000 || gladeInfosConn != conn) {
+			gladeInfosAt = now;
+			gladeInfosConn = conn;
+			gladeInfos.clear();
+			if (mc.player != null) addInfo(conn.getPlayerInfo(mc.player.getUUID()));
+			for (UUID id : users) addInfo(conn.getPlayerInfo(id));
+		}
+		return gladeInfos.contains(info);
+	}
+
+	private final Set<PlayerInfo> gladeInfos = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+	private long gladeInfosAt;
+	private ClientPacketListener gladeInfosConn;
+
+	private void addInfo(PlayerInfo info) {
+		if (info != null) gladeInfos.add(info);
 	}
 
 	private static final Identifier BADGE_FONT = Identifier.fromNamespaceAndPath("tuff", "badge");

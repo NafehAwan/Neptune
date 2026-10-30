@@ -15,9 +15,13 @@
     if (canvas) drawHead(canvas, skin, angle, pitch, distance);
   }
 
+  // 30 fps is plenty for a slow turn
+  let last = 0;
   function loop(now: number) {
-    if (!document.hidden) draw(yaw + ((now - start) / 1000) * 40);
     frame = requestAnimationFrame(loop);
+    if (document.hidden || now - last < 33) return;
+    last = now;
+    draw(yaw + ((now - start) / 1000) * 40);
   }
 
   $effect(() => {

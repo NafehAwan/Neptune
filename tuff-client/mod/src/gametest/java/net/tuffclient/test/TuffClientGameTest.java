@@ -355,6 +355,36 @@ public class TuffClientGameTest implements FabricClientGameTest {
 			world.getServer().runCommand("/effect give @a minecraft:instant_health 1 5");
 			world.getServer().runCommand("/gamemode creative @a");
 
+			// Hitboxes styled (thick lines, no look arrow or eye line, red when aimed at) and
+			// Damage Tint on armor: an armored zombie right ahead, just hit.
+			world.getServer().runCommand("/tp @a 0.5 -60 0.5 0 0");
+			world.getServer().runCommand("/summon minecraft:zombie 0.5 -60 3 {NoAI:1b,Rotation:[180f,0f],equipment:{feet:{id:\"minecraft:diamond_boots\"},legs:{id:\"minecraft:diamond_leggings\"},chest:{id:\"minecraft:diamond_chestplate\"},head:{id:\"minecraft:diamond_helmet\"}}}");
+			context.runOnClient(client -> {
+				var m = TuffClient.modules();
+				m.hitboxes.setEnabled(true);
+				m.hitboxes.lookLine.set(false);
+				m.hitboxes.eyeLine.set(false);
+				m.hitboxes.width.set(5.0);
+				m.hitColor.setEnabled(true);
+			});
+			context.waitTicks(20);
+			waitForChunks(world);
+			world.getServer().runCommand("/damage @e[type=minecraft:zombie,limit=1] 1");
+			context.waitTicks(2);
+			context.takeScreenshot("glade-hitbox-armor-tint");
+			String hitboxInfo = context.computeOnClient(client -> "aimed=" + (client.crosshairPickEntity == null ? "none" : client.crosshairPickEntity.getType().toShortString())
+					+ " style=" + Module.hasMixin("HitboxStyleMixin") + " armorTint=" + Module.hasMixin("ArmorTintMixin"));
+			System.out.println("GLADE hitboxes/armor tint: " + hitboxInfo);
+			context.runOnClient(client -> {
+				var m = TuffClient.modules();
+				m.hitboxes.lookLine.set(true);
+				m.hitboxes.eyeLine.set(true);
+				m.hitboxes.width.set(2.5);
+				m.hitboxes.setEnabled(false);
+				m.hitColor.setEnabled(false);
+			});
+			world.getServer().runCommand("/kill @e[type=minecraft:zombie]");
+
 			// Motion Blur: Glade's post effect must load (shader and JSON) and blend while turning
 			context.runOnClient(client -> TuffClient.modules().motionBlur.setEnabled(true));
 			for (int i = 0; i < 12; i++) {
