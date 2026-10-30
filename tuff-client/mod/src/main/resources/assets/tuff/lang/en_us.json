@@ -1,16 +1,5 @@
 {
 	"key.category.tuff.tuff": "Glade",
 	"key.tuff.menu": "Open Glade menu",
-	"key.tuff.zoom": "Zoom",
-	"key.tuff.waypoint": "Add waypoint",
-	"key.tuff.freelook": "Freelook",
-	"key.categories.tuff": "Glade",
-	"key.tuff.clip": "Save clip",
-	"key.tuff.snaplook": "Snaplook",
-	"key.tuff.macro_1": "Chat macro 1",
-	"key.tuff.macro_2": "Chat macro 2",
-	"key.tuff.macro_3": "Chat macro 3",
-	"key.tuff.macro_4": "Chat macro 4",
-	"key.tuff.macro_5": "Chat macro 5",
-	"key.tuff.macro_6": "Chat macro 6"
+	"key.tuff.freelook": "Freelook"
 }

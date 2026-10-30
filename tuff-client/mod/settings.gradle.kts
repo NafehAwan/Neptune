@@ -18,9 +18,9 @@ plugins {
 
 stonecutter {
     create(rootProject) {
-        // Every Minecraft version Glade builds for; each needs a table in stonecutter.properties.toml.
-        versions("1.21.1", "1.21.3", "1.21.4", "1.21.5", "1.21.8", "1.21.10", "1.21.11", "26.1", "26.2", "26.3")
-        vcsVersion = "26.3"
+        // Glade is private and built for Minecraft 1.21.11 only.
+        versions("1.21.11")
+        vcsVersion = "1.21.11"
     }
 }
 

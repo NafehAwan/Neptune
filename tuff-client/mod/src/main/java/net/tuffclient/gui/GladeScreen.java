@@ -1,7 +1,6 @@
-// glade: minecraft >=26.1
 package net.tuffclient.gui;
 
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
@@ -15,7 +14,7 @@ import net.minecraft.network.chat.Component;
  * default {@code on...} methods do what the game would.
  */
 public abstract class GladeScreen extends Screen {
-	private GuiGraphicsExtractor graphics;
+	private GuiGraphics graphics;
 	private MouseButtonEvent mouseEvent;
 	private KeyEvent keyEvent;
 	private CharacterEvent charEvent;
@@ -25,14 +24,14 @@ public abstract class GladeScreen extends Screen {
 	}
 
 	protected void drawBackground(Gfx g, int mouseX, int mouseY, float partialTick) {
-		super.extractBackground(graphics, mouseX, mouseY, partialTick);
+		super.renderBackground(graphics, mouseX, mouseY, partialTick);
 	}
 
 	protected abstract void draw(Gfx g, int mouseX, int mouseY, float partialTick);
 
 	/** Blurs what has been drawn so far (the game's menu blur). */
 	protected void blurBehind(Gfx g) {
-		extractBlurredBackground(graphics);
+		renderBlurredBackground(graphics);
 	}
 
 	protected boolean onClick(Input.Click click, boolean doubleClick) {
@@ -67,13 +66,13 @@ public abstract class GladeScreen extends Screen {
 	// ---------------------------------------------------- the game's methods
 
 	@Override
-	public final void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+	public final void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
 		this.graphics = graphics;
 		drawBackground(Gfx.of(graphics), mouseX, mouseY, partialTick);
 	}
 
 	@Override
-	public final void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+	public final void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
 		this.graphics = graphics;
 		draw(Gfx.of(graphics), mouseX, mouseY, partialTick);
 	}

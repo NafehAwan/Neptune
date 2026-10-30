@@ -1,4 +1,3 @@
-// glade: minecraft >=26.2
 package net.tuffclient;
 
 import net.minecraft.client.Minecraft;
@@ -15,25 +14,25 @@ public final class Mc {
 
 	/** The open screen, or null in game. */
 	public static Screen screen() {
-		return get().gui.screen();
+		return get().screen;
 	}
 
 	public static void setScreen(Screen screen) {
-		get().gui.setScreen(screen);
+		get().setScreen(screen);
 	}
 
 	/** F1: the HUD is hidden. */
 	public static boolean hudHidden() {
-		return get().gui.hud.isHidden();
+		return get().options.hideGui;
 	}
 
 	/** The tab list overlay. */
 	public static net.minecraft.client.gui.components.PlayerTabOverlay tabList() {
-		return get().gui.hud.getTabList();
+		return get().gui.getTabList();
 	}
 
 	/** The loading overlay (resource reload), or null when none is showing. */
 	public static net.minecraft.client.gui.screens.Overlay overlay() {
-		return get().gui.overlay();
+		return get().getOverlay();
 	}
 }

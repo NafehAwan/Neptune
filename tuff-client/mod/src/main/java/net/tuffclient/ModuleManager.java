@@ -8,121 +8,56 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.tuffclient.module.Module;
 import net.tuffclient.module.hud.ArmorModule;
-import net.tuffclient.module.hud.ClockModule;
-import net.tuffclient.module.hud.CoordinatesModule;
-import net.tuffclient.module.hud.CpsModule;
-import net.tuffclient.module.hud.EffectsModule;
+import net.tuffclient.module.hud.DayTimeModule;
 import net.tuffclient.module.hud.FpsModule;
 import net.tuffclient.module.hud.HudModule;
 import net.tuffclient.module.hud.KeystrokesModule;
-import net.tuffclient.module.hud.MemoryModule;
 import net.tuffclient.module.hud.PingModule;
-import net.tuffclient.module.hud.ServerModule;
-import net.tuffclient.module.hud.SpeedModule;
-import net.tuffclient.module.hud.BiomeLightModule;
-import net.tuffclient.module.hud.CompassModule;
-import net.tuffclient.module.hud.DayTimeModule;
-import net.tuffclient.module.hud.DurabilityModule;
-import net.tuffclient.module.hud.ItemCounterModule;
-import net.tuffclient.module.hud.PackDisplayModule;
-import net.tuffclient.module.hud.SessionStatsModule;
-import net.tuffclient.module.util.AutoGGModule;
-import net.tuffclient.module.util.AutoReconnectModule;
-import net.tuffclient.module.util.ChatPlusModule;
-import net.tuffclient.module.util.CleanF3Module;
+import net.tuffclient.module.hud.ReachModule;
 import net.tuffclient.module.util.CrosshairModule;
 import net.tuffclient.module.util.FreelookModule;
-import net.tuffclient.module.util.ScreenshotToolsModule;
-import net.tuffclient.module.util.WaypointsModule;
-import net.tuffclient.module.visual.BlockOutlineModule;
-import net.tuffclient.module.visual.CosmeticsModule;
-import net.tuffclient.module.visual.CustomSkyModule;
-import net.tuffclient.module.visual.HitColorModule;
-import net.tuffclient.module.visual.NametagsModule;
-import net.tuffclient.module.visual.ParticlesModule;
 import net.tuffclient.module.util.FullbrightModule;
-import net.tuffclient.module.visual.ScoreboardModule;
-import net.tuffclient.module.util.InterfaceModule;
-import net.tuffclient.module.util.TitleScreenModule;
-import net.tuffclient.module.util.ToggleSprintModule;
-import net.tuffclient.module.util.ZoomModule;
+import net.tuffclient.module.visual.BlockOutlineModule;
+import net.tuffclient.module.visual.ClearGlassModule;
+import net.tuffclient.module.visual.HandViewModule;
+import net.tuffclient.module.visual.HitColorModule;
+import net.tuffclient.module.visual.HitboxesModule;
+import net.tuffclient.module.visual.ItemPhysicsModule;
+import net.tuffclient.module.visual.LowFireModule;
+import net.tuffclient.module.visual.MenuBackgroundModule;
+import net.tuffclient.module.visual.MinimalBobbingModule;
+import net.tuffclient.module.visual.ParticlesModule;
+import net.tuffclient.module.visual.SmallShieldModule;
+import net.tuffclient.module.visual.TiersModule;
 
 public final class ModuleManager {
 	private final List<Module> modules = new ArrayList<>();
 	private final List<HudModule> hud = new ArrayList<>();
 
-	public final InterfaceModule ui = add(new InterfaceModule());
-	public final TitleScreenModule titleScreen = add(new TitleScreenModule());
-	public final ZoomModule zoom = add(new ZoomModule());
-	public final FullbrightModule fullbright = add(new FullbrightModule());
+	// HUD
+	public final FpsModule fps = add(new FpsModule());
+	public final KeystrokesModule keystrokes = add(new KeystrokesModule());
+	public final ArmorModule armor = add(new ArmorModule());
+	public final PingModule ping = add(new PingModule());
+	public final DayTimeModule dayTime = add(new DayTimeModule());
+	public final ReachModule reach = add(new ReachModule());
+	// PvP and visuals
 	public final CrosshairModule crosshair = add(new CrosshairModule());
-	public final ScoreboardModule scoreboard = add(new ScoreboardModule());
-	public final net.tuffclient.module.visual.MenuBackgroundModule menuBackground = add(new net.tuffclient.module.visual.MenuBackgroundModule());
-	public final net.tuffclient.module.util.ClipsModule clips = add(new net.tuffclient.module.util.ClipsModule());
-	public final net.tuffclient.module.hud.ReachModule reach = add(new net.tuffclient.module.hud.ReachModule());
-	public final net.tuffclient.module.hud.ComboModule combo = add(new net.tuffclient.module.hud.ComboModule());
-	public final net.tuffclient.module.hud.HudProfilesModule hudProfiles = add(new net.tuffclient.module.hud.HudProfilesModule());
-	public final net.tuffclient.module.visual.EntityDistanceModule entityDistance = add(new net.tuffclient.module.visual.EntityDistanceModule());
-	public final net.tuffclient.module.util.FpsBoostModule fpsBoost = add(new net.tuffclient.module.util.FpsBoostModule());
-	public final net.tuffclient.module.visual.TabPingModule tabPing = add(new net.tuffclient.module.visual.TabPingModule());
-	public final net.tuffclient.module.visual.TiersModule tiers = add(new net.tuffclient.module.visual.TiersModule());
-	public final WaypointsModule waypoints = add(new WaypointsModule());
-	public final FreelookModule freelook = add(new FreelookModule());
-	public final ChatPlusModule chatPlus = add(new ChatPlusModule());
-	public final AutoGGModule autoGG = add(new AutoGGModule());
-	public final AutoReconnectModule autoReconnect = add(new AutoReconnectModule());
-	public final CleanF3Module cleanF3 = add(new CleanF3Module());
-	public final ScreenshotToolsModule screenshotTools = add(new ScreenshotToolsModule());
+	public final HitboxesModule hitboxes = add(new HitboxesModule());
 	public final HitColorModule hitColor = add(new HitColorModule());
 	public final BlockOutlineModule blockOutline = add(new BlockOutlineModule());
 	public final ParticlesModule particles = add(new ParticlesModule());
-	public final CustomSkyModule customSky = add(new CustomSkyModule());
-	public final NametagsModule nametags = add(new NametagsModule());
-	public final CosmeticsModule cosmetics = add(new CosmeticsModule());
-	public final net.tuffclient.module.visual.HitSoundsModule hitSounds = add(new net.tuffclient.module.visual.HitSoundsModule());
-	public final net.tuffclient.module.visual.ItemPhysicsModule itemPhysics = add(new net.tuffclient.module.visual.ItemPhysicsModule());
-	public final net.tuffclient.module.visual.OldAnimationsModule oldAnimations = add(new net.tuffclient.module.visual.OldAnimationsModule());
-	public final net.tuffclient.module.visual.LowFireModule lowFire = add(new net.tuffclient.module.visual.LowFireModule());
-	public final net.tuffclient.module.visual.SmallShieldModule smallShield = add(new net.tuffclient.module.visual.SmallShieldModule());
-	public final net.tuffclient.module.visual.HandViewModule handView = add(new net.tuffclient.module.visual.HandViewModule());
-	public final net.tuffclient.module.visual.TimeWeatherModule timeWeather = add(new net.tuffclient.module.visual.TimeWeatherModule());
-	public final net.tuffclient.module.util.SnaplookModule snaplook = add(new net.tuffclient.module.util.SnaplookModule());
-	public final net.tuffclient.module.util.ChatMacrosModule chatMacros = add(new net.tuffclient.module.util.ChatMacrosModule());
-	public final net.tuffclient.module.visual.HurtCamModule hurtCam = add(new net.tuffclient.module.visual.HurtCamModule());
-	public final net.tuffclient.module.visual.FovChangerModule fovChanger = add(new net.tuffclient.module.visual.FovChangerModule());
-	public final net.tuffclient.module.hud.SaturationModule saturation = add(new net.tuffclient.module.hud.SaturationModule());
-	public final net.tuffclient.module.visual.LowHealthModule lowHealth = add(new net.tuffclient.module.visual.LowHealthModule());
-	public final net.tuffclient.module.util.NickHiderModule nickHider = add(new net.tuffclient.module.util.NickHiderModule());
-	public final net.tuffclient.module.visual.ShinyPotsModule shinyPots = add(new net.tuffclient.module.visual.ShinyPotsModule());
-	public final net.tuffclient.module.visual.MinimalBobbingModule minimalBobbing = add(new net.tuffclient.module.visual.MinimalBobbingModule());
-	public final net.tuffclient.module.visual.HitboxesModule hitboxes = add(new net.tuffclient.module.visual.HitboxesModule());
-	public final net.tuffclient.module.visual.GlintColorModule glintColor = add(new net.tuffclient.module.visual.GlintColorModule());
-	public final net.tuffclient.module.visual.ClearGlassModule clearGlass = add(new net.tuffclient.module.visual.ClearGlassModule());
-	public final net.tuffclient.module.visual.MotionBlurModule motionBlur = add(new net.tuffclient.module.visual.MotionBlurModule());
-	public final net.tuffclient.module.visual.TntTimerModule tntTimer = add(new net.tuffclient.module.visual.TntTimerModule());
-
-	public ModuleManager() {
-		add(new ToggleSprintModule());
-		add(new FpsModule());
-		add(new CpsModule());
-		add(new KeystrokesModule());
-		add(new ArmorModule());
-		add(new CoordinatesModule());
-		add(new PingModule());
-		add(new EffectsModule());
-		add(new ClockModule());
-		add(new ServerModule());
-		add(new SpeedModule());
-		add(new MemoryModule());
-		add(new CompassModule());
-		add(new BiomeLightModule());
-		add(new ItemCounterModule());
-		add(new DurabilityModule());
-		add(new SessionStatsModule());
-		add(new PackDisplayModule());
-		add(new DayTimeModule());
-		add(new net.tuffclient.module.hud.CooldownsModule());
-	}
+	public final SmallShieldModule smallShield = add(new SmallShieldModule());
+	public final HandViewModule handView = add(new HandViewModule());
+	public final LowFireModule lowFire = add(new LowFireModule());
+	public final MinimalBobbingModule minimalBobbing = add(new MinimalBobbingModule());
+	public final ClearGlassModule clearGlass = add(new ClearGlassModule());
+	public final ItemPhysicsModule itemPhysics = add(new ItemPhysicsModule());
+	public final TiersModule tiers = add(new TiersModule());
+	public final MenuBackgroundModule menuBackground = add(new MenuBackgroundModule());
+	public final FullbrightModule fullbright = add(new FullbrightModule());
+	// Utility
+	public final FreelookModule freelook = add(new FreelookModule());
 
 	private <M extends Module> M add(M module) {
 		modules.add(module);
@@ -173,18 +108,10 @@ public final class ModuleManager {
 
 	public void renderHud(Gfx g) {
 		Minecraft client = Minecraft.getInstance();
-		if (client.player == null) return;
-		if (!net.tuffclient.Mc.hudHidden()) {
-			if (lowHealth.isEnabled()) lowHealth.render(g);
-			if (tntTimer.isEnabled()) tntTimer.render(g);
-			if (waypoints.isEnabled()) waypoints.render(g);
-			if (saturation.isEnabled()) saturation.render(g);
-			for (HudModule m : hud) {
-				if (m.isEnabled()) renderModule(g, client.font, m, false);
-			}
-			if (screenshotTools.isEnabled()) screenshotTools.render(g);
+		// the HUD layout editor draws the elements itself
+		if (client.player == null || net.tuffclient.Mc.hudHidden() || net.tuffclient.gui.HudLayoutScreen.open()) return;
+		for (HudModule m : hud) {
+			if (m.isEnabled()) renderModule(g, client.font, m, false);
 		}
-		// F3 goes over the HUD, like the vanilla debug screen
-		if (cleanF3.isEnabled()) cleanF3.render(g);
 	}
 }

@@ -1,8 +1,7 @@
-// glade: minecraft >=26.1
 package net.tuffclient.gui;
 
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -18,19 +17,19 @@ public final class Gfx {
 	private static final Gfx SHARED = new Gfx();
 	private static final Identifier WHITE = Identifier.fromNamespaceAndPath("tuff", "textures/gui/white.png");
 
-	private GuiGraphicsExtractor g;
+	private GuiGraphics g;
 
 	private Gfx() {
 	}
 
 	/** Wraps the game's graphics object for this frame (drawing is single-threaded). */
-	public static Gfx of(GuiGraphicsExtractor graphics) {
+	public static Gfx of(GuiGraphics graphics) {
 		SHARED.g = graphics;
 		return SHARED;
 	}
 
 	/** The game's own graphics object, for version-specific code. */
-	public GuiGraphicsExtractor raw() {
+	public GuiGraphics raw() {
 		return g;
 	}
 
@@ -85,7 +84,10 @@ public final class Gfx {
 	}
 
 	public void outline(int x, int y, int w, int h, int argb) {
-		g.outline(x, y, w, h, argb);
+		fill(x, y, x + w, y + 1, argb);
+		fill(x, y + h - 1, x + w, y + h, argb);
+		fill(x, y + 1, x + 1, y + h - 1, argb);
+		fill(x + w - 1, y + 1, x + w, y + h - 1, argb);
 	}
 
 	/** Only draw inside this rectangle until {@link #disableScissor}. */
@@ -105,19 +107,19 @@ public final class Gfx {
 	// ------------------------------------------------------------------- text
 
 	public void text(Font font, Component text, int x, int y, int color, boolean shadow) {
-		g.text(font, text, x, y, color, shadow);
+		g.drawString(font, text, x, y, color, shadow);
 	}
 
 	public void text(Font font, String text, int x, int y, int color, boolean shadow) {
-		g.text(font, text, x, y, color, shadow);
+		g.drawString(font, text, x, y, color, shadow);
 	}
 
 	public void centeredText(Font font, Component text, int x, int y, int color) {
-		g.centeredText(font, text, x, y, color);
+		g.drawCenteredString(font, text, x, y, color);
 	}
 
 	public void centeredText(Font font, String text, int x, int y, int color) {
-		g.centeredText(font, text, x, y, color);
+		g.drawCenteredString(font, text, x, y, color);
 	}
 
 	// --------------------------------------------------------------- textures
@@ -137,7 +139,7 @@ public final class Gfx {
 	}
 
 	public void item(ItemStack stack, int x, int y) {
-		g.item(stack, x, y);
+		g.renderItem(stack, x, y);
 	}
 
 	// ------------------------------------------------------------- crosshair

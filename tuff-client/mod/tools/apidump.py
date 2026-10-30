@@ -60,13 +60,12 @@ net.minecraft.client.renderer.entity.layers.EquipmentLayerRenderer net.minecraft
 net.minecraft.gizmos.GizmoStyle net.minecraft.gizmos.CuboidGizmo net.minecraft.gizmos.LineGizmo net.minecraft.gizmos.ArrowGizmo net.minecraft.gizmos.GizmoProperties
 net.minecraft.client.renderer.gizmos.DrawableGizmoPrimitives net.minecraft.client.renderer.OrderedSubmitNodeCollector net.minecraft.client.renderer.SubmitNodeStorage
 net.minecraft.client.renderer.entity.state.HumanoidRenderState net.minecraft.client.renderer.entity.state.AvatarRenderState
+net.minecraft.client.renderer.ItemInHandRenderer net.minecraft.client.renderer.entity.ItemEntityRenderer com.mojang.math.Axis net.minecraft.client.renderer.entity.state.ItemEntityRenderState
 """.split()
 
 
 # Classes whose bytecode is printed too, to see how the game uses them.
-DISASM = ["net.minecraft.client.renderer.debug.EntityHitboxDebugRenderer", "net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer",
-          "net.minecraft.client.renderer.entity.layers.EquipmentLayerRenderer", "net.minecraft.gizmos.CuboidGizmo", "net.minecraft.gizmos.GizmoStyle",
-          "net.minecraft.client.renderer.entity.LivingEntityRenderer"]
+DISASM = ["net.minecraft.client.renderer.ItemInHandRenderer", "net.minecraft.client.renderer.entity.ItemEntityRenderer"]
 
 
 def used_classes():

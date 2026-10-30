@@ -3,7 +3,7 @@
 	"id": "tuff",
 	"version": "${version}",
 	"name": "Glade",
-	"description": "The Glade in-game mod: an animated title screen, a mod menu, a drag-and-drop HUD editor and HUD and utility modules.",
+	"description": "Glade: PvP and HUD modules with a simple menu (Right Shift) and a HUD layout editor.",
 	"authors": ["Glade"],
 	"license": "GPL-3.0",
 	"icon": "assets/tuff/icon.png",

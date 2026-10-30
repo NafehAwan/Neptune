@@ -23,6 +23,11 @@ public final class PingModule extends TextHudModule {
 		var mc = net.minecraft.client.Minecraft.getInstance();
 		PlayerInfo info = !colored.get() || mc.player == null || mc.getConnection() == null ? null : mc.getConnection().getPlayerInfo(mc.player.getUUID());
 		if (info == null) super.value(g, font, s, x, y);
-		else text(g, font, s, x, y, net.tuffclient.module.visual.TabPingModule.color(info.getLatency()));
+		else text(g, font, s, x, y, color(info.getLatency()));
+	}
+
+	/** Green, yellow, orange or red by latency, grey when unknown. */
+	static int color(int ms) {
+		return ms <= 0 ? 0xFFAAAAAA : ms <= 75 ? 0xFF55FF55 : ms <= 150 ? 0xFFFFFF55 : ms <= 300 ? 0xFFFFAA00 : 0xFFFF5555;
 	}
 }

@@ -1,4 +1,3 @@
-// glade: minecraft >=1.21.9
 package net.tuffclient.gui;
 
 import net.minecraft.network.chat.Style;

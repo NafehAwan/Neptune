@@ -1,4 +1,3 @@
-// glade: minecraft >=26.3
 package net.tuffclient.compat;
 
 import net.minecraft.client.Minecraft;

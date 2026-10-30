@@ -1,4 +1,3 @@
-// glade: minecraft >=1.21.2
 package net.tuffclient.compat;
 
 import com.mojang.blaze3d.platform.NativeImage;

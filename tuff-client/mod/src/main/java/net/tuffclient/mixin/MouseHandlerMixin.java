@@ -5,11 +5,9 @@ import net.minecraft.client.player.LocalPlayer;
 import net.tuffclient.TuffClient;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** Freelook turns the camera instead of the player; scrolling while zoomed zooms further. */
+/** Freelook turns the camera instead of the player. */
 @Mixin(MouseHandler.class)
 public abstract class MouseHandlerMixin {
 	@Redirect(method = "turnPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;turn(DD)V"))
@@ -19,8 +17,4 @@ public abstract class MouseHandlerMixin {
 		else player.turn(dx, dy);
 	}
 
-	@Inject(method = "onScroll", at = @At("HEAD"), cancellable = true)
-	private void glade$zoomScroll(long window, double x, double y, CallbackInfo ci) {
-		if (TuffClient.modules() != null && net.tuffclient.Mc.screen() == null && TuffClient.modules().zoom.onScroll(y)) ci.cancel();
-	}
 }

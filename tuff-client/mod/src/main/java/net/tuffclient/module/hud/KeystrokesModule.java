@@ -49,8 +49,8 @@ public final class KeystrokesModule extends HudModule {
 		if (showMouse.get()) {
 			int half = (w - GAP) / 2;
 			boolean cps = mouseCps.get();
-			key(g, font, 4, client.options.keyAttack, cps ? CpsModule.left() + " CPS" : "LMB", 0, y, half, KEY - 4, dt);
-			key(g, font, 5, client.options.keyUse, cps ? CpsModule.right() + " CPS" : "RMB", half + GAP, y, w - half - GAP, KEY - 4, dt);
+			key(g, font, 4, client.options.keyAttack, cps ? Clicks.left() + " CPS" : "LMB", 0, y, half, KEY - 4, dt);
+			key(g, font, 5, client.options.keyUse, cps ? Clicks.right() + " CPS" : "RMB", half + GAP, y, w - half - GAP, KEY - 4, dt);
 			y += KEY - 4 + GAP;
 		}
 		if (showSpace.get()) {
