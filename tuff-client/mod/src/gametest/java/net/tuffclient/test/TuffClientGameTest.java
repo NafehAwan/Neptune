@@ -147,25 +147,4 @@ public class TuffClientGameTest implements FabricClientGameTest {
 		throw new AssertionError("No waitForChunks method on this Fabric API");
 	}
 
-	private static void waitForChunks(TestSingleplayerContext world) {
-		try {
-			// look methods up on the public interfaces: the implementations aren't public
-			java.lang.reflect.Method get;
-			try {
-				get = TestSingleplayerContext.class.getMethod("getConnection");
-			} catch (NoSuchMethodException e) {
-				get = TestSingleplayerContext.class.getMethod("getClientWorld");
-			}
-			Object target = get.invoke(world);
-			for (java.lang.reflect.Method m : get.getReturnType().getMethods()) {
-				if (m.getName().startsWith("waitForChunks") && m.getParameterCount() == 0) {
-					m.invoke(target);
-					return;
-				}
-			}
-		} catch (ReflectiveOperationException e) {
-			throw new AssertionError("Couldn't wait for chunks", e);
-		}
-		throw new AssertionError("No waitForChunks method on this Fabric API");
-	}
 }
