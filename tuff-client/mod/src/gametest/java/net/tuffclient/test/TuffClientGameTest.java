@@ -26,7 +26,7 @@ public class TuffClientGameTest implements FabricClientGameTest {
 		String problems = context.computeOnClient(client -> {
 			StringBuilder bad = new StringBuilder();
 			var m = TuffClient.modules();
-			if (m.all().size() != 21) bad.append(" modules=").append(m.all().size());
+			if (m.all().size() != 22) bad.append(" modules=").append(m.all().size());
 			if (!Module.hasMixin("HitboxStyleMixin")) bad.append(" no-hitbox-style");
 			if (!Module.hasMixin("ArmorTintMixin")) bad.append(" no-armor-tint");
 			for (Module mod : m.all()) if (mod.hidden()) bad.append(" hidden:").append(mod.id);
@@ -48,6 +48,15 @@ public class TuffClientGameTest implements FabricClientGameTest {
 		context.setScreen(() -> new ModuleScreen(new TitleScreen(), TuffClient.modules().keystrokes));
 		context.waitTicks(10);
 		context.takeScreenshot("glade-keystrokes-options");
+
+		context.runOnClient(client -> {
+			var kb = TuffClient.modules().keybinds;
+			kb.binds[0].action = "key.sprint";
+			kb.binds[0].key = com.mojang.blaze3d.platform.InputConstants.Type.MOUSE.getOrCreate(4);
+		});
+		context.setScreen(() -> new ModuleScreen(new TitleScreen(), TuffClient.modules().keybinds));
+		context.waitTicks(10);
+		context.takeScreenshot("glade-keybinds-options");
 
 		context.setScreen(() -> new ColorScreen(new TitleScreen(), TuffClient.modules().hitboxes.aimed));
 		context.waitTicks(10);

@@ -9,6 +9,7 @@ import net.tuffclient.TuffConfig;
 import net.tuffclient.module.Module;
 import net.tuffclient.module.hud.HudModule;
 import net.tuffclient.module.util.CrosshairModule;
+import net.tuffclient.module.util.KeybindsModule;
 import net.tuffclient.setting.BoolSetting;
 import net.tuffclient.setting.ChoiceSetting;
 import net.tuffclient.setting.ColorSetting;
@@ -23,6 +24,8 @@ public final class ModuleScreen extends VanillaScreen {
 
 	private final Module module;
 	private KeybindSetting listening;
+	/** The Keybinds slot waiting for a key, or null. */
+	private KeybindsModule.Bind listeningBind;
 	private TextSetting typing;
 
 	public ModuleScreen(Screen parent, Module module) {
@@ -43,6 +46,7 @@ public final class ModuleScreen extends VanillaScreen {
 			if (s.visible() && (hud == null || !hud.isStyle(s))) y = row(g, s, x, y, w);
 		}
 		if (module instanceof CrosshairModule ch) y = crosshair(g, ch, x, y, w);
+		if (module instanceof KeybindsModule kb) y = keybinds(g, kb, x, y, w);
 		if (hud != null) {
 			y = heading(g, "Style", y + 4);
 			int bw = (w - 3 * 4) / 4;
@@ -83,6 +87,26 @@ public final class ModuleScreen extends VanillaScreen {
 			}
 		}
 		return y + ROW;
+	}
+
+	// -------------------------------------------------------------- keybinds
+
+	/** Each extra key: the action (opens a list to pick from) and its key (click, then press a key or mouse button). */
+	private int keybinds(Gfx g, KeybindsModule kb, int x, int y, int w) {
+		y = heading(g, "Extra keys", y + 4);
+		y = note(g, "Pick an action, then click its key and press the key or mouse button to add. Esc clears the key.", x, y, w);
+		int kw = 110, aw = w - kw - 4;
+		for (KeybindsModule.Bind b : kb.binds) {
+			var mapping = b.mapping();
+			Component action = mapping == null ? Component.literal("Pick an action...") : Component.translatable(mapping.getName());
+			button(g, x, y, aw, action, true, () -> minecraft.setScreen(new ActionPickerScreen(this, b)));
+			Component key = listeningBind == b
+					? Component.literal("> ").append(b.key.getDisplayName()).append(" <").withStyle(ChatFormatting.YELLOW)
+					: b.key == InputConstants.UNKNOWN ? Component.literal("None") : b.key.getDisplayName();
+			button(g, x + aw + 4, y, kw, 20, key, mapping != null, true, c -> listeningBind = b);
+			y += ROW;
+		}
+		return y;
 	}
 
 	// ------------------------------------------------------------- crosshair
@@ -156,6 +180,11 @@ public final class ModuleScreen extends VanillaScreen {
 
 	@Override
 	protected boolean onClick(Input.Click click, boolean doubleClick) {
+		if (listeningBind != null) {
+			listeningBind.key = InputConstants.Type.MOUSE.getOrCreate(click.button());
+			listeningBind = null;
+			return true;
+		}
 		if (listening != null) {
 			// a mouse button becomes the key, like the game's Controls screen
 			listening.bind(InputConstants.Type.MOUSE.getOrCreate(click.button()));
@@ -168,6 +197,11 @@ public final class ModuleScreen extends VanillaScreen {
 
 	@Override
 	protected boolean onKey(Input.Key key) {
+		if (listeningBind != null) {
+			listeningBind.key = key.isEscape() ? InputConstants.UNKNOWN : key.bound();
+			listeningBind = null;
+			return true;
+		}
 		if (listening != null) {
 			if (key.isEscape()) listening.unbind();
 			else listening.bind(key.bound());

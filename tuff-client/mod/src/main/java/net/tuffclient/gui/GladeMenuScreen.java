@@ -32,7 +32,7 @@ public final class GladeMenuScreen extends VanillaScreen {
 			if (mods.isEmpty()) continue;
 			y = heading(g, group[1], y);
 			for (Module m : mods) {
-				boolean options = m.settings().stream().anyMatch(s -> s.visible());
+				boolean options = m instanceof net.tuffclient.module.util.KeybindsModule || m.settings().stream().anyMatch(s -> s.visible());
 				int bw = options ? w - 84 : w;
 				button(g, x, y, bw, onOff(m.name, m.isEnabled()), true, () -> {
 					m.setEnabled(!m.isEnabled());

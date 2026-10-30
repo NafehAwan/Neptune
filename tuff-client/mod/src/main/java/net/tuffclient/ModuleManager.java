@@ -58,6 +58,7 @@ public final class ModuleManager {
 	public final FullbrightModule fullbright = add(new FullbrightModule());
 	// Utility
 	public final FreelookModule freelook = add(new FreelookModule());
+	public final net.tuffclient.module.util.KeybindsModule keybinds = add(new net.tuffclient.module.util.KeybindsModule());
 
 	private <M extends Module> M add(M module) {
 		modules.add(module);
