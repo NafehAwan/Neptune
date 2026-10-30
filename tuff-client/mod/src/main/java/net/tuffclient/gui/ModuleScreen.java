@@ -93,6 +93,11 @@ public final class ModuleScreen extends VanillaScreen {
 
 	/** Each extra key: the action (opens a list to pick from) and its key (click, then press a key or mouse button). */
 	private int keybinds(Gfx g, KeybindsModule kb, int x, int y, int w) {
+		Component toggleKey = listeningBind == kb.toggle
+				? Component.literal("> ").append(kb.toggle.key.getDisplayName()).append(" <").withStyle(ChatFormatting.YELLOW)
+				: kb.toggle.key == InputConstants.UNKNOWN ? Component.literal("None") : kb.toggle.key.getDisplayName();
+		button(g, x, y, w, 20, Component.literal("On/off key: ").append(toggleKey), true, true, c -> listeningBind = kb.toggle);
+		y += ROW;
 		y = heading(g, "Extra keys", y + 4);
 		y = note(g, "Pick an action, then click its key and press the key or mouse button to add. Esc clears the key.", x, y, w);
 		int kw = 110, aw = w - kw - 4;

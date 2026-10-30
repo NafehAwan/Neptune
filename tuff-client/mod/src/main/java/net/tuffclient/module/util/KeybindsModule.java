@@ -31,6 +31,8 @@ public final class KeybindsModule extends Module {
 	}
 
 	public final Bind[] binds = new Bind[SLOTS];
+	/** A key that turns this module on and off (only its key is used). */
+	public final Bind toggle = new Bind();
 
 	public KeybindsModule() {
 		super("keybinds", "Keybinds", "Give any action extra keys, set here. The game's Controls keep their own keys.", Category.UTILITY, false);
@@ -45,14 +47,28 @@ public final class KeybindsModule extends Module {
 		}
 	}
 
-	/** A key was pressed: the actions with it as an extra key get the press too. */
+	/** A key was pressed: the on/off key flips the module; the actions with it as an extra key get the press too. */
 	public void click(InputConstants.Key key) {
+		if (toggle.key != InputConstants.UNKNOWN && toggle.key.equals(key)) {
+			setEnabled(!isEnabled());
+			net.tuffclient.TuffConfig.save(net.tuffclient.TuffClient.modules());
+			var mc = net.minecraft.client.Minecraft.getInstance();
+			if (mc.player != null) mc.player.displayClientMessage(net.minecraft.network.chat.Component.literal("Keybinds: " + (isEnabled() ? "ON" : "OFF")), true);
+		}
 		if (!isEnabled()) return;
 		for (Bind b : binds) {
 			if (b.active() && b.key.equals(key)) {
 				var m = (net.tuffclient.mixin.KeyMappingAccessor) b.mapping();
 				m.glade$setClickCount(m.glade$getClickCount() + 1);
 			}
+		}
+	}
+
+	/** Actions held through an extra key let go when the module turns off, so none stay stuck down. */
+	@Override
+	protected void onDisable() {
+		for (Bind b : binds) {
+			if (b.active()) b.mapping().setDown(false);
 		}
 	}
 
@@ -67,12 +83,18 @@ public final class KeybindsModule extends Module {
 			list.add(o);
 		}
 		json.add("binds", list);
+		json.addProperty("toggle_key", toggle.key.getName());
 		return json;
 	}
 
 	@Override
 	public void load(JsonObject json) {
 		super.load(json);
+		try {
+			if (json.has("toggle_key")) toggle.key = InputConstants.getKey(json.get("toggle_key").getAsString());
+		} catch (RuntimeException ex) {
+			toggle.key = InputConstants.UNKNOWN;
+		}
 		if (!json.has("binds") || !json.get("binds").isJsonArray()) return;
 		int i = 0;
 		for (JsonElement e : json.getAsJsonArray("binds")) {
