@@ -1,3 +1,10 @@
+Glade 1.9.0
+- Windows: Glade now comes as a Windows installer (.exe) and updates itself on Windows. This test build is for Minecraft 1.21.11.
+- Hitboxes: hide the look-direction line and the red eye-height line, change the line width and box color, and the box turns red (or a color you pick) when you aim at it.
+- Damage Tint (was Hit Color): worn armor now flashes with the body when it's hit, every piece including the inner leggings layer and trims. It's vanilla red by default; turn it on in Visual.
+- Smoother launcher: the 3D character on Home draws far less (one piece per body part instead of one per pixel) and the 3D views are capped at 30 fps.
+- Smoother game: the tab list and TNT Timer no longer redo slow checks every frame.
+
 Glade 1.8.9
 - Fixed: FOV Changer and Hurt Cam could leave your FOV effects or screen shake changed after closing the game with them on, so turning them off later didn't give your settings back. Your own values are now restored when the game closes and kept safe in Glade's config.
 - Fixed: Hitboxes could stay on after turning the module off (on Minecraft 1.21.9 and newer).

@@ -268,7 +268,8 @@ mod tests {
         let args = build_args(&input(&v, &s, &cp, None));
         assert_eq!(args[0], "-Xmx4096M");
         assert!(args.contains(&"-Djava.library.path=/n".to_string()));
-        assert!(args.contains(&"/l/a.jar:/v/26.3.jar".to_string()));
+        let sep = if cfg!(windows) { ";" } else { ":" };
+        assert!(args.contains(&format!("/l/a.jar{sep}/v/26.3.jar")));
         let main = args.iter().position(|a| a == "net.minecraft.client.main.Main").unwrap();
         assert_eq!(args[main - 1], "-Dfoo=bar");
         assert_eq!(&args[main + 1..], &["--username", "Steve", "--gameDir", "/g"]);
