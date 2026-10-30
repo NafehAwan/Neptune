@@ -28,13 +28,18 @@
       "csp": "default-src 'self'; img-src 'self' asset: http://asset.localhost data: blob: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src ipc: http://ipc.localhost; script-src 'self'",
       "assetProtocol": {
         "enable": true,
-        "scope": ["$DATA/glade/instances/**"]
+        "scope": [
+          "$DATA/glade/instances/**"
+        ]
       }
     }
   },
   "bundle": {
     "active": true,
-    "targets": ["deb"],
+    "targets": [
+      "deb",
+      "nsis"
+    ],
     "category": "Game",
     "shortDescription": "A fast, minimal Minecraft launcher",
     "longDescription": "Glade is a lightweight Minecraft launcher with Microsoft login, Fabric profiles, a Modrinth content browser, server pinging, skin management and the Glade in-game mod.",
@@ -43,15 +48,27 @@
       "icons/32x32.png",
       "icons/128x128.png",
       "icons/128x128@2x.png",
-      "icons/icon.png"
+      "icons/icon.png",
+      "icons/icon.ico"
     ],
-    "resources": ["resources/**/*"],
+    "resources": [
+      "resources/**/*"
+    ],
     "linux": {
       "deb": {
         "section": "games",
         "depends": [],
-        "conflicts": ["tuff-client"],
-        "replaces": ["tuff-client"]
+        "conflicts": [
+          "tuff-client"
+        ],
+        "replaces": [
+          "tuff-client"
+        ]
+      }
+    },
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser"
       }
     }
   }

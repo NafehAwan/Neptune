@@ -1092,7 +1092,7 @@ struct LauncherUpdate {
     current: String,
     notes: String,
     page: String,
-    /// The launcher can install it itself (installed from the .deb).
+    /// The launcher can install it itself (from the .deb on Linux, the installer on Windows).
     can_install: bool,
 }
 
@@ -1103,7 +1103,7 @@ async fn check_update(app: AppHandle, state: State<'_, AppState>) -> CmdResult<U
     let manifest = update::manifest(&state.http).await.map_err(err)?;
     let mod_updated = None;
     let current = app.package_info().version.to_string();
-    let launcher = (update::is_newer(&manifest.version, &current) && manifest.deb.is_some()).then(|| LauncherUpdate {
+    let launcher = (update::is_newer(&manifest.version, &current) && update::installer(&manifest).is_some()).then(|| LauncherUpdate {
         version: manifest.version.clone(),
         current,
         notes: manifest.notes.clone(),
@@ -1140,20 +1140,27 @@ async fn install_update(app: AppHandle, state: State<'_, AppState>) -> CmdResult
         return Err("Close Minecraft first; the update restarts the launcher.".into());
     }
     let manifest = update::manifest(&state.http).await.map_err(err)?;
-    let deb = manifest.deb.clone().ok_or("This release has no .deb to install.")?;
-    let path = update::deb_path(&state.paths, &manifest.version);
+    let asset = update::installer(&manifest).cloned().ok_or("This release has no installer for this system.")?;
+    let path = if cfg!(windows) { update::exe_path(&state.paths, &manifest.version) } else { update::deb_path(&state.paths, &manifest.version) };
     let progress_app = app.clone();
     let last = Mutex::new(Instant::now() - Duration::from_secs(1));
-    update::download(&state.http, &deb.url, &deb.sha256, &path, move |done, total| {
+    let total_size = asset.size;
+    update::download(&state.http, &asset.url, &asset.sha256, &path, move |done, total| {
         let mut last = last.lock().unwrap();
         if done == total || last.elapsed() > Duration::from_millis(80) {
             *last = Instant::now();
-            let _ = progress_app.emit("update-progress", UpdateProgress { stage: "download", done, total: total.max(deb.size) });
+            let _ = progress_app.emit("update-progress", UpdateProgress { stage: "download", done, total: total.max(total_size) });
         }
     })
     .await
     .map_err(err)?;
     let _ = app.emit("update-progress", UpdateProgress { stage: "install", done: 1, total: 1 });
+    if cfg!(windows) {
+        // the installer replaces the launcher's files, so the launcher has to close
+        update::start_exe(&path).map_err(err)?;
+        app.exit(0);
+        return Ok(());
+    }
     update::install_deb(&path).await.map_err(err)?;
     let _ = std::fs::remove_file(&path);
     app.restart();

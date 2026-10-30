@@ -47,7 +47,7 @@
         {#if update.page}<button class="btn ghost" onclick={() => api.openUrl(update.page)}>Download it myself</button>{/if}
       </div>
     {:else if p?.stage === "install"}
-      <p class="stage"><span class="spinner"></span> Installing… enter your password if your computer asks for it.</p>
+      <p class="stage"><span class="spinner"></span> Installing… confirm it if your computer asks.</p>
     {:else}
       <div class="bar"><span style:width="{pct}%"></span></div>
       <p class="stage faint">{busy ? (p ? `Downloading ${bytes(p.done)} of ${bytes(p.total)}` : "Starting the download…") : "Getting ready…"}</p>

@@ -55,11 +55,18 @@ net.minecraft.client.multiplayer.chat.GuiMessage net.minecraft.client.User net.m
 net.minecraft.client.renderer.entity.state.LivingEntityRenderState net.minecraft.client.renderer.entity.state.PlayerRenderState
 net.minecraft.client.renderer.entity.player.PlayerRenderer net.minecraft.client.renderer.entity.ItemRenderer
 net.minecraft.client.multiplayer.ClientLevel net.minecraft.world.level.dimension.DimensionType net.minecraft.client.renderer.DimensionSpecialEffects
+net.minecraft.client.renderer.debug.EntityHitboxDebugRenderer net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer
+net.minecraft.client.renderer.entity.layers.EquipmentLayerRenderer net.minecraft.client.renderer.entity.layers.RenderLayer net.minecraft.gizmos.Gizmos
+net.minecraft.gizmos.GizmoStyle net.minecraft.gizmos.CuboidGizmo net.minecraft.gizmos.LineGizmo net.minecraft.gizmos.ArrowGizmo net.minecraft.gizmos.GizmoProperties
+net.minecraft.client.renderer.gizmos.DrawableGizmoPrimitives net.minecraft.client.renderer.OrderedSubmitNodeCollector net.minecraft.client.renderer.SubmitNodeStorage
+net.minecraft.client.renderer.entity.state.HumanoidRenderState net.minecraft.client.renderer.entity.state.AvatarRenderState
 """.split()
 
 
 # Classes whose bytecode is printed too, to see how the game uses them.
-DISASM = ["net.minecraft.client.renderer.GameRenderer", "net.minecraft.client.renderer.PostChain", "net.minecraft.client.gui.components.PlayerTabOverlay"]
+DISASM = ["net.minecraft.client.renderer.debug.EntityHitboxDebugRenderer", "net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer",
+          "net.minecraft.client.renderer.entity.layers.EquipmentLayerRenderer", "net.minecraft.gizmos.CuboidGizmo", "net.minecraft.gizmos.GizmoStyle",
+          "net.minecraft.client.renderer.entity.LivingEntityRenderer"]
 
 
 def used_classes():

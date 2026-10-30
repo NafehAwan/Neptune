@@ -3,7 +3,9 @@
 //!
 //! - a newer Glade mod is downloaded quietly and used from the next launch;
 //! - a newer launcher is downloaded as a .deb and installed with the system's
-//!   password prompt, then the launcher restarts.
+//!   password prompt, then the launcher restarts (Linux); on Windows the new
+//!   installer (.exe) is downloaded and started, and the launcher closes so it
+//!   can replace it.
 //!
 //! Every file is checked against its SHA-256 before it's used.
 
@@ -33,6 +35,8 @@ pub struct Manifest {
     /// The release page, for downloading by hand.
     pub page: String,
     pub deb: Option<Asset>,
+    /// The Windows installer.
+    pub exe: Option<Asset>,
     /// The 26.3 build alone, read by launcher 1.1.0.
     #[serde(rename = "mod")]
     pub glade_mod: Option<ModAsset>,
@@ -139,8 +143,26 @@ fn on_path(program: &str) -> bool {
 
 /// The launcher was installed from the .deb and can install the next one.
 pub fn can_install() -> bool {
+    if cfg!(windows) {
+        return true;
+    }
     let installed = std::env::current_exe().is_ok_and(|p| p.starts_with("/usr/"));
     cfg!(target_os = "linux") && installed && on_path("pkexec") && on_path("dpkg")
+}
+
+/// This system's installer in a release: the .exe on Windows, the .deb elsewhere.
+pub fn installer(manifest: &Manifest) -> Option<&Asset> {
+    if cfg!(windows) { manifest.exe.as_ref() } else { manifest.deb.as_ref() }
+}
+
+pub fn exe_path(paths: &Paths, version: &str) -> PathBuf {
+    paths.file("glade").join("updates").join(format!("Glade_{version}_x64-setup.exe"))
+}
+
+/// Starts the Windows installer; the launcher then closes so its files can be replaced.
+pub fn start_exe(exe: &Path) -> Result<()> {
+    std::process::Command::new(exe).spawn().context("starting the installer")?;
+    Ok(())
 }
 
 pub fn deb_path(paths: &Paths, version: &str) -> PathBuf {
