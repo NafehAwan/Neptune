@@ -1,0 +1,21 @@
+{
+	"schemaVersion": 1,
+	"id": "gladebot",
+	"version": "${version}",
+	"name": "Glade Bot",
+	"description": "A Neth Pot practice bot for singleplayer: pick LT3, HT3 or LT2, mend or no mend, then /bot start.",
+	"authors": ["Glade"],
+	"license": "GPL-3.0",
+	"environment": "*",
+	"entrypoints": {
+		"main": ["net.gladebot.GladeBot"],
+		"client": ["net.gladebot.GladeBotClient"]
+	},
+	"mixins": ["gladebot.mixins.json"],
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "${minecraft}",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

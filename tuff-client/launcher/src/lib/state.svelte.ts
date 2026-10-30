@@ -1,0 +1,252 @@
+import { api, isTauri, on } from "./api";
+import { Speed } from "./progress";
+import { toast } from "./toast.svelte";
+import type { Account, AppInfo, GameExit, GladeReport, LaunchProgress, LauncherUpdate, LogLine, Profile, Settings, UpdateProgress } from "./types";
+
+export type Route = "home" | "library" | "browse" | "servers" | "wardrobe" | "screenshots" | "console" | "settings";
+
+const MAX_LOG_LINES = 5000;
+
+export const app = $state({
+  ready: false,
+  /** What the start screen is doing; null once the launcher is open. */
+  boot: "Starting Glade" as string | null,
+  bootBusy: true,
+  bootError: null as string | null,
+  route: "home" as Route,
+  info: null as AppInfo | null,
+  settings: null as Settings | null,
+  profiles: [] as Profile[],
+  accounts: [] as Account[],
+  activeAccount: null as string | null,
+  running: null as string | null,
+  launching: null as string | null,
+  progress: null as LaunchProgress | null,
+  /** Download speed of the launch, in bytes per second. */
+  speed: 0,
+  /** A Glade preset profile being created, and its download speed. */
+  creating: false,
+  createProgress: null as LaunchProgress | null,
+  createSpeed: 0,
+  logs: [] as LogLine[],
+  lastExit: null as GameExit | null,
+  /** The crash dialog is showing for app.lastExit. */
+  crashOpen: false,
+  /** Profile the library page should open, set by other pages. */
+  focusProfile: null as string | null,
+  accountModal: false,
+  /** Microsoft's sign-in window is open. */
+  signingIn: false,
+  /** The first-run sign-in screen was put off for this session. */
+  signinSkipped: false,
+  /** A newer launcher; the update screen installs it. */
+  update: null as LauncherUpdate | null,
+  updateProgress: null as UpdateProgress | null,
+});
+
+const launchSpeed = new Speed();
+const createSpeed = new Speed();
+
+/** Creates a Glade preset profile, keeping app.createProgress up to date meanwhile. */
+export async function createPresetProfile(preset: string, gameVersion: string) {
+  app.creating = true;
+  app.createProgress = { profileId: "", stage: "Starting", done: 0, total: 0, bytes: 0, bytesTotal: 0 };
+  app.createSpeed = 0;
+  try {
+    return await api.createPresetProfile(preset, gameVersion);
+  } finally {
+    app.creating = false;
+    app.createProgress = null;
+  }
+}
+
+const UPDATE_CHECK_MS = 5 * 60 * 1000;
+
+/** Checks for a newer launcher and Glade mod. Updates can't be turned off. */
+let lastCheck = 0;
+
+/** Checks for a newer launcher and Glade mod. With `manual`, says what it found. */
+/** Is there a newer launcher? True when the check worked. */
+async function checkLauncher(manual: boolean): Promise<boolean> {
+  try {
+    const status = await api.checkUpdate();
+    if (status.launcher) app.update = status.launcher;
+    else if (manual) toast(`Glade ${app.info?.version} is the newest version.`, "success");
+    return true;
+  } catch (e) {
+    // offline or no release yet: try again later
+    if (manual) toast(`Couldn't check for updates: ${e}`, "error", 8000);
+    return false;
+  }
+}
+
+let gladeUpdate: Promise<boolean> | null = null;
+
+/** Brings the Glade mod files up to date (never while a game starts or runs). True when it worked. */
+export function updateGlade(): Promise<boolean> {
+  if (gladeUpdate) return gladeUpdate;
+  if (app.running || app.launching) return Promise.resolve(false);
+  gladeUpdate = api.updateGlade()
+    .then((v) => { if (v && app.ready) toast(`Glade mod updated to ${v}. It's used from your next launch.`, "success", 6000); return true; })
+    .catch(() => false)
+    .finally(() => { gladeUpdate = null; });
+  return gladeUpdate;
+}
+
+export async function checkForUpdates(manual = false): Promise<boolean> {
+  lastCheck = Date.now();
+  const ok = await checkLauncher(manual);
+  if (ok && !app.update) updateGlade();
+  return ok;
+}
+
+/** Whenever you come back to the launcher, check again (at most every 20 s). */
+function checkOnFocus() {
+  if (Date.now() - lastCheck > 20 * 1000) checkForUpdates();
+}
+
+export function selectedProfile(): Profile | null {
+  return app.profiles.find((p) => p.id === app.settings?.selectedProfile) ?? app.profiles[0] ?? null;
+}
+
+export function activeAccount(): Account | null {
+  return app.accounts.find((a) => a.id === app.activeAccount) ?? null;
+}
+
+export function go(route: Route) {
+  app.route = route;
+}
+
+export async function refreshProfiles() {
+  app.profiles = await api.listProfiles();
+}
+
+export async function refreshAccounts() {
+  const list = await api.listAccounts();
+  app.accounts = list.accounts;
+  app.activeAccount = list.active;
+}
+
+export async function updateSettings(patch: Partial<Settings>) {
+  if (!app.settings) return;
+  app.settings = await api.saveSettings({ ...app.settings, ...patch });
+}
+
+export async function selectProfile(id: string) {
+  await updateSettings({ selectedProfile: id });
+}
+
+/** Opens Microsoft's own sign-in page in a window (no code to type) and adds the account.
+ *  Rejects with the reason when it doesn't work; closing the window rejects too. */
+export async function signInMicrosoft(): Promise<Account> {
+  if (app.signingIn) throw "The sign-in window is already open.";
+  app.signingIn = true;
+  try {
+    const account = await api.msLoginWindow();
+    await refreshAccounts();
+    toast(`Signed in as ${account.name}`, "success");
+    return account;
+  } finally {
+    app.signingIn = false;
+  }
+}
+
+export async function play(profileId: string, server?: string) {
+  if (app.running || app.launching) return;
+  // let a Glade mod update finish first, so the game never starts on half-written files
+  if (gladeUpdate) await gladeUpdate;
+  if (!app.activeAccount) {
+    app.accountModal = true;
+    toast("Add an account to play.", "info");
+    return;
+  }
+  app.launching = profileId;
+  app.progress = { profileId, stage: "Preparing", done: 0, total: 0, bytes: 0, bytesTotal: 0 };
+  app.speed = 0;
+  app.logs = [];
+  app.lastExit = null;
+  try {
+    await api.launch(profileId, server);
+  } catch (e) {
+    toast(e, "error");
+  } finally {
+    app.launching = null;
+    app.progress = null;
+  }
+}
+
+const LAUNCHER_CHECK_MS = 15000;
+const MOD_UPDATE_MS = 120000;
+
+export async function init() {
+  const [info, settings] = await Promise.all([api.appInfo(), api.getSettings()]);
+  app.info = info;
+  app.settings = settings;
+  await Promise.all([refreshProfiles(), refreshAccounts()]);
+  app.running = await api.runningGame();
+
+  await on<LaunchProgress>("launch-progress", (p) => {
+    if (app.launching !== p.profileId) return;
+    app.progress = p;
+    app.speed = launchSpeed.sample(p);
+  });
+  await on<LaunchProgress>("create-progress", (p) => {
+    if (!app.creating) return;
+    app.createProgress = p;
+    app.createSpeed = createSpeed.sample(p);
+  });
+  await on<LogLine[]>("game-log", (batch) => {
+    app.logs.push(...batch);
+    if (app.logs.length > MAX_LOG_LINES) app.logs.splice(0, app.logs.length - MAX_LOG_LINES);
+  });
+  await on<{ running: boolean; profileId: string }>("game-state", (s) => {
+    app.running = s.running ? s.profileId : null;
+    if (!s.running) refreshProfiles();
+  });
+  await on<UpdateProgress>("update-progress", (p) => (app.updateProgress = p));
+  await on<{ profileId: string; report: GladeReport }>("glade-check", ({ report }) => {
+    for (const fix of report.fixed) toast(fix, "info", 5000);
+  });
+  await on<{ path: string; name: string }>("clip-saved", ({ name }) => toast(`Clip saved to Videos/Glade: ${name}`, "success", 7000));
+  await on<string>("clip-error", (message) => toast(message, "error", 9000));
+  await on<GameExit>("game-exit", (exit) => {
+    app.lastExit = exit;
+    if (exit.crash) app.crashOpen = true;
+  });
+  // the start screen waits for the launcher check, then for the Glade mod files, before opening
+  const started = Date.now();
+  const within = <T,>(p: Promise<T>, ms: number, late: T) => Promise.race([p, new Promise<T>((r) => setTimeout(() => r(late), ms))]);
+  app.boot = "Checking for updates";
+  app.bootBusy = true;
+  lastCheck = Date.now();
+  const launcherOk = await within(checkLauncher(false), LAUNCHER_CHECK_MS, false);
+  if (!app.update) {
+    let modsOk = false;
+    if (launcherOk) {
+      app.boot = "Updating Glade";
+      modsOk = await within(updateGlade(), MOD_UPDATE_MS, false);
+    }
+    app.bootBusy = false;
+    app.boot = launcherOk && modsOk ? "You're up to date" : "Couldn't reach the update server, starting anyway";
+    await new Promise((r) => setTimeout(r, Math.max(launcherOk && modsOk ? 300 : 1400, 900 - (Date.now() - started))));
+  }
+  app.ready = true;
+  app.boot = null;
+  setInterval(() => checkForUpdates(), UPDATE_CHECK_MS);
+  window.addEventListener("focus", checkOnFocus);
+  // browser preview only: ?crash shows the crash dialog with a sample report
+  if (!isTauri && location.search.includes("crash")) {
+    app.lastExit = {
+      profileId: app.profiles[0]?.id ?? "",
+      code: 1,
+      crash: {
+        title: "Sodium needs Fabric API",
+        hint: "Install Fabric API from the Mods page, or turn Sodium off.",
+        culprit: "Sodium",
+        modFile: "sodium-fabric-0.6.13+mc26.3.jar",
+        evidence: ["- Mod 'Sodium' (sodium) 0.6.13 requires any version of 'Fabric API' (fabric-api), which is missing!"],
+      },
+    };
+    app.crashOpen = true;
+  }
+}
