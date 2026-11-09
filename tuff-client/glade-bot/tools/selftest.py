@@ -5,7 +5,8 @@ punishes, a double pop when hit twice for lethal damage, and pots."""
 import os, re, subprocess, sys, threading, time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-RUN = os.path.join(ROOT, "versions", "1.21.11", "run")
+MC = os.environ.get("GLADE_MC", "1.21.11")
+RUN = os.path.join(ROOT, "versions", MC, "run")
 os.makedirs(RUN, exist_ok=True)
 open(os.path.join(RUN, "eula.txt"), "w").write("eula=true\n")
 open(os.path.join(RUN, "server.properties"), "w").write("\n".join([
@@ -13,7 +14,7 @@ open(os.path.join(RUN, "server.properties"), "w").write("\n".join([
     "view-distance=4", "simulation-distance=4", "difficulty=easy", "spawn-monsters=false", "spawn-animals=false",
 ]) + "\n")
 
-p = subprocess.Popen(["./gradlew", "--no-daemon", "--console=plain", ":1.21.11:runServer"], cwd=ROOT,
+p = subprocess.Popen(["./gradlew", "--no-daemon", "--console=plain", f":{MC}:runServer"], cwd=ROOT,
                      stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
 lines = []
 def read():

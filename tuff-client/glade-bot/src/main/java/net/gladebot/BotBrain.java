@@ -677,7 +677,11 @@ public final class BotBrain {
 	}
 
 	private void select(int slot) {
+		//? if >=1.21.11 {
 		bot.getInventory().setSelectedSlot(slot);
+		//?} else {
+		/*bot.getInventory().selected = slot;
+		*///?}
 	}
 
 	private void selectSword() {

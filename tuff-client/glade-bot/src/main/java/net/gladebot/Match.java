@@ -174,12 +174,20 @@ public final class Match {
 		if (ticks == 500) {
 			bot.setHealth(2f);
 			bot.invulnerableTime = 0;
+			//? if >=1.21.11 {
 			bot.hurtServer(level, bot.damageSources().generic(), 200f);
+			//?} else {
+			/*bot.hurt(bot.damageSources().generic(), 200f);
+			*///?}
 			GladeBot.LOGGER.info("[gladebot] lethal hit 1");
 		}
 		if (ticks == 510 && state == State.FIGHT) {
 			bot.invulnerableTime = 0;
+			//? if >=1.21.11 {
 			bot.hurtServer(level, bot.damageSources().generic(), 200f);
+			//?} else {
+			/*bot.hurt(bot.damageSources().generic(), 200f);
+			*///?}
 			GladeBot.LOGGER.info("[gladebot] lethal hit 2");
 		}
 		// worn armour and room to mend: it should mend every piece back up
@@ -191,7 +199,11 @@ public final class Match {
 			}
 			bot.setHealth(bot.getMaxHealth());
 			dummy.brain.pause(200);
+			//? if >=1.21.11 {
 			dummy.teleportTo(level, bot.getX() + 9, bot.getY(), bot.getZ(), java.util.Set.of(), 0, 0, true);
+			//?} else {
+			/*dummy.teleportTo(level, bot.getX() + 9, bot.getY(), bot.getZ(), java.util.Set.of(), 0, 0);
+			*///?}
 			GladeBot.LOGGER.info("[gladebot] armour worn to 110: {}", bot.brain.armorReport());
 		}
 		if (ticks == 1000) GladeBot.LOGGER.info("[gladebot] armour after mending: {}", bot.brain.armorReport());

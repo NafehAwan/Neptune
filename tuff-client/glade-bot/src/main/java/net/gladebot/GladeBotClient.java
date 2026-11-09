@@ -13,7 +13,11 @@ public final class GladeBotClient implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
+		//? if >=1.21.11 {
 		KeyMapping.Category category = KeyMapping.Category.register(Identifier.fromNamespaceAndPath("gladebot", "gladebot"));
+		//?} else {
+		/*String category = "key.categories.gladebot";
+		*///?}
 		menuKey = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.gladebot.menu", InputConstants.KEY_B, category));
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
 			while (menuKey.consumeClick()) {

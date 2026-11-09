@@ -43,7 +43,11 @@ public final class BotPlayer extends ServerPlayer {
 		FakeConnection connection = new FakeConnection();
 		BotPlayer bot = new BotPlayer(server, level, profile, connection);
 		server.getPlayerList().placeNewPlayer(connection, bot, CommonListenerCookie.createInitial(profile, false));
+		//? if >=1.21.11 {
 		bot.teleportTo(level, pos.x, pos.y, pos.z, Set.of(), yaw, 0, true);
+		//?} else {
+		/*bot.teleportTo(level, pos.x, pos.y, pos.z, Set.of(), yaw, 0);
+		*///?}
 		bot.setGameMode(GameType.SURVIVAL);
 		bot.setHealth(bot.getMaxHealth());
 		bot.unsetRemoved();
@@ -72,7 +76,7 @@ public final class BotPlayer extends ServerPlayer {
 		// a real player's fall is tracked from their client's movement; the bot has
 		// none, so track it here (crits need it: you only crit while falling)
 		double dy = getY() - y;
-		if (!onGround() && dy < 0) fallDistance = Math.max(fallDistance, 0) - dy;
+		if (!onGround() && dy < 0) fallDistance = (float) (Math.max(fallDistance, 0) - dy);
 		else if (onGround()) fallDistance = 0;
 	}
 

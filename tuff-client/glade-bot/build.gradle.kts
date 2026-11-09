@@ -42,8 +42,9 @@ tasks.processResources {
     filesMatching("fabric.mod.json") { expand(props) }
 }
 
-// The in-game test: start a match against the bot and check it fights.
-fabricApi {
+// The in-game test: start a match against the bot and check it fights
+// (Fabric's client test tool exists from 1.21.4, so 1.21.11 only).
+if (mc == "1.21.11") fabricApi {
     configureTests {
         createSourceSet = true
         modId = "gladebot-test"

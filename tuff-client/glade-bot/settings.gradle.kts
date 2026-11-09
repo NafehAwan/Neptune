@@ -9,7 +9,7 @@ pluginManagement {
 }
 
 plugins {
-    // Same build setup as Glade (so the bot can be merged into it later), one version for now
+    // Same build setup as Glade (so the bot can be merged into it later)
     id("dev.kikugie.stonecutter") version "0.9.8"
     id("dev.kikugie.loom-back-compat") version "0.4.2"
     id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
@@ -17,7 +17,7 @@ plugins {
 
 stonecutter {
     create(rootProject) {
-        versions("1.21.11")
+        versions("1.21.11", "1.21.1")
         vcsVersion = "1.21.11"
     }
 }

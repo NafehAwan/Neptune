@@ -111,7 +111,12 @@ public final class Kits {
 		for (int i = 0; i < 36; i++) inv.setItem(i, fresh(kit[i]));
 		for (int i = 0; i < 4; i++) player.setItemSlot(ARMOR[i], fresh(kit[36 + i]));
 		player.setItemSlot(EquipmentSlot.OFFHAND, fresh(kit[40]));
+		//? if >=1.21.11 {
 		inv.setSelectedSlot(0);
+		//?} else {
+		/*inv.selected = 0;
+		player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetCarriedItemPacket(0));
+		*///?}
 		player.containerMenu.broadcastChanges();
 	}
 
