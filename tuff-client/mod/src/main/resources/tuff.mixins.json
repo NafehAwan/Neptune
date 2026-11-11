@@ -1,0 +1,14 @@
+{
+	"required": true,
+	"package": "net.tuffclient.mixin",
+	"compatibilityLevel": "@JAVA@",
+	"client": [
+"@MIXINS@"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"overwrites": {
+		"requireAnnotations": true
+	}
+}

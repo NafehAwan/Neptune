@@ -1,0 +1,224 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Glade Trailer</title>
+<style>
+@font-face { font-family: Fraunces; src: url(fraunces.woff2); font-style: italic; font-weight: 600; }
+@font-face { font-family: Jakarta; src: url(jakarta500.woff2); font-weight: 500; }
+@font-face { font-family: Jakarta; src: url(jakarta800.woff2); font-weight: 800; }
+html, body { margin: 0; background: #F6F4EE; }
+canvas { display: block; }
+</style></head>
+<body><canvas id="c" width="1920" height="1080"></canvas>
+<script>
+// Glade trailer, 13 s. draw(t) renders the frame at time t (seconds); the
+// renderer calls it for every frame, so the animation is exact at any fps.
+const c = document.getElementById("c"), x = c.getContext("2d");
+const W = 1920, H = 1080;
+const leaf = new Image(); leaf.src = "leaf.svg";
+const ready = Promise.all([document.fonts.load("600 italic 100px Fraunces"), document.fonts.load("500 40px Jakarta"),
+  document.fonts.load("800 40px Jakarta"), new Promise(r => (leaf.onload = r))]);
+
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const outC = p => 1 - Math.pow(1 - p, 3);
+const outQ = p => 1 - Math.pow(1 - p, 5);
+const inOut = p => p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+const back = p => { const k = 1.70158; return 1 + (k + 1) * Math.pow(p - 1, 3) + k * Math.pow(p - 1, 2); };
+const mix = (a, b, p) => a + (b - a) * p;
+const hex = (h, a = 1) => { const n = parseInt(h.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
+const lerpHex = (h1, h2, p) => { const a = parseInt(h1.slice(1), 16), b = parseInt(h2.slice(1), 16);
+  const ch = s => Math.round(mix((a >> s) & 255, (b >> s) & 255, p)); return `rgb(${ch(16)},${ch(8)},${ch(0)})`; };
+
+const GREEN = "#2F6B4F", INK = "#1F2A22", PAPER = "#F6F4EE";
+
+// deterministic pixel leaves drifting across the screen
+const rnd = (() => { let s = 7; return () => (s = (s * 16807) % 2147483647) / 2147483647; })();
+const leaves = Array.from({ length: 46 }, () => ({ x: rnd() * W, y: rnd() * H, s: 6 + rnd() * 12, v: 40 + rnd() * 90, ph: rnd() * 6.28, z: rnd() }));
+
+function rr(px, py, w, h, r) { x.beginPath(); x.roundRect(px, py, w, h, r); }
+
+function background(t, dark) {
+  // sky: paper and mint, deepening to forest for "coming soon"
+  const g = x.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, lerpHex("#CFE6D9", "#0E2219", dark));
+  g.addColorStop(1, lerpHex(PAPER, "#173B2B", dark));
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  // slow sun rays
+  x.save(); x.translate(W * 0.5, H * 0.38); x.rotate(t * 0.06);
+  for (let i = 0; i < 12; i++) {
+    x.rotate(Math.PI / 6);
+    x.fillStyle = dark > 0.5 ? hex("#7FD1A4", 0.05 * dark) : hex("#FFFFFF", 0.22 * (1 - dark));
+    x.beginPath(); x.moveTo(0, 0); x.lineTo(1500, -90); x.lineTo(1500, 90); x.fill();
+  }
+  x.restore();
+  const glow = x.createRadialGradient(W / 2, H * 0.38, 0, W / 2, H * 0.38, 620);
+  glow.addColorStop(0, dark > 0.5 ? hex("#3FA06C", 0.35 * dark) : hex("#FFF4D6", 0.85 * (1 - dark)));
+  glow.addColorStop(1, hex("#FFF4D6", 0));
+  x.fillStyle = glow; x.fillRect(0, 0, W, H);
+  // rolling hills with blocky trees
+  for (let layer = 0; layer < 3; layer++) {
+    const base = H - 120 + layer * 55, shift = (t * (14 + layer * 18)) % 160;
+    x.fillStyle = lerpHex(["#A9CDB5", "#83B394", "#5E9874"][layer], ["#1D4733", "#163A2A", "#102C20"][layer], dark);
+    x.beginPath(); x.moveTo(0, H);
+    for (let px = -160; px <= W + 160; px += 40) x.lineTo(px - shift, base - Math.sin((px + layer * 300) / 260) * 34);
+    x.lineTo(W, H); x.fill();
+    for (let px = -160; px <= W + 160; px += 160 - layer * 30) {
+      const tx = px - shift + layer * 50, ty = base - Math.sin((px + layer * 300 + 30) / 260) * 34;
+      x.fillRect(tx - 5, ty - 30, 10, 30);
+      x.fillRect(tx - 24, ty - 70 - layer * 6, 48, 44 + layer * 6);
+    }
+  }
+  // drifting leaves
+  for (const l of leaves) {
+    const px = (l.x + t * l.v) % (W + 40) - 20, py = (l.y + t * l.v * 0.35 + Math.sin(t * 2 + l.ph) * 18) % (H + 40) - 20;
+    x.save(); x.translate(px, py); x.rotate(t * 1.4 + l.ph);
+    x.fillStyle = dark > 0.5 ? hex("#7FD1A4", 0.35 + l.z * 0.4) : hex(l.z > 0.5 ? "#4E8C66" : "#8DBF9C", 0.55 + l.z * 0.4);
+    x.fillRect(-l.s / 2, -l.s / 4, l.s, l.s / 2); x.restore();
+  }
+}
+
+function glass(px, py, w, h, r, a, darkGlass) {
+  x.save(); x.globalAlpha *= a;
+  x.shadowColor = hex("#1E3C28", darkGlass ? 0.5 : 0.18); x.shadowBlur = 50; x.shadowOffsetY = 16;
+  rr(px, py, w, h, r); x.fillStyle = darkGlass ? hex("#FFFFFF", 0.1) : hex("#FFFFFF", 0.62); x.fill();
+  x.shadowColor = "transparent";
+  x.lineWidth = 2; x.strokeStyle = hex("#FFFFFF", darkGlass ? 0.28 : 0.9); x.stroke();
+  x.restore();
+}
+
+function text(s, px, py, font, color, a = 1, align = "center", spacing = 0) {
+  x.save(); x.globalAlpha *= a; x.font = font; x.fillStyle = color; x.textAlign = align; x.textBaseline = "middle";
+  if (spacing) x.letterSpacing = spacing + "px";
+  x.fillText(s, px, py); x.restore();
+}
+
+function logo(cx, cy, size, a, spin = 0) {
+  x.save(); x.globalAlpha *= a; x.translate(cx, cy); x.rotate(spin);
+  x.drawImage(leaf, -size / 2, -size / 2, size, size); x.restore();
+}
+
+// ---------------------------------------------------------------- scenes
+function intro(t) {
+  if (t > 2.4) return;
+  const out = outC(seg(t, 2.0, 2.35));
+  x.save(); x.translate(0, -out * 140); x.globalAlpha = 1 - out;
+  const pop = back(seg(t, 0.15, 0.85));
+  // pulse rings
+  for (let i = 0; i < 2; i++) {
+    const p = seg(t, 0.55 + i * 0.18, 1.5 + i * 0.18);
+    if (p > 0 && p < 1) { x.beginPath(); x.arc(W / 2, 400, 90 + outC(p) * 260, 0, 7); x.strokeStyle = hex(GREEN, 0.35 * (1 - p)); x.lineWidth = 4; x.stroke(); }
+  }
+  logo(W / 2, 400, 190 * pop, clamp(pop * 1.5), (1 - pop) * -1.2);
+  // wordmark, letter by letter
+  const word = "Glade"; x.font = "600 italic 170px Fraunces";
+  let total = x.measureText(word).width, px = W / 2 - total / 2;
+  for (let i = 0; i < word.length; i++) {
+    const p = outQ(seg(t, 0.7 + i * 0.07, 1.15 + i * 0.07)), w = x.measureText(word[i]).width;
+    text(word[i], px + w / 2, 610 + (1 - p) * 60, "600 italic 170px Fraunces", INK, p);
+    px += w;
+  }
+  const tag = outC(seg(t, 1.25, 1.7));
+  text("The calm Minecraft client", W / 2, 735 + (1 - tag) * 24, "500 44px Jakarta", "#3A463D", tag);
+  x.restore();
+}
+
+const FEATURES = [
+  ["1.8.9 → 26.3", "Every version, one client"],
+  ["Zoom & Freelook", "On the keys you choose"],
+  ["Styled HUD", "Sharp, rounded or smooth"],
+  ["Crash fixer", "Finds the mod to blame"],
+  ["Microsoft sign-in", "One code and you're in"],
+  ["Auto updates", "Always the newest Glade"],
+];
+
+function features(t) {
+  const a = seg(t, 2.25, 2.6), out = inOut(seg(t, 6.75, 7.3));
+  if (a <= 0 || out >= 1) return;
+  x.save();
+  const z = 1 + out * 0.25; x.translate(W / 2, H / 2); x.scale(z, z); x.translate(-W / 2, -H / 2); x.globalAlpha = 1 - out;
+  const h = outC(a);
+  text("EVERYTHING YOU NEED", W / 2, 170 + (1 - h) * 30, "800 30px Jakarta", GREEN, h, "center", 8);
+  text("Built in. Light. Free.", W / 2, 240 + (1 - h) * 30, "600 italic 76px Fraunces", INK, h);
+  const cw = 500, ch = 210, gap = 40, gx = W / 2 - (cw * 3 + gap * 2) / 2, gy = 340;
+  FEATURES.forEach(([title, sub], i) => {
+    const p = outQ(seg(t, 2.6 + i * 0.6, 3.15 + i * 0.6));
+    if (p <= 0) return;
+    const col = i % 3, row = (i / 3) | 0, px = gx + col * (cw + gap) + (1 - p) * 260, py = gy + row * (ch + gap);
+    glass(px, py, cw, ch, 28, p);
+    // index chip and accent bar
+    x.save(); x.globalAlpha *= p; rr(px + 34, py + 36, 64, 64, 18); x.fillStyle = GREEN; x.fill(); x.restore();
+    text(String(i + 1).padStart(2, "0"), px + 66, py + 69, "800 26px Jakarta", PAPER, p);
+    text(title, px + 34, py + 140, "800 40px Jakarta", INK, p, "left");
+    text(sub, px + 34, py + 182, "500 26px Jakarta", "#5B675E", p, "left");
+    // highlight sweep as each card lands
+    const sw = seg(t, 3.0 + i * 0.6, 3.5 + i * 0.6);
+    if (sw > 0 && sw < 1) {
+      x.save(); rr(px, py, cw, ch, 28); x.clip();
+      const sx = px - 200 + sw * (cw + 400), gr = x.createLinearGradient(sx - 120, 0, sx + 120, 0);
+      gr.addColorStop(0, hex("#FFFFFF", 0)); gr.addColorStop(0.5, hex("#FFFFFF", 0.7)); gr.addColorStop(1, hex("#FFFFFF", 0));
+      x.fillStyle = gr; x.fillRect(px, py, cw, ch); x.restore();
+    }
+  });
+  x.restore();
+}
+
+const SOON = ["Tiers", "Server hosting", "Host on your own PC · FPS boost"];
+
+function comingSoon(t) {
+  const a = seg(t, 7.3, 7.55), out = outC(seg(t, 10.35, 10.7));
+  if (a <= 0 || out >= 1) return;
+  x.save(); x.globalAlpha *= 1 - out; x.translate(0, -out * 80);
+  // headline slams in with a slight overshoot and a light glitch offset
+  const p = back(seg(t, 7.3, 7.75)), jitter = seg(t, 7.3, 7.6) < 1 ? Math.sin(t * 90) * 10 * (1 - seg(t, 7.3, 7.6)) : 0;
+  x.save(); x.translate(W / 2, 330); x.scale(mix(1.6, 1, p), mix(1.6, 1, p));
+  text("COMING SOON", jitter + 4, 4, "800 150px Jakarta", hex("#7FD1A4", 0.35), clamp(p), "center", 14);
+  text("COMING SOON", -jitter, 0, "800 150px Jakarta", "#F2F7F3", clamp(p), "center", 14);
+  x.restore();
+  const line = outC(seg(t, 7.6, 8.0));
+  x.fillStyle = hex("#7FD1A4", 0.9); x.fillRect(W / 2 - 260 * line, 440, 520 * line, 5);
+  SOON.forEach((s, i) => {
+    const q = back(seg(t, 8.05 + i * 0.6, 8.45 + i * 0.6));
+    if (q <= 0) return;
+    x.font = "800 52px Jakarta"; const tw = x.measureText(s).width + 120, py = 520 + i * 130;
+    x.save(); x.translate(W / 2, py + 45); x.scale(q, q);
+    glass(-tw / 2, -45, tw, 90, 45, clamp(q), true);
+    x.beginPath(); x.arc(-tw / 2 + 52, 0, 11, 0, 7); x.fillStyle = "#7FD1A4"; x.fill();
+    text(s, 22, 2, "800 52px Jakarta", "#F2F7F3", clamp(q));
+    x.restore();
+  });
+  x.restore();
+}
+
+function endCard(t) {
+  const a = seg(t, 10.6, 11.2);
+  if (a <= 0) return;
+  const p = back(a), q = outC(seg(t, 10.9, 11.4)), b = outC(seg(t, 11.3, 11.8));
+  logo(W / 2, 330, 170 * p, clamp(p * 1.4));
+  text("Glade", W / 2, 520 + (1 - q) * 40, "600 italic 190px Fraunces", INK, q);
+  text("Every version · Every feature · Free", W / 2, 650 + (1 - q) * 30, "500 40px Jakarta", "#3A463D", q);
+  // download button with a shimmer
+  const bw = 440, bh = 96, bx = W / 2 - bw / 2, by = 740 + (1 - b) * 40;
+  x.save(); x.globalAlpha *= b; x.shadowColor = hex(GREEN, 0.4); x.shadowBlur = 40; x.shadowOffsetY = 14;
+  rr(bx, by, bw, bh, 22); x.fillStyle = GREEN; x.fill(); x.shadowColor = "transparent";
+  x.clip(); const sx = bx - 200 + (((t - 11.6) / 1.1) % 1 + 1) % 1 * (bw + 400);
+  const gr = x.createLinearGradient(sx - 90, 0, sx + 90, 0);
+  gr.addColorStop(0, hex("#FFFFFF", 0)); gr.addColorStop(0.5, hex("#FFFFFF", 0.35)); gr.addColorStop(1, hex("#FFFFFF", 0));
+  x.fillStyle = gr; x.fillRect(bx, by, bw, bh); x.restore();
+  text("Download now", W / 2, by + bh / 2 + 2, "800 40px Jakarta", PAPER, b);
+}
+
+function draw(t) {
+  // background darkens for "coming soon", then lightens for the end card
+  const dark = inOut(seg(t, 7.0, 7.5)) * (1 - inOut(seg(t, 10.3, 10.9)));
+  background(t, dark);
+  intro(t); features(t); comingSoon(t); endCard(t);
+  // white flash on the big cuts
+  for (const [ft, len] of [[2.3, 0.25], [7.3, 0.3], [10.6, 0.3]]) {
+    const f = seg(t, ft - 0.05, ft) * (1 - seg(t, ft, ft + len));
+    if (f > 0) { x.fillStyle = hex("#FFFFFF", f * 0.75); x.fillRect(0, 0, W, H); }
+  }
+  // soft fade in and out
+  const fade = 1 - seg(t, 0, 0.3) + seg(t, 12.6, 13.0);
+  if (fade > 0) { x.fillStyle = hex(PAPER, clamp(fade)); x.fillRect(0, 0, W, H); }
+}
+window.ready = ready; window.draw = draw;
+</script></body></html>

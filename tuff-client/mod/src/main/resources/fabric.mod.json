@@ -1,0 +1,21 @@
+{
+	"schemaVersion": 1,
+	"id": "tuff",
+	"version": "${version}",
+	"name": "Glade",
+	"description": "Glade: PvP and HUD modules with a simple menu (Right Shift) and a HUD layout editor.",
+	"authors": ["Glade"],
+	"license": "GPL-3.0",
+	"icon": "assets/tuff/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"client": ["net.tuffclient.TuffClient"]
+	},
+	"mixins": ["tuff.mixins.json"],
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "${minecraft}",
+		"java": ">=${java}",
+		"fabric-api": "*"
+	}
+}

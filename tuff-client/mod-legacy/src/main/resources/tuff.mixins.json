@@ -1,0 +1,17 @@
+{
+	"required": true,
+	"minVersion": "0.8",
+	"package": "net.tuffclient.legacy.mixin",
+	"compatibilityLevel": "JAVA_8",
+	"client": [
+		"EntityMixin",
+		"GameOptionsMixin",
+		"GameRendererMixin",
+		"InGameHudMixin",
+		"MinecraftClientMixin",
+		"PlayerInventoryMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

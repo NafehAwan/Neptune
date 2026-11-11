@@ -1,0 +1,240 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Glade Teaser</title>
+<style>
+@font-face { font-family: Fraunces; src: url(fraunces.woff2); font-style: italic; font-weight: 600; }
+@font-face { font-family: Jakarta; src: url(jakarta500.woff2); font-weight: 500; }
+@font-face { font-family: Jakarta; src: url(jakarta800.woff2); font-weight: 800; }
+html, body { margin: 0; background: #000; }
+canvas { display: block; }
+</style></head>
+<body><canvas id="c" width="1920" height="1080"></canvas>
+<script>
+// Glade teaser, 13 s, cut to "COOOK PARDON" (129 bpm). The drop lands at 5.0 s;
+// after it every cut is on a kick (BEAT apart). draw(t) renders time t.
+const c = document.getElementById("c"), x = c.getContext("2d"), W = 1920, H = 1080;
+const DROP = 5.0, BEAT = 0.4646, END = DROP + 12 * BEAT;
+const leaf = new Image(); leaf.src = "leaf.svg";
+const ready = Promise.all([document.fonts.load("600 italic 100px Fraunces"), document.fonts.load("500 40px Jakarta"),
+  document.fonts.load("800 40px Jakarta"), new Promise(r => (leaf.onload = r))]);
+
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const outC = p => 1 - Math.pow(1 - p, 3), outQ = p => 1 - Math.pow(1 - p, 5);
+const back = p => { const k = 2.2; return 1 + (k + 1) * Math.pow(p - 1, 3) + k * Math.pow(p - 1, 2); };
+const rgba = (h, a = 1) => { const n = parseInt(h.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
+const hash = n => { const s = Math.sin(n * 127.1) * 43758.5453; return s - Math.floor(s); };
+const GREEN = "#2F6B4F", MINT = "#7FD1A4", CREAM = "#F6F4EE", DEEP = "#0C1F16", RED = "#FF4D4D";
+
+function txt(s, px, py, font, color, a = 1, align = "center", spacing = 0) {
+  if (a <= 0) return;
+  x.save(); x.globalAlpha *= a; x.font = font; x.fillStyle = color; x.textAlign = align; x.textBaseline = "middle";
+  x.letterSpacing = spacing + "px"; x.fillText(s, px, py); x.restore();
+}
+// text with an RGB split, for the glitchy "problem" part
+function rgbText(s, px, py, font, split, a = 1) {
+  x.save(); x.globalCompositeOperation = "lighter";
+  txt(s, px - split, py, font, "#FF2A2A", a); txt(s, px, py, font, "#2AFF6A", a); txt(s, px + split, py, font, "#2A6AFF", a);
+  x.restore();
+}
+function rr(px, py, w, h, r) { x.beginPath(); x.roundRect(px, py, w, h, r); }
+function logo(cx, cy, size, a = 1, rot = 0) {
+  x.save(); x.globalAlpha *= a; x.translate(cx, cy); x.rotate(rot); x.drawImage(leaf, -size / 2, -size / 2, size, size); x.restore();
+}
+function grain(t, amt) {
+  for (let i = 0; i < 260; i++) {
+    const h = hash(i + Math.floor(t * 30) * 977);
+    x.fillStyle = `rgba(255,255,255,${amt * hash(i * 3.1 + h)})`;
+    x.fillRect(hash(i * 7.7 + h) * W, hash(i * 1.3 + h * 9) * H, 2, 2);
+  }
+}
+
+// ------------------------------------------------- 0 – 3.45 s: clients today
+const POPUPS = [
+  [0.25, 210, 160, 520, 150, "UNLOCK CAPES", "Only $9.99 / month"],
+  [0.55, 1210, 120, 480, 150, "VERSION NOT SUPPORTED", "Please use 1.8.9"],
+  [0.85, 140, 700, 500, 150, "LOADING ASSETS…", "87% · 412 MB"],
+  [1.05, 1280, 690, 500, 150, "PREMIUM ONLY", "This module needs Plus"],
+  [1.3, 700, 420, 520, 150, "THE GAME CRASHED", "exit code -1"],
+  [1.55, 360, 430, 420, 130, "NEW UPDATE", "Restart required"],
+];
+function problem(t) {
+  if (t > 3.5) return;
+  x.fillStyle = "#0A0C0B"; x.fillRect(0, 0, W, H);
+  // shaky, cluttered "client" windows piling up
+  const shake = (seg(t, 1.7, 3.4)) * 14;
+  x.save(); x.translate((hash(Math.floor(t * 40)) - 0.5) * shake, (hash(Math.floor(t * 40) + 9) - 0.5) * shake);
+  for (const [at, px, py, w, h, title, sub] of POPUPS) {
+    const p = back(seg(t, at, at + 0.22)); if (p <= 0) continue;
+    x.save(); x.translate(px + w / 2, py + h / 2); x.scale(p, p); x.rotate((hash(at) - 0.5) * 0.08);
+    rr(-w / 2, -h / 2, w, h, 14); x.fillStyle = "#1A1D1C"; x.fill(); x.strokeStyle = "#3A3F3D"; x.lineWidth = 2; x.stroke();
+    x.fillStyle = title.includes("CRASH") || title.includes("NOT") ? RED : "#FFB020"; x.fillRect(-w / 2, -h / 2 + 14, 6, h - 28);
+    txt(title, -w / 2 + 34, -18, "800 34px Jakarta", "#ECECEC", 1, "left", 2);
+    txt(sub, -w / 2 + 34, 26, "500 26px Jakarta", "#8C928F", 1, "left");
+    txt("×", w / 2 - 34, -h / 2 + 30, "500 34px Jakarta", "#6A706D");
+    x.restore();
+  }
+  // fps counter falling
+  const fps = Math.round(144 - seg(t, 0.4, 3.2) * 131);
+  txt(`FPS ${fps}`, W - 60, 50, "800 40px Jakarta", fps < 40 ? RED : "#E0E0E0", 1, "right", 2);
+  x.restore();
+  x.fillStyle = "rgba(0,0,0,0.55)"; x.fillRect(0, 0, W, H);
+  // headline, in time with the voice
+  const q = outQ(seg(t, 0.1, 0.45));
+  if (t < 1.72) {
+    txt("MINECRAFT CLIENTS", W / 2, 470 + (1 - q) * 50, "800 130px Jakarta", "#F2F2F2", q, "center", 6);
+    txt("today?", W / 2, 600, "600 italic 110px Fraunces", MINT, seg(t, 0.85, 1.05));
+  }
+  const words = [[1.72, "BLOATED."], [2.26, "LAGGY."], [2.8, "PAYWALLED."]];
+  words.forEach(([at, w], i) => {
+    const next = words[i + 1] ? words[i + 1][0] : 3.36;
+    if (t < at || t >= next) return;
+    const p = seg(t, at, at + 0.12), s = 1.25 - outC(p) * 0.25;
+    x.save(); x.translate(W / 2, H / 2); x.scale(s, s);
+    rgbText(w, 0, 0, "800 230px Jakarta", 10 * (1 - p) + 3, 1);
+    // strike-through
+    const strike = outC(seg(t, at + 0.18, at + 0.32));
+    x.fillStyle = RED; x.fillRect(-560, -8, 1120 * strike, 18);
+    x.restore();
+  });
+  // glitch bands and grain
+  if (t > 1.7) for (let i = 0; i < 6; i++) {
+    const h = hash(Math.floor(t * 24) * 13 + i);
+    if (h > 0.55) { const y0 = hash(h * 99) * H; x.drawImage(c, 0, y0, W, 24, (h - 0.75) * 120, y0, W, 24); }
+  }
+  grain(t, 0.25);
+  // cut out: the screen collapses to a line
+  const cut = seg(t, 3.36, 3.46);
+  if (cut > 0) { x.fillStyle = "#000"; x.fillRect(0, 0, W, H * cut / 2); x.fillRect(0, H - H * cut / 2, W, H * cut / 2); }
+}
+
+// --------------------------------------- 3.45 – 5.0 s: so we built our own
+function builtOwn(t) {
+  if (t < 3.45 || t > DROP) return;
+  x.fillStyle = "#000"; x.fillRect(0, 0, W, H);
+  const glow = x.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, 900);
+  glow.addColorStop(0, rgba(GREEN, 0.15 + seg(t, 3.5, 5) * 0.45)); glow.addColorStop(1, rgba(GREEN, 0));
+  x.fillStyle = glow; x.fillRect(0, 0, W, H);
+  const line = "So we built our own.", n = Math.floor(seg(t, 3.5, 4.4) * line.length);
+  x.font = "600 italic 120px Fraunces"; const full = x.measureText(line).width;
+  txt(line.slice(0, n), W / 2 - full / 2, H / 2, "600 italic 120px Fraunces", CREAM, 1, "left");
+  if (Math.floor(t * 4) % 2 === 0 || n < line.length) {
+    x.font = "600 italic 120px Fraunces"; const w = x.measureText(line.slice(0, n)).width;
+    x.fillStyle = MINT; x.fillRect(W / 2 - full / 2 + w + 10, H / 2 - 55, 8, 110);
+  }
+  // light streaks rushing to the centre before the drop
+  const r = seg(t, 4.35, DROP);
+  for (let i = 0; i < 40 && r > 0; i++) {
+    const a = hash(i) * 6.283, d = (1 - outC(r)) * (900 + hash(i + 7) * 700) + 40, len = 120 + 260 * r;
+    x.strokeStyle = rgba(MINT, 0.25 + 0.6 * r); x.lineWidth = 3;
+    x.beginPath(); x.moveTo(W / 2 + Math.cos(a) * d, H / 2 + Math.sin(a) * d); x.lineTo(W / 2 + Math.cos(a) * (d + len), H / 2 + Math.sin(a) * (d + len)); x.stroke();
+  }
+}
+
+// ------------------------------------------------- shared green backdrop
+function grove(t, bump) {
+  const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#123526"); g.addColorStop(1, DEEP);
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  x.save(); x.translate(W / 2, H / 2); x.rotate(t * 0.15);
+  for (let i = 0; i < 16; i++) { x.rotate(Math.PI / 8); x.fillStyle = rgba(MINT, 0.035 + bump * 0.06); x.beginPath(); x.moveTo(0, 0); x.lineTo(1500, -70); x.lineTo(1500, 70); x.fill(); }
+  x.restore();
+  for (let i = 0; i < 60; i++) {
+    const px = (hash(i) * W + t * (60 + hash(i + 3) * 160)) % W, py = (hash(i + 5) * H + t * 50 + Math.sin(t * 2 + i) * 20) % H, s = 5 + hash(i + 9) * 12;
+    x.save(); x.translate(px, py); x.rotate(t * 1.6 + i); x.fillStyle = rgba(MINT, 0.25 + hash(i + 11) * 0.45); x.fillRect(-s / 2, -s / 4, s, s / 2); x.restore();
+  }
+  for (let layer = 0; layer < 2; layer++) {
+    const base = H - 90 + layer * 50, shift = (t * (30 + layer * 40)) % 140;
+    x.fillStyle = layer ? "#081710" : "#0E2A1D"; x.beginPath(); x.moveTo(0, H);
+    for (let px = -140; px <= W + 140; px += 35) x.lineTo(px - shift, base - Math.sin((px + layer * 260) / 230) * 30);
+    x.lineTo(W, H); x.fill();
+    for (let px = -140; px <= W + 140; px += 140) { const tx = px - shift + layer * 60, ty = base - Math.sin((px + layer * 260) / 230) * 30; x.fillRect(tx - 5, ty - 26, 10, 26); x.fillRect(tx - 22, ty - 64, 44, 40); }
+  }
+}
+
+// ----------------------------------------------- 5.0 – 5.93 s: the drop
+function reveal(t, bump) {
+  if (t < DROP || t > DROP + 2 * BEAT) return;
+  grove(t, bump);
+  const p = back(seg(t, DROP, DROP + 0.35));
+  // shockwave rings and a burst of leaves
+  for (let i = 0; i < 3; i++) {
+    const q = seg(t, DROP + i * 0.06, DROP + 0.7 + i * 0.06);
+    if (q > 0 && q < 1) { x.beginPath(); x.arc(W / 2, 420, 80 + outC(q) * 900, 0, 7); x.strokeStyle = rgba(MINT, 0.6 * (1 - q)); x.lineWidth = 10 * (1 - q) + 2; x.stroke(); }
+  }
+  const burst = seg(t, DROP, DROP + 0.9);
+  for (let i = 0; i < 70; i++) {
+    const a = hash(i * 1.7) * 6.283, d = outC(burst) * (300 + hash(i) * 800), s = 8 + hash(i + 2) * 14;
+    x.save(); x.translate(W / 2 + Math.cos(a) * d, 420 + Math.sin(a) * d); x.rotate(a + t * 4);
+    x.fillStyle = rgba(i % 3 ? MINT : CREAM, 1 - burst); x.fillRect(-s / 2, -s / 4, s, s / 2); x.restore();
+  }
+  logo(W / 2, 420, 260 * p, clamp(p * 2), (1 - clamp(p)) * 1.5);
+  const w = outQ(seg(t, DROP + 0.12, DROP + 0.45));
+  txt("Glade", W / 2, 690 + (1 - w) * 80, "600 italic 230px Fraunces", CREAM, w);
+}
+
+// --------------------------------------- 5.93 – 10.58 s: one feature a beat
+const MONTAGE = [
+  ["EVERY VERSION", "1.8.9  →  26.3"], ["ZOOM", "smooth, on your key"], ["FREELOOK", "look around, keep running"],
+  ["YOUR HUD", "sharp · rounded · smooth"], ["CRASH FIXER", "names the mod to blame"], ["AUTO UPDATES", "always the newest"],
+  ["TIERS", "show what you're worth"], ["SERVER HOSTING", "one click, no setup"], ["HOST ON YOUR PC", "play with friends free"], ["FPS BOOST", "zero bloat"],
+];
+function montage(t, bump) {
+  const start = DROP + 2 * BEAT;
+  if (t < start || t >= END) return;
+  const i = Math.min(MONTAGE.length - 1, Math.floor((t - start) / BEAT)), lt = t - start - i * BEAT;
+  const dark = i % 2 === 0, [big, small] = MONTAGE[i], dir = i % 2 ? -1 : 1;
+  if (dark) grove(t, bump); else { x.fillStyle = CREAM; x.fillRect(0, 0, W, H); }
+  // huge outlined word behind, drifting
+  x.save(); x.globalAlpha = 0.07; x.font = "800 420px Jakarta"; x.textAlign = "center"; x.textBaseline = "middle";
+  x.strokeStyle = dark ? MINT : GREEN; x.lineWidth = 3; x.strokeText(big, W / 2 - dir * (lt * 400 - 90), H / 2); x.restore();
+  const p = outQ(seg(lt, 0, 0.16)), fg = dark ? CREAM : GREEN;
+  // the word slides in with a motion smear
+  for (let k = 3; k >= 0; k--) {
+    const off = (1 - p) * dir * (500 + k * 90);
+    txt(big, W / 2 + off, H / 2 - 30, "800 170px Jakarta", fg, k ? 0.12 * (1 - p) : 1, "center", 4);
+  }
+  txt(small, W / 2, H / 2 + 105 + (1 - outC(seg(lt, 0.05, 0.2))) * 30, dark ? "600 italic 56px Fraunces" : "600 italic 56px Fraunces", dark ? MINT : "#3A463D", seg(lt, 0.05, 0.2));
+  // progress ticks
+  for (let k = 0; k < MONTAGE.length; k++) { x.fillStyle = k <= i ? (dark ? MINT : GREEN) : rgba(dark ? CREAM : GREEN, 0.2); x.fillRect(W / 2 - 290 + k * 60, H - 110, 44, 6); }
+  // diagonal wipe at the very start of each beat
+  const wipe = seg(lt, 0, 0.1);
+  if (wipe < 1) { x.save(); x.fillStyle = dark ? GREEN : MINT; x.beginPath(); const e = wipe * (W + 600) - 300;
+    x.moveTo(e, 0); x.lineTo(e + 260, 0); x.lineTo(e - 40, H); x.lineTo(e - 300, H); x.fill(); x.restore(); }
+}
+
+// ----------------------------------------------- 10.58 – 13 s: coming soon
+function ending(t, bump) {
+  if (t < END) return;
+  grove(t, bump);
+  const p = back(seg(t, END, END + 0.35)), q = outQ(seg(t, END + 0.25, END + 0.6)), r = outC(seg(t, END + 0.45, END + 1.0));
+  for (let i = 0; i < 5; i++) {
+    const bt = END + i * BEAT, s = seg(t, bt, bt + 0.9);
+    if (s > 0 && s < 1) { x.beginPath(); x.arc(W / 2, 330, 100 + outC(s) * 500, 0, 7); x.strokeStyle = rgba(MINT, 0.35 * (1 - s)); x.lineWidth = 4; x.stroke(); }
+  }
+  logo(W / 2, 330, 210 * p, clamp(p * 2));
+  txt("Glade", W / 2, 560 + (1 - q) * 50, "600 italic 200px Fraunces", CREAM, q);
+  const spacing = 40 - r * 24;
+  txt("COMING SOON", W / 2, 750, "800 96px Jakarta", MINT, r, "center", spacing);
+  txt("The Minecraft client that stays out of your way.", W / 2, 850, "500 38px Jakarta", rgba(CREAM, 0.8), outC(seg(t, END + 0.9, END + 1.4)));
+}
+
+function draw(t) {
+  // camera bump on every kick after the drop
+  const sinceBeat = t >= DROP ? (t - DROP) % BEAT : 99, bump = Math.exp(-sinceBeat * 9);
+  x.save();
+  if (t >= DROP) { const z = 1 + bump * 0.022; x.translate(W / 2, H / 2); x.scale(z, z); x.translate(-W / 2, -H / 2); }
+  if (t >= DROP && t < DROP + 0.4) { const s = (1 - seg(t, DROP, DROP + 0.4)) * 24; x.translate((hash(t * 97) - 0.5) * s, (hash(t * 61) - 0.5) * s); }
+  problem(t); builtOwn(t); reveal(t, bump); montage(t, bump); ending(t, bump);
+  x.restore();
+  // flash on the drop and the end card
+  for (const [ft, len, a] of [[DROP, 0.35, 1], [END, 0.3, 0.7]]) {
+    const f = t >= ft ? 1 - seg(t, ft, ft + len) : 0;
+    if (f > 0) { x.fillStyle = `rgba(255,255,255,${f * a})`; x.fillRect(0, 0, W, H); }
+  }
+  // vignette, then fade to black at the end
+  const v = x.createRadialGradient(W / 2, H / 2, H * 0.45, W / 2, H / 2, H * 1.05);
+  v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(0,0,0,0.45)"); x.fillStyle = v; x.fillRect(0, 0, W, H);
+  const fade = 1 - seg(t, 0, 0.15) + seg(t, 12.45, 12.95);
+  if (fade > 0) { x.fillStyle = `rgba(0,0,0,${clamp(fade)})`; x.fillRect(0, 0, W, H); }
+}
+window.ready = ready; window.draw = draw;
+</script></body></html>

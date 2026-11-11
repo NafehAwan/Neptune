@@ -1,0 +1,11 @@
+# Glade Bot: a Neth Pot practice bot for singleplayer (Minecraft 1.21.11 and 1.21.1).
+mod.id = "gladebot"
+mod.version = "0.7.3"
+deps.fabric_loader = "0.19.5"
+loomx.loom_version = "1.18-SNAPSHOT"
+
+["1.21.11"]
+mod.mc_compat = "1.21.11"
+
+["1.21.1"]
+mod.mc_compat = ">=1.21 <=1.21.1"
